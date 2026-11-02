@@ -9,9 +9,15 @@ import {
   ShieldCheck,
   Eye,
   X,
+  CheckCircle2,
+  ArrowUpRight,
 } from "lucide-react";
 import { products, Product } from "@/lib/data";
 import { useCartStore } from "@/lib/cart-store";
+import laddooMix from "@/assets/laddooMix.png";
+import ragiPouch from "@/assets/ragi-pouch.png";
+import paanPouchStick from "@/assets/paan-pouch-stick.png";
+import paanPouchBack from "@/assets/paan-pouch-back.png";
 
 export const ProductDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -40,7 +46,63 @@ export const ProductDetail: React.FC = () => {
     setTimeout(() => setAdded(false), 2000);
   };
 
-  const otherProducts = products.filter((p) => p.id !== product.id);
+  const allCombos = [
+    {
+      id: "laddoo-twin-pack-500g",
+      name: "Shahi Ragi Laddoo Mix Twin Pack (500g)",
+      desc: "2× 250g value twin pack. Pure millet & nut laddoo premix (zero added sugar). Yields 20–24 nutritious home-made laddoos.",
+      badge: "SUPER SAVER TWIN PACK",
+      save: "SAVE 26%",
+      price: 369,
+      mrp: 500,
+      link: "/combos",
+      features: [
+        "2× 250g Pure Millet & Nut Laddoo Mix (500g Total)",
+        "Yields 20–24 Fresh Wholesome Laddoos",
+        "Free Express Shipping Pan-India",
+      ],
+      type: "laddoo-twin",
+      priority: product.id.includes("laddoo") || product.slug.includes("laddoo") ? 1 : 2,
+    },
+    {
+      id: "royal-heritage-superfood-pack",
+      name: "The Royal Heritage & Superfood Pack",
+      desc: "2× Shahi Ragi Laddoo Mix (500g Total) + 20 Paan Digestive Shot Sachets (Makes 40 Fresh Shots). Wholesome nutrition meets royal after-meal digestive freshness.",
+      badge: "BEST SELLER COMBO",
+      save: "SAVE ₹201",
+      price: 899,
+      mrp: 1100,
+      link: "/combos",
+      features: [
+        "2 Packets Laddoo Mix (250g + 250g = 500g Total)",
+        "20 Royal Paan Digestive Sachets (40 Shots)",
+        "Free Express Shipping Pan-India",
+      ],
+      type: "heritage-duo",
+      priority: 1,
+    },
+    {
+      id: "paan-30-shots-monthly-combo",
+      name: "30 Shots Monthly Combo (Paan Multipack)",
+      desc: "3 full boxes of authentic Banarasi betel leaf and gulkand digestive shots for daily post-dinner wellness rituals.",
+      badge: "MONTHLY RITUAL PACK",
+      save: "SAVE ₹101",
+      price: 799,
+      mrp: 900,
+      link: "/combos",
+      features: [
+        "3 Full Boxes (30 Sachets = 60 Fresh Shots)",
+        "Real Banarasi Betel Leaf & Prebiotic Inulin",
+        "Free Express Shipping Pan-India",
+      ],
+      type: "paan-trio",
+      priority: product.id.includes("paan") || product.slug.includes("paan") ? 1 : 3,
+    },
+  ];
+
+  const suggestedCombos = [...allCombos]
+    .sort((a, b) => a.priority - b.priority)
+    .slice(0, 2);
 
   return (
     <div className="pt-32 pb-24 px-4 sm:px-8 md:px-12 lg:px-16 w-full min-h-screen text-[#0E382E] bg-[#F6F5F0]">
@@ -503,67 +565,153 @@ export const ProductDetail: React.FC = () => {
         </div>
       )}
 
-      {/* You May Also Like */}
-      {otherProducts.length > 0 && (
-        <section className="mt-24 pt-16 border-t border-[#74B487]/40 space-y-8">
-          <div className="flex justify-between items-end">
-            <div>
-              <span className="text-xs uppercase tracking-widest text-[#E67E22] font-extrabold">
-                RECOMMENDED
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0E382E] mt-1">
-                You May Also Like
-              </h2>
-            </div>
-            <Link
-              to="/shop"
-              className="text-xs uppercase tracking-widest text-[#E67E22] font-extrabold hover:text-[#D35400] transition-colors"
-            >
-              View Catalogue →
-            </Link>
+      {/* You May Also Like — Always Suggest Combo Packets */}
+      <section className="mt-24 pt-16 border-t border-[#74B487]/40 space-y-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-3">
+          <div>
+            <span className="text-xs uppercase tracking-widest text-[#E67E22] font-extrabold flex items-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5" /> RECOMMENDED
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-[#0E382E] mt-1">
+              You May Also Like
+            </h2>
+            <p className="text-xs text-[#1F684B] font-medium mt-1">
+              Bundle & save more with our curated family packs and combo variety boxes.
+            </p>
           </div>
+          <Link
+            to="/combos"
+            className="text-xs uppercase tracking-widest text-[#E67E22] font-extrabold hover:text-[#D35400] transition-colors inline-flex items-center gap-1"
+          >
+            Explore All Combos →
+          </Link>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {otherProducts.map((item) => {
-              const itemImg = item.images[0]?.src ?? item.storyImage;
-              return (
-                <div
-                  key={item.id}
-                  className="flex gap-6 p-6 bg-white rounded-2xl border border-[#74B487]/40 items-center shadow-xs"
-                >
-                  <img
-                    src={itemImg}
-                    alt={item.name}
-                    className="w-28 h-32 object-contain bg-[#E8F1E9] p-2 rounded-xl border border-[#74B487]/30"
-                  />
-                  <div className="space-y-2">
-                    <span className="text-[10px] uppercase text-[#E67E22] font-extrabold">
-                      {item.categoryLabel}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {suggestedCombos.map((combo) => (
+            <div
+              key={combo.id}
+              className="bg-white rounded-3xl border border-[#74B487]/40 p-6 sm:p-7 flex flex-col justify-between shadow-md space-y-6 hover:shadow-xl hover:border-[#E67E22]/60 transition-all duration-300 group"
+            >
+              <div className="space-y-4">
+                {/* Visual Frame */}
+                <div className="relative w-full h-52 sm:h-60 rounded-2xl bg-gradient-to-br from-[#E8F1E9]/70 via-[#F6F5F0] to-[#E8F1E9]/40 border border-[#74B487]/30 overflow-hidden flex items-center justify-center p-4">
+                  <div className="absolute top-3 left-3 z-10">
+                    <span className="badge-orange text-[9px] sm:text-[10px] uppercase font-extrabold tracking-widest px-2.5 py-1 rounded-full shadow-xs">
+                      {combo.badge}
                     </span>
-                    <h3 className="text-lg font-extrabold text-[#0E382E]">
-                      {item.name}
-                    </h3>
-                    <p className="text-xs text-stone-600 line-clamp-1 font-normal">
-                      "{item.pitch}"
-                    </p>
-                    <div className="pt-2 flex items-center gap-4">
-                      <span className="text-sm font-extrabold text-[#0E382E]">
-                        {item.priceDisplay}
-                      </span>
-                      <Link
-                        to={`/product/${item.slug}`}
-                        className="text-xs font-extrabold uppercase tracking-wider text-[#E67E22] hover:text-[#D35400] underline underline-offset-4"
-                      >
-                        Explore →
-                      </Link>
-                    </div>
                   </div>
+                  <div className="absolute top-3 right-3 z-10">
+                    <span className="text-xs font-black text-[#E67E22] bg-white border border-[#E67E22]/30 px-3 py-1 rounded-full shadow-xs">
+                      {combo.save}
+                    </span>
+                  </div>
+
+                  {/* Combo Mockups */}
+                  {combo.type === "laddoo-twin" && (
+                    <div className="flex items-center justify-center gap-2 sm:gap-4 w-full h-full pt-4 relative group-hover:scale-105 transition-all duration-300">
+                      <img
+                        src={ragiPouch}
+                        alt="Shahi Ragi Laddoo Mix Pack 1"
+                        className="h-24 sm:h-32 md:h-36 w-auto object-contain drop-shadow-xl -rotate-6 -translate-x-2 sm:-translate-x-3 transition-all rounded-xl border border-[#74B487]/30 shadow-md"
+                      />
+                      <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#0E382E] text-[#E67E22] font-black text-xs flex items-center justify-center shadow-md shrink-0 z-20">
+                        +
+                      </span>
+                      <img
+                        src={ragiPouch}
+                        alt="Shahi Ragi Laddoo Mix Pack 2"
+                        className="h-24 sm:h-32 md:h-36 w-auto object-contain drop-shadow-xl rotate-6 translate-x-2 sm:translate-x-3 transition-all rounded-xl border border-[#74B487]/30 shadow-md"
+                      />
+                    </div>
+                  )}
+
+                  {combo.type === "heritage-duo" && (
+                    <div className="flex items-center justify-center gap-1.5 sm:gap-3 w-full h-full pt-4 max-w-full">
+                      <img
+                        src={laddooMix}
+                        alt="Shahi Ragi Laddoo Mix"
+                        className="h-24 sm:h-32 md:h-36 w-auto max-w-[50%] object-contain drop-shadow-xl -rotate-2 group-hover:rotate-0 transition-all shrink-0"
+                      />
+                      <span className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-[#0E382E] text-[#E67E22] font-black text-xs flex items-center justify-center shadow-md shrink-0 z-10">
+                        +
+                      </span>
+                      <div className="relative flex items-center justify-center h-28 sm:h-36 shrink-0 group-hover:scale-105 transition-all">
+                        <img
+                          src={paanPouchBack}
+                          alt="Paan Back"
+                          className="h-22 sm:h-28 w-auto object-contain drop-shadow-md rotate-6 translate-x-2 opacity-75"
+                        />
+                        <img
+                          src={paanPouchStick}
+                          alt="Paan Sachet"
+                          className="h-26 sm:h-34 w-auto object-contain drop-shadow-xl -rotate-3 z-10"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {combo.type === "paan-trio" && (
+                    <div className="flex items-center justify-center w-full h-full pt-4 relative group-hover:scale-105 transition-all duration-300">
+                      <img
+                        src={paanPouchStick}
+                        alt="Paan Left"
+                        className="h-22 sm:h-30 w-auto object-contain drop-shadow-lg -rotate-12 -translate-x-5 sm:-translate-x-8 translate-y-1 opacity-90 transition-all"
+                      />
+                      <img
+                        src={paanPouchStick}
+                        alt="Paan Hero"
+                        className="h-26 sm:h-36 w-auto object-contain drop-shadow-2xl z-10"
+                      />
+                      <img
+                        src={paanPouchBack}
+                        alt="Paan Right"
+                        className="h-22 sm:h-30 w-auto object-contain drop-shadow-lg rotate-12 translate-x-5 sm:translate-x-8 translate-y-1 opacity-90 transition-all"
+                      />
+                    </div>
+                  )}
                 </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
+
+                <div className="space-y-1.5">
+                  <h3 className="text-xl font-extrabold text-[#0E382E] leading-tight">
+                    {combo.name}
+                  </h3>
+                  <p className="text-xs text-[#1F684B] leading-relaxed">
+                    {combo.desc}
+                  </p>
+                </div>
+
+                <ul className="space-y-1.5 text-xs text-[#0E382E] font-semibold pt-1">
+                  {combo.features.map((feat, fIdx) => (
+                    <li key={fIdx} className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[#E67E22] shrink-0" />
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="pt-4 border-t border-[#74B487]/30 flex items-center justify-between">
+                <div>
+                  <span className="text-xs line-through text-stone-400 font-bold block">
+                    ₹{combo.mrp}
+                  </span>
+                  <span className="text-2xl sm:text-3xl font-extrabold text-[#0E382E]">
+                    ₹{combo.price}
+                  </span>
+                </div>
+
+                <Link
+                  to={combo.link}
+                  className="btn-dust-orange px-5 py-2.5 text-white font-extrabold text-xs uppercase tracking-wider rounded-full inline-flex items-center gap-1.5 shadow-md hover:scale-105 transition-all"
+                >
+                  Order Combo <ArrowUpRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
     </div>
   );
 };
