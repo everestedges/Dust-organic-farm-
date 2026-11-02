@@ -69,9 +69,9 @@ export const ProductDetail: React.FC = () => {
       name: "The Royal Heritage & Superfood Pack",
       desc: "2× Shahi Ragi Laddoo Mix (500g Total) + 20 Paan Digestive Shot Sachets (Makes 40 Fresh Shots). Wholesome nutrition meets royal after-meal digestive freshness.",
       badge: "BEST SELLER COMBO",
-      save: "SAVE ₹201",
-      price: 899,
-      mrp: 1100,
+      save: "SAVE ₹160",
+      price: 1058,
+      mrp: 1218,
       link: "/combos",
       features: [
         "2 Packets Laddoo Mix (250g + 250g = 500g Total)",
