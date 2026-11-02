@@ -32,8 +32,18 @@ import ragiInfographic from "@/assets/ragi-infographic.png";
 import aboutBannerFarmWaste from "@/assets/about-banner-farm-waste.png";
 import aboutBannerLaddoo from "@/assets/about-banner-laddoo.png";
 import almondCollage from "@/assets/almond-powder-collage.png";
+import cashewCollage from "@/assets/cashew-powder-collage.png";
 
 const homeHeroBanners = [
+  {
+    image: cashewCollage,
+    alt: "DUST Premium Cashew Powder - Pure Cashew Goodness",
+    title: "DUST™ Premium Cashew Powder",
+    subtitle: "Pure Cashew Goodness | Everyday Nutrition",
+    price: "₹749",
+    tag: "NEW LAUNCH",
+    productIndex: 1,
+  },
   {
     image: aboutBannerLaddoo,
     alt: "Warm Family Laddoo Mix - DUST Wholesome Goodness",
@@ -41,7 +51,7 @@ const homeHeroBanners = [
     subtitle: "Wholesome Laddoo Premix | Premium Nuts",
     price: "₹229",
     tag: "BEST SELLER",
-    productIndex: 1,
+    productIndex: 2,
   },
   {
     image: almondCollage,
@@ -49,7 +59,7 @@ const homeHeroBanners = [
     title: "DUST™ Almond Powder",
     subtitle: "Pure Almond Goodness | Everyday Nutrition",
     price: "₹749",
-    tag: "NEW ARRIVAL",
+    tag: "PURE NUTRITION",
     productIndex: 0,
   },
   {
@@ -59,7 +69,7 @@ const homeHeroBanners = [
     subtitle: "100% Real Fruit & Pure Nutrition",
     price: "₹299",
     tag: "HERITAGE WELLNESS",
-    productIndex: 2,
+    productIndex: 3,
   },
 ];
 

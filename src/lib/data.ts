@@ -20,6 +20,10 @@ import almondPouch from "@/assets/almond-powder-pouch.png";
 import almondPouchAlt from "@/assets/almond-powder-pouch-alt.png";
 import almondCollage from "@/assets/almond-powder-collage.png";
 import almondInfographic from "@/assets/almond-powder-infographic.png";
+import cashewPouch from "@/assets/cashew-powder-pouch.png";
+import cashewPouchAlt from "@/assets/cashew-powder-pouch-alt.png";
+import cashewCollage from "@/assets/cashew-powder-collage.png";
+import cashewInfographic from "@/assets/cashew-powder-infographic.png";
 
 export const img = {
   ragiHero,
@@ -38,6 +42,10 @@ export const img = {
   almondPouchAlt,
   almondCollage,
   almondInfographic,
+  cashewPouch,
+  cashewPouchAlt,
+  cashewCollage,
+  cashewInfographic,
 };
 
 export const companyInfo = {
@@ -245,6 +253,122 @@ export const products: Product[] = [
     accent: "amber",
     stock: 60,
     sku: "DUST-ALMOND-500",
+    fssai: "In Process",
+    featured: true,
+    newArrival: true,
+    bestSeller: false,
+  },
+  {
+    id: "cashew-powder-01",
+    slug: "premium-cashew-powder",
+    name: "DUST™ Premium Cashew Powder",
+    shortName: "Cashew Powder",
+    subtitle: "Pure Cashew Goodness | Everyday Nutrition | Endless Possibilities",
+    pitch: "Pure Cashew Goodness. Everyday Nutrition. Endless Possibilities.",
+    category: "pure-nut-powders",
+    categoryLabel: "Pure Nut Powders",
+    price: 749,
+    originalPrice: 899,
+    priceDisplay: "₹749",
+    originalPriceDisplay: "₹899",
+    unitDisplay: "₹749 / 500g Pack",
+    savePercent: 17,
+    netWeight: "500g",
+    badges: ["100% Natural", "Premium Quality", "Plant Protein", "Clean Label"],
+    description: [
+      "Bring the rich, creamy taste of cashews into your everyday recipes with DUST™ Premium Cashew Powder.",
+      "Made from finely ground premium cashews, this versatile ingredient adds natural nutty flavour, velvety texture and nutritional goodness to your favourite foods and beverages.",
+      "Whether you're preparing smoothies, desserts, traditional Indian sweets or rich creamy gravies, DUST™ Cashew Powder makes it easy to enjoy the goodness of cashews in every spoonful.",
+    ],
+    disclaimer:
+      "Product image shown for illustrative purposes only. Actual product appearance and packaging may vary. 100% pure natural cashew powder with zero added sugar and no preservatives.",
+    preparation:
+      "Add 1 to 2 tablespoons into smoothies, milk, kheer, gravies, baking batter, or traditional sweets as required.",
+    ingredients: "100% Pure Natural Cashew Nuts (Anacardium occidentale).",
+    allergen: "Contains Tree Nuts (Cashew Nuts). Processed in a facility that also handles other tree nuts & seeds.",
+    storage:
+      "Store in a cool, dry place away from direct sunlight, heat and moisture. Keep the pouch tightly sealed after opening.",
+    nutrition: {
+      serving: "Per 100g",
+      note: "Pack Net Wt: 500g",
+      rows: [
+        ["Energy", "553 kcal", "28%*"],
+        ["Protein", "18.2g", "33%*"],
+        ["Total Fat", "43.9g", "65%*"],
+        ["Carbohydrate", "30.2g", "10%*"],
+        ["Dietary Fibre", "3.3g", "11%*"],
+        ["Added Sugar", "0g", "0%*"],
+        ["Magnesium", "292mg", "73%*"],
+        ["Iron", "6.68mg", "37%*"],
+      ],
+    },
+    claims: [
+      "Natural Cashew Goodness & Creamy Texture",
+      "Source of Plant Protein & Healthy Fats",
+      "Naturally Provides Magnesium, Zinc & Iron",
+      "Ideal for Smoothies, Gravies, Baking & Sweets",
+      "Clean Label — No Additives & No Preservatives",
+    ],
+    ritualLabel: "Ways to Use",
+    ritual: [
+      {
+        title: "Smoothies & Shakes",
+        detail:
+          "Add 1–2 tablespoons to your favourite smoothie or milkshake for a creamy texture and delicious nutty flavour.",
+      },
+      {
+        title: "Indian Sweets & Desserts",
+        detail:
+          "Use in kheer, halwa, barfi, laddoos, puddings and homemade sweets.",
+      },
+      {
+        title: "Curries & Gravies",
+        detail:
+          "Add to vegetable curries, paneer gravies, korma and creamy sauces for richness and thickness.",
+      },
+      {
+        title: "Baking & Cookies",
+        detail:
+          "Incorporate into cakes, cookies, muffins, biscuits and homemade energy bites.",
+      },
+      {
+        title: "Breakfast & Daily Nutrition",
+        detail:
+          "Mix into oats, porridge, cereals, pancakes and breakfast bowls.",
+      },
+      {
+        title: "Homemade Cashew Butter & Spreads",
+        detail:
+          "Use as a base ingredient for homemade nut spreads, creamy dips and dessert fillings.",
+      },
+    ],
+    heritageTitle: "Pure Cashew Goodness — Choice of Motherland",
+    heritageQuote:
+      "A versatile kitchen essential. Enjoy the convenience of finely ground premium cashews without grinding them yourself.",
+    images: [
+      {
+        src: cashewPouch,
+        alt: "DUST Premium Cashew Powder 500g official front packaging pouch",
+      },
+      {
+        src: cashewCollage,
+        alt: "DUST Premium Cashew Powder packaging collection and culinary use cases",
+      },
+      {
+        src: cashewInfographic,
+        alt: "DUST Premium Cashew Powder versatile uses and key benefits infographic",
+      },
+      {
+        src: cashewPouchAlt,
+        alt: "DUST Premium Cashew Powder stand-up pouch rear view",
+      },
+    ],
+    storyImage: cashewPouch,
+    posterImage: cashewCollage,
+    infographicImage: cashewInfographic,
+    accent: "amber",
+    stock: 60,
+    sku: "DUST-CASHEW-500",
     fssai: "In Process",
     featured: true,
     newArrival: true,
@@ -529,34 +653,34 @@ export const collections: Collection[] = [
   },
   {
     slug: "pure-nut-powders",
-    name: "Pure Almond Powder",
-    titleLines: ["Pure", "Almonds."],
-    tagline: "Pure almond goodness made from whole skin-on almonds for everyday nutrition.",
+    name: "Pure Nut Powders",
+    titleLines: ["Pure", "Nut Powders."],
+    tagline: "Pure almond and cashew powders crafted for wholesome daily nutrition and culinary richness.",
     description:
-      "Finely ground 100% skin-on almonds. A versatile kitchen superfood with plant-based protein, dietary fibre, healthy fats and vitamin E.",
+      "Finely ground 100% single-ingredient nut powders — skin-on almonds and premium cashews with zero added sugar and zero preservatives.",
     meta: [
-      { label: "Format", value: "Finely Ground Powder" },
+      { label: "Format", value: "Finely Ground Powders" },
       { label: "Net Wt.", value: "500g" },
-      { label: "Promise", value: "No Added Sugar" },
+      { label: "Promise", value: "100% Natural • Clean Label" },
     ],
     shelfTitle: "The Nut Powder Shelf",
     shelfDescription:
       "Wholesome nut powders crafted for milk, smoothies, baking, breakfast bowls and Indian sweets.",
-    shelfNote: "01 Creation · Skin-On Almonds",
+    shelfNote: "02 Creations · Pure Almond & Cashew",
     comingTitle: "More nut superfoods coming",
     comingText: "New single-ingredient nut and seed powders are being prepared.",
     pillars: [
       {
-        title: "100% Skin-On Almonds",
-        text: "Made from whole almonds with natural skin for maximum nutrient retention.",
+        title: "100% Pure Natural Nuts",
+        text: "Single-ingredient whole nuts finely ground with zero additives or preservatives.",
       },
       {
         title: "Plant Protein & Healthy Fats",
-        text: "Natural source of protein, dietary fibre, Vitamin E and essential minerals.",
+        text: "Natural source of protein, dietary fibre, vitamins and essential minerals.",
       },
       {
         title: "Endless Versatility",
-        text: "Blends seamlessly into smoothies, milk, oatmeal, baking and desserts.",
+        text: "Blends seamlessly into smoothies, milk, curries, oatmeal, baking and desserts.",
       },
     ],
     crossTitle: "Looking for traditional laddoos?",
@@ -564,7 +688,7 @@ export const collections: Collection[] = [
       "Explore our Shahi Ragi & Dry Fruit Laddoo Mix — ready-to-shape premix with zero added sugar.",
     crossCta: "Explore Laddoo Mix",
     crossHref: "/product/shahi-ragi-dry-fruit-laddoo-mix",
-    heroImage: almondPouch,
+    heroImage: cashewCollage,
   },
 ];
 

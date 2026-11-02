@@ -151,6 +151,51 @@ export const ProductDetail: React.FC = () => {
     },
   ];
 
+  const cashewHealthBenefits = [
+    {
+      title: "Natural Cashew Goodness",
+      description:
+        "Enjoy the rich taste, natural sweetness and pure goodness of cashews in convenient powder form.",
+      icon: Sparkles,
+      highlight: "Pure Cashew",
+    },
+    {
+      title: "Source of Plant Protein",
+      description:
+        "Cashews provide plant-based protein to complement your everyday diet and maintain active wellness.",
+      icon: Activity,
+      highlight: "Plant Protein",
+    },
+    {
+      title: "Rich in Healthy Fats",
+      description:
+        "Contains naturally occurring unsaturated healthy fats that support heart health and balanced nutrition.",
+      icon: Heart,
+      highlight: "Heart Healthy",
+    },
+    {
+      title: "Essential Mineral Content",
+      description:
+        "Cashews naturally provide vital minerals such as magnesium, copper, zinc and iron for vitality.",
+      icon: Zap,
+      highlight: "Vital Minerals",
+    },
+    {
+      title: "Rich, Creamy Culinary Texture",
+      description:
+        "Adds delicious richness, body and natural creaminess to smoothies, desserts and savoury gravies.",
+      icon: ShieldCheck,
+      highlight: "Creamy Texture",
+    },
+    {
+      title: "Versatile & Easy to Use",
+      description:
+        "Convenient to measure, blend and cook into everyday recipes without grinding or mess.",
+      icon: CheckCircle2,
+      highlight: "Convenient Daily Use",
+    },
+  ];
+
   const laddooHealthBenefits = [
     {
       title: "Naturally Rich in Calcium",
@@ -447,25 +492,35 @@ export const ProductDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* What are the Health Benefits? (For Laddoo Mix & Almond Powder) */}
-      {(product.id.includes("laddoo") || product.slug.includes("laddoo") || product.slug.includes("almond")) && (
+      {/* What are the Health Benefits? (For Laddoo Mix, Almond Powder & Cashew Powder) */}
+      {(product.id.includes("laddoo") || product.slug.includes("laddoo") || product.slug.includes("almond") || product.slug.includes("cashew")) && (
         <section className="mt-20 pt-16 border-t border-[#74B487]/40 space-y-8">
           <div className="max-w-3xl space-y-3">
             <span className="text-xs uppercase tracking-[0.25em] text-[#E67E22] font-extrabold flex items-center gap-2">
-              <Sparkles className="w-4 h-4" /> {product.slug.includes("almond") ? "HEALTH & NUTRITIONAL BENEFITS" : "WHOLESOME TRADITIONAL NUTRITION"}
+              <Sparkles className="w-4 h-4" />{" "}
+              {product.slug.includes("almond") || product.slug.includes("cashew")
+                ? "HEALTH & NUTRITIONAL BENEFITS"
+                : "WHOLESOME TRADITIONAL NUTRITION"}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0E382E]">
               What are the Health Benefits?
             </h2>
             <p className="text-sm sm:text-base text-[#1F684B] font-medium leading-relaxed">
-              {product.slug.includes("almond")
+              {product.slug.includes("cashew")
+                ? "DUST™ Premium Cashew Powder brings the rich, velvety taste and pure goodness of cashews into your everyday recipes."
+                : product.slug.includes("almond")
                 ? "DUST™ Almond Powder brings the pure goodness of skin-on almonds into your everyday meals for natural nourishment."
                 : "DUST™ Ragi & Dry Fruit Laddoo Mix brings together the goodness of ragi, premium nuts and seeds for a wholesome traditional snack."}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(product.slug.includes("almond") ? almondHealthBenefits : laddooHealthBenefits).map((benefit, idx) => {
+            {(product.slug.includes("cashew")
+              ? cashewHealthBenefits
+              : product.slug.includes("almond")
+              ? almondHealthBenefits
+              : laddooHealthBenefits
+            ).map((benefit, idx) => {
               const IconComp = benefit.icon;
               return (
                 <div
@@ -505,7 +560,9 @@ export const ProductDetail: React.FC = () => {
             {product.ritualLabel}
           </span>
           <h2 className="text-3xl font-extrabold text-[#0E382E]">
-            {product.slug.includes("almond") ? "Delicious Ways to Use" : "Preparation Ritual"}
+            {product.slug.includes("almond") || product.slug.includes("cashew")
+              ? "Delicious Ways to Use"
+              : "Preparation Ritual"}
           </h2>
 
           <div className="space-y-6">
@@ -526,6 +583,59 @@ export const ProductDetail: React.FC = () => {
               </div>
             ))}
           </div>
+
+          {/* Suggested Quantity Guide (for Cashew Powder) */}
+          {product.slug.includes("cashew") && (
+            <div className="p-5 bg-white rounded-2xl border border-[#74B487]/40 shadow-xs space-y-3 mt-6">
+              <div className="flex items-center justify-between border-b border-[#74B487]/30 pb-2">
+                <h4 className="text-xs font-black uppercase tracking-wider text-[#0E382E]">
+                  Suggested Quantity Guide
+                </h4>
+                <span className="text-[10px] text-[#E67E22] font-extrabold bg-[#E8F1E9] px-2.5 py-0.5 rounded-full border border-[#74B487]/30">
+                  How to Use
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-stone-700">
+                  <thead>
+                    <tr className="border-b border-[#74B487]/20 text-[#0E382E] font-extrabold text-left">
+                      <th className="py-2">Recipe / Preparation</th>
+                      <th className="py-2 text-right">Suggested Quantity</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E8F1E9] font-medium">
+                    <tr>
+                      <td className="py-2.5 text-[#0E382E] font-bold">Smoothies & Shakes</td>
+                      <td className="py-2.5 text-right text-[#E67E22] font-extrabold">1–2 tbsp</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 text-[#0E382E] font-bold">Warm / Cold Milk</td>
+                      <td className="py-2.5 text-right text-[#E67E22] font-extrabold">1 tbsp</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 text-[#0E382E] font-bold">Kheer & Pudding</td>
+                      <td className="py-2.5 text-right text-[#E67E22] font-extrabold">1–2 tbsp</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 text-[#0E382E] font-bold">Gravies & Curries (Korma, Paneer)</td>
+                      <td className="py-2.5 text-right text-[#E67E22] font-extrabold">1–2 tbsp</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 text-[#0E382E] font-bold">Cakes & Cookies</td>
+                      <td className="py-2.5 text-right text-stone-600 italic">As per recipe</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 text-[#0E382E] font-bold">Traditional Sweets (Barfi, Halwa)</td>
+                      <td className="py-2.5 text-right text-stone-600 italic">As per recipe</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[10.5px] text-stone-500 italic pt-1 border-t border-[#74B487]/20">
+                *Adjust quantities according to your taste and recipe requirements.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Nutritional Information */}
