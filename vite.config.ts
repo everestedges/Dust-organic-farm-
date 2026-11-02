@@ -13,5 +13,8 @@ export default defineConfig({
   server: {
     port: 8080,
     host: true,
+    watch: {
+      ignored: ["**/public/**", "**/.git/**", "**/node_modules/**"],
+    },
   },
 });
