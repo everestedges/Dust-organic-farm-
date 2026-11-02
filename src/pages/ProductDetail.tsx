@@ -106,6 +106,51 @@ export const ProductDetail: React.FC = () => {
     .sort((a, b) => a.priority - b.priority)
     .slice(0, 2);
 
+  const almondHealthBenefits = [
+    {
+      title: "Naturally Occurring Healthy Fats",
+      description:
+        "Almonds contain unsaturated fats, which can be part of a balanced diet.",
+      icon: Heart,
+      highlight: "Heart & Energy",
+    },
+    {
+      title: "Plant-Based Protein",
+      description:
+        "A convenient ingredient to add some plant-based protein to everyday meals.",
+      icon: Activity,
+      highlight: "Muscle & Vitality",
+    },
+    {
+      title: "Source of Dietary Fibre",
+      description:
+        "Almonds naturally contain dietary fibre, which contributes to a balanced diet.",
+      icon: ShieldCheck,
+      highlight: "Digestive Wellness",
+    },
+    {
+      title: "Vitamin E",
+      description:
+        "Almonds naturally contain vitamin E, an antioxidant nutrient that helps protect cells from oxidative stress.",
+      icon: Sparkles,
+      highlight: "Antioxidant Defense",
+    },
+    {
+      title: "Essential Minerals",
+      description:
+        "Almonds provide naturally occurring minerals such as magnesium, calcium and phosphorus.",
+      icon: Zap,
+      highlight: "Vital Minerals",
+    },
+    {
+      title: "Everyday Nutritional Variety",
+      description:
+        "An easy way to include almonds in breakfast, snacks and homemade recipes.",
+      icon: CheckCircle2,
+      highlight: "Everyday Wellness",
+    },
+  ];
+
   const laddooHealthBenefits = [
     {
       title: "Naturally Rich in Calcium",
@@ -405,23 +450,25 @@ export const ProductDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* What are the Health Benefits? (For Laddoo Mix) */}
-      {(product.id.includes("laddoo") || product.slug.includes("laddoo")) && (
+      {/* What are the Health Benefits? (For Laddoo Mix & Almond Powder) */}
+      {(product.id.includes("laddoo") || product.slug.includes("laddoo") || product.slug.includes("almond")) && (
         <section className="mt-20 pt-16 border-t border-[#74B487]/40 space-y-8">
           <div className="max-w-3xl space-y-3">
             <span className="text-xs uppercase tracking-[0.25em] text-[#E67E22] font-extrabold flex items-center gap-2">
-              <Sparkles className="w-4 h-4" /> WHOLESOME TRADITIONAL NUTRITION
+              <Sparkles className="w-4 h-4" /> {product.slug.includes("almond") ? "HEALTH & NUTRITIONAL BENEFITS" : "WHOLESOME TRADITIONAL NUTRITION"}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0E382E]">
               What are the Health Benefits?
             </h2>
             <p className="text-sm sm:text-base text-[#1F684B] font-medium leading-relaxed">
-              DUST™ Ragi &amp; Dry Fruit Laddoo Mix brings together the goodness of ragi, premium nuts and seeds for a wholesome traditional snack.
+              {product.slug.includes("almond")
+                ? "DUST™ Almond Powder brings the pure goodness of skin-on almonds into your everyday meals for natural nourishment."
+                : "DUST™ Ragi & Dry Fruit Laddoo Mix brings together the goodness of ragi, premium nuts and seeds for a wholesome traditional snack."}
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {laddooHealthBenefits.map((benefit, idx) => {
+            {(product.slug.includes("almond") ? almondHealthBenefits : laddooHealthBenefits).map((benefit, idx) => {
               const IconComp = benefit.icon;
               return (
                 <div
@@ -461,7 +508,7 @@ export const ProductDetail: React.FC = () => {
             {product.ritualLabel}
           </span>
           <h2 className="text-3xl font-extrabold text-[#0E382E]">
-            Preparation Ritual
+            {product.slug.includes("almond") ? "Delicious Ways to Use" : "Preparation Ritual"}
           </h2>
 
           <div className="space-y-6">

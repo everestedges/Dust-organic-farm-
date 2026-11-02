@@ -31,6 +31,7 @@ import ragiPoster from "@/assets/ragi-poster.png";
 import ragiInfographic from "@/assets/ragi-infographic.png";
 import aboutBannerFarmWaste from "@/assets/about-banner-farm-waste.png";
 import aboutBannerLaddoo from "@/assets/about-banner-laddoo.png";
+import almondCollage from "@/assets/almond-powder-collage.png";
 
 const homeHeroBanners = [
   {
@@ -40,6 +41,15 @@ const homeHeroBanners = [
     subtitle: "Wholesome Laddoo Premix | Premium Nuts",
     price: "₹229",
     tag: "BEST SELLER",
+    productIndex: 1,
+  },
+  {
+    image: almondCollage,
+    alt: "DUST Almond Powder - Pure Almond Goodness",
+    title: "DUST™ Almond Powder",
+    subtitle: "Pure Almond Goodness | Everyday Nutrition",
+    price: "₹749",
+    tag: "NEW ARRIVAL",
     productIndex: 0,
   },
   {
@@ -49,7 +59,7 @@ const homeHeroBanners = [
     subtitle: "100% Real Fruit & Pure Nutrition",
     price: "₹299",
     tag: "HERITAGE WELLNESS",
-    productIndex: 1,
+    productIndex: 2,
   },
 ];
 
@@ -117,8 +127,8 @@ export const Home: React.FC = () => {
     bestSeller: true,
   };
 
-  const storyRagiProduct = products[0] ?? heroProduct;
-  const storyPaanProduct = products[1] ?? heroProduct;
+  const storyRagiProduct = products.find((p) => p.id === "ragi-laddoo-01") ?? heroProduct;
+  const storyPaanProduct = products.find((p) => p.id === "paan-digestive-shot-01") ?? heroProduct;
 
   return (
     <div className="bg-[#F6F5F0] text-[#0E382E] min-h-screen">

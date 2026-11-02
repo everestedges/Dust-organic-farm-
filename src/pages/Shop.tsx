@@ -87,6 +87,16 @@ export const Shop: React.FC = () => {
           >
             Heritage Wellness
           </button>
+          <button
+            onClick={() => setSelectedCategory("pure-nut-powders")}
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-colors ${
+              selectedCategory === "pure-nut-powders"
+                ? "bg-[#E67E22] text-white shadow-xs"
+                : "bg-white text-[#0E382E] hover:bg-[#74B487]/20 border border-[#74B487]/40"
+            }`}
+          >
+            Pure Nut Powders
+          </button>
         </div>
 
         {/* Right Search & Sort */}

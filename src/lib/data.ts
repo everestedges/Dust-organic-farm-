@@ -16,6 +16,10 @@ import paanPouch from "@/assets/paan-pouch.jpg";
 import paanDuo from "@/assets/paan-duo.jpg";
 import paanPoster from "@/assets/paan-poster.jpeg";
 import storyPaan from "@/assets/story-paan-dark.jpg";
+import almondPouch from "@/assets/almond-powder-pouch.png";
+import almondPouchAlt from "@/assets/almond-powder-pouch-alt.png";
+import almondCollage from "@/assets/almond-powder-collage.png";
+import almondInfographic from "@/assets/almond-powder-infographic.png";
 
 export const img = {
   ragiHero,
@@ -30,6 +34,10 @@ export const img = {
   paanPoster,
   storyRagi: ragiPouch,
   storyPaan,
+  almondPouch,
+  almondPouchAlt,
+  almondCollage,
+  almondInfographic,
 };
 
 export const companyInfo = {
@@ -69,7 +77,7 @@ export interface Product {
   shortName: string;
   subtitle: string;
   pitch: string;
-  category: "wholesome-millets" | "pure-fruit-powders" | "heritage-wellness";
+  category: "wholesome-millets" | "pure-fruit-powders" | "heritage-wellness" | "pure-nut-powders";
   categoryLabel: string;
   price: number;
   originalPrice?: number;
@@ -106,7 +114,7 @@ export interface Product {
 }
 
 export interface Collection {
-  slug: "wholesome-millets" | "pure-fruit-powders" | "heritage-wellness";
+  slug: "wholesome-millets" | "pure-fruit-powders" | "heritage-wellness" | "pure-nut-powders";
   name: string;
   titleLines: [string, string];
   tagline: string;
@@ -126,6 +134,122 @@ export interface Collection {
 }
 
 export const products: Product[] = [
+  {
+    id: "almond-powder-01",
+    slug: "pure-almond-powder",
+    name: "DUST™ Almond Powder",
+    shortName: "Almond Powder",
+    subtitle: "Pure Almond Goodness. Everyday Nutrition.",
+    pitch: "Made from skin-on almonds for versatile everyday kitchen nutrition",
+    category: "pure-nut-powders",
+    categoryLabel: "Pure Almond Powder",
+    price: 749,
+    originalPrice: 899,
+    priceDisplay: "₹749",
+    originalPriceDisplay: "₹899",
+    unitDisplay: "₹749 / 500g Pack",
+    savePercent: 17,
+    netWeight: "500g",
+    badges: ["100% Pure Almonds", "Skin-On Goodness", "No Added Sugar"],
+    description: [
+      "Bring the goodness of almonds into your everyday meals with DUST™ Almond Powder. Made from almonds with their natural skin, this finely ground powder offers a convenient way to enjoy the familiar taste and richness of almonds.",
+      "A versatile kitchen ingredient, it blends easily into milk, smoothies, breakfast bowls, desserts and homemade recipes.",
+      "DUST™ | Choice of Motherland — A simple ingredient. Countless delicious possibilities.",
+    ],
+    disclaimer:
+      "Product image shown for illustrative purposes only. Actual product appearance and packaging may vary. 100% pure skin-on almond powder with zero added sugar.",
+    preparation:
+      "Add 1 to 2 spoonfuls into milk, smoothies, porridge, oats, baking batter, or traditional Indian sweets and desserts.",
+    ingredients: "100% Pure Skin-On Almond Powder (Prunus dulcis).",
+    allergen: "Contains Tree Nuts (Almonds).",
+    storage:
+      "Store in a cool, dry place, away from direct sunlight, heat and moisture. Keep in an airtight container after opening.",
+    nutrition: {
+      serving: "Per 100g",
+      note: "Pack Net Wt: 500g",
+      rows: [
+        ["Energy", "579 kcal", "29%*"],
+        ["Protein", "21.15g", "38%*"],
+        ["Fat", "49.93g", "74%*"],
+        ["Carbohydrate", "21.55g", "7%*"],
+        ["Dietary Fibre", "12.50g", "42%*"],
+        ["Added Sugar", "0g", "0%*"],
+        ["Vitamin E", "25.6mg", "170%*"],
+        ["Magnesium", "270mg", "68%*"],
+      ],
+    },
+    claims: [
+      "100% Pure Skin-On Almond Powder",
+      "Naturally Contains Protein, Fibre & Vitamin E",
+      "No Added Sugar & Zero Additives",
+      "Ideal for Smoothies, Milk, Baking & Sweets",
+      "Finely Ground & Convenient Daily Nutrition",
+    ],
+    ritualLabel: "Ways to Use",
+    ritual: [
+      {
+        title: "Almond Milk",
+        detail:
+          "Mix almond powder into warm milk or a plant-based milk alternative for a rich almond flavour.",
+      },
+      {
+        title: "Smoothies & Shakes",
+        detail:
+          "Add one or two spoonfuls to banana shakes, fruit smoothies or morning breakfast drinks.",
+      },
+      {
+        title: "Breakfast & Porridge",
+        detail:
+          "Mix into oats, ragi porridge, cereal or warm milk for added nutty flavour and rich nutrition.",
+      },
+      {
+        title: "Baking",
+        detail:
+          "Use in cakes, cookies, pancakes, muffins, breads and homemade energy bites.",
+      },
+      {
+        title: "Indian Sweets & Desserts",
+        detail:
+          "Add to kheer, halwa, laddoos, barfi and festive homemade desserts.",
+      },
+      {
+        title: "Breakfast Bowls",
+        detail:
+          "Sprinkle over Greek yoghurt, fresh fruit bowls, and overnight chia seed oats.",
+      },
+    ],
+    heritageTitle: "Pure Almond Goodness — Choice of Motherland",
+    heritageQuote:
+      "A simple ingredient. Countless delicious possibilities. Finely ground skin-on almonds for daily family wellness.",
+    images: [
+      {
+        src: almondPouch,
+        alt: "DUST Almond Powder 500g official front packaging pouch",
+      },
+      {
+        src: almondCollage,
+        alt: "DUST Almond Powder product collage and serving showcase",
+      },
+      {
+        src: almondInfographic,
+        alt: "DUST Almond Powder nutrition in every spoon infographic",
+      },
+      {
+        src: almondPouchAlt,
+        alt: "DUST Almond Powder transparent packaging with whole almonds",
+      },
+    ],
+    storyImage: almondPouch,
+    posterImage: almondCollage,
+    infographicImage: almondInfographic,
+    accent: "amber",
+    stock: 60,
+    sku: "DUST-ALMOND-500",
+    fssai: "In Process",
+    featured: true,
+    newArrival: true,
+    bestSeller: false,
+  },
   {
     id: "ragi-laddoo-01",
     slug: "shahi-ragi-dry-fruit-laddoo-mix",
@@ -402,6 +526,45 @@ export const collections: Collection[] = [
     crossCta: "Explore Wholesome Laddoo Premix",
     crossHref: "/collections/wholesome-millets",
     heroImage: "/paan_image_1.jpeg",
+  },
+  {
+    slug: "pure-nut-powders",
+    name: "Pure Almond Powder",
+    titleLines: ["Pure", "Almonds."],
+    tagline: "Pure almond goodness made from whole skin-on almonds for everyday nutrition.",
+    description:
+      "Finely ground 100% skin-on almonds. A versatile kitchen superfood with plant-based protein, dietary fibre, healthy fats and vitamin E.",
+    meta: [
+      { label: "Format", value: "Finely Ground Powder" },
+      { label: "Net Wt.", value: "500g" },
+      { label: "Promise", value: "No Added Sugar" },
+    ],
+    shelfTitle: "The Nut Powder Shelf",
+    shelfDescription:
+      "Wholesome nut powders crafted for milk, smoothies, baking, breakfast bowls and Indian sweets.",
+    shelfNote: "01 Creation · Skin-On Almonds",
+    comingTitle: "More nut superfoods coming",
+    comingText: "New single-ingredient nut and seed powders are being prepared.",
+    pillars: [
+      {
+        title: "100% Skin-On Almonds",
+        text: "Made from whole almonds with natural skin for maximum nutrient retention.",
+      },
+      {
+        title: "Plant Protein & Healthy Fats",
+        text: "Natural source of protein, dietary fibre, Vitamin E and essential minerals.",
+      },
+      {
+        title: "Endless Versatility",
+        text: "Blends seamlessly into smoothies, milk, oatmeal, baking and desserts.",
+      },
+    ],
+    crossTitle: "Looking for traditional laddoos?",
+    crossText:
+      "Explore our Shahi Ragi & Dry Fruit Laddoo Mix — ready-to-shape premix with zero added sugar.",
+    crossCta: "Explore Laddoo Mix",
+    crossHref: "/product/shahi-ragi-dry-fruit-laddoo-mix",
+    heroImage: almondPouch,
   },
 ];
 
