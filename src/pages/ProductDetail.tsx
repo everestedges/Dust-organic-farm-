@@ -576,6 +576,9 @@ export const ProductDetail: React.FC = () => {
               <p>
                 <strong className="text-[#0E382E]">Storage:</strong> {product.storage}
               </p>
+              <p className="text-[10.5px] text-stone-600 italic leading-relaxed pt-1">
+                *% RDA (Recommended dietary allowance) is calculated on the basis of 2000 calories a day. Your daily values may be higher or lower depending on your calorie needs.
+              </p>
               {product.disclaimer && (
                 <div className="pt-2.5 mt-2 border-t border-[#74B487]/30 flex items-start gap-2">
                   <span className="text-[10px] font-black uppercase tracking-wider text-[#E67E22] shrink-0">
