@@ -40,7 +40,7 @@ const homeHeroBanners = [
     alt: "DUST Premium Cashew Powder - Pure Cashew Goodness",
     title: "DUST™ Premium Cashew Powder",
     subtitle: "Pure Cashew Goodness | Everyday Nutrition",
-    price: "₹749",
+    price: "₹649",
     tag: "NEW LAUNCH",
     productIndex: 1,
   },
