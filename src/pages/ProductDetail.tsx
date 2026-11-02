@@ -282,9 +282,6 @@ export const ProductDetail: React.FC = () => {
               <span className="text-xs uppercase font-extrabold tracking-widest text-[#E67E22] bg-[#E8F1E9] border border-[#74B487]/40 px-3 py-1 rounded-full">
                 {product.categoryLabel}
               </span>
-              <span className="text-xs text-[#1F684B] font-semibold">
-                SKU: {product.sku}
-              </span>
             </div>
 
             <h1 className="text-3xl sm:text-4xl font-extrabold text-[#0E382E] leading-tight">
