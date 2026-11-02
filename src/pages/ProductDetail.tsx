@@ -52,9 +52,9 @@ export const ProductDetail: React.FC = () => {
       name: "Shahi Ragi Laddoo Mix Twin Pack (500g)",
       desc: "2× 250g value twin pack. Pure millet & nut laddoo premix (zero added sugar). Yields 20–24 nutritious home-made laddoos.",
       badge: "SUPER SAVER TWIN PACK",
-      save: "SAVE 26%",
-      price: 369,
-      mrp: 500,
+      save: "SAVE ₹60",
+      price: 458,
+      mrp: 518,
       link: "/combos",
       features: [
         "2× 250g Pure Millet & Nut Laddoo Mix (500g Total)",
