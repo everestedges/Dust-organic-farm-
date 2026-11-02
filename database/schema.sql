@@ -208,7 +208,7 @@ INSERT INTO `categories` (`id`, `slug`, `name`, `description`) VALUES
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`);
 
 INSERT INTO `products` (`id`, `slug`, `name`, `sub_heading`, `category_id`, `price`, `compare_price`, `weight`, `servings`, `stock_qty`, `image_url`, `description`, `ingredients`, `is_best_seller`, `is_featured`) VALUES
-(1, 'banarasi-paan-01', 'Banarasi Paan Digestive Shots', 'Royal Betel Leaf & Gulkand After-Meal Digestive', 2, 299.00, 349.00, 'Box of 10 Sachets', 'Makes 20 Shots', 200, '/paan_image_2.jpeg', 'Crafted with authentic Banarasi betel leaf extracts, rose petal gulkand, fennel, and prebiotic inulin fiber for digestive health.', 'Real Betel Leaf Solids, Gulkand, Fennel, Cardamom, Inulin Fiber', 1, 1),
+(1, 'banarasi-paan-01', 'Banarasi Paan Digestive Shots', 'Royal Betel Leaf & Gulkand After-Meal Digestive', 2, 299.00, 350.00, 'Box of 10 Sachets', 'Makes 20 Shots', 200, '/paan_image_2.jpeg', 'Crafted with authentic Banarasi betel leaf extracts, rose petal gulkand, fennel, and prebiotic inulin fiber for digestive health.', 'Real Betel Leaf Solids, Gulkand, Fennel, Cardamom, Inulin Fiber', 1, 1),
 (2, 'kacha-aam-01', 'Kacha Aam Instant Powder', 'Tangy Raw Mango Summer Cooler Mix (Coming Soon)', 1, 199.00, 249.00, '100g', 'Makes 10 Coolers', 150, '/paan_image_1.jpeg', 'Experience authentic Indian summer street flavor made with spray-dried raw mango solids and rock salt.', 'Raw Mango Solids, Rock Salt, Cumin, Mint Extract', 0, 0)
 ON DUPLICATE KEY UPDATE `price` = VALUES(`price`);
 
