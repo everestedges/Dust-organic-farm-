@@ -157,7 +157,7 @@ export const products: Product[] = [
     allergen:
       "Contains: Ghee, Almonds, Cashews, Pistachios & Other Tree Nuts.",
     storage:
-      "Keep in a cool, dry place away from direct sunlight. Best enjoyed within 9 months of manufacture.",
+      "Store in a cool, dry place away from sunlight, heat & moisture. Shelf life: 6 months. Consume within 20-25 days after opening.",
     nutrition: {
       serving: "Per 100g",
       note: "Pack Net Wt: 250g",
@@ -507,6 +507,10 @@ export const faqs = [
   {
     q: "Can we make laddoos with milk?",
     a: "NO. However, adding ghee is a suitable option for binding the mixture. Follow the preparation instructions provided on the pack.",
+  },
+  {
+    q: "Storage & Shelf Life: How should DUST™ Ragi & Dry Fruit Laddoo Mix be stored?",
+    a: "DUST™️ Ragi & Dry Fruit Laddoo Mix should be stored in a cool, dry place, away from direct sunlight, heat and moisture.\n\n• Shelf Life: 6 months from the date of manufacturing, subject to validated shelf-life testing.\n• After Opening: Transfer the contents to a clean, dry, airtight container and consume within 20–25 days.\n• Refrigeration: Refrigeration may help slow down quality deterioration. Keep the product in an airtight container and protect it from moisture and condensation.\n\nAlways use a clean, dry spoon and reseal the pack properly after every use.",
   },
   {
     q: "How many days can we store the laddoos once made?",

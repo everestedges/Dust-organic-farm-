@@ -29,6 +29,12 @@ const faqData: FAQItem[] = [
   },
   {
     category: "DUST™ Ragi Laddoo Mix",
+    question: "Storage & Shelf Life: How should DUST™ Ragi & Dry Fruit Laddoo Mix be stored?",
+    answer:
+      "DUST™️ Ragi & Dry Fruit Laddoo Mix should be stored in a cool, dry place, away from direct sunlight, heat and moisture.\n\n• Shelf Life: 6 months from the date of manufacturing, subject to validated shelf-life testing.\n• After Opening: Transfer the contents to a clean, dry, airtight container and consume within 20–25 days.\n• Refrigeration: Refrigeration may help slow down quality deterioration. Keep the product in an airtight container and protect it from moisture and condensation.\n\nAlways use a clean, dry spoon and reseal the pack properly after every use.",
+  },
+  {
+    category: "DUST™ Ragi Laddoo Mix",
     question: "How many days can we store the laddoos once made?",
     answer:
       "For the best taste and freshness, prepare laddoos in small batches. Store them in a clean, airtight container. Laddoos once made can be stored up to 15–20 days in an airtight container.",
