@@ -497,6 +497,22 @@ export const journalPosts: JournalPost[] = [
 
 export const faqs = [
   {
+    q: "What are the health benefits of this laddoo mix?",
+    a: "DUST™ Ragi & Dry Fruit Laddoo Mix combines calcium-rich ragi with almonds, cashews, pumpkin seeds, watermelon seeds and sunflower seeds. It provides dietary fibre, plant-based nutrients, healthy fats and energy, making it a wholesome traditional snacking option.",
+  },
+  {
+    q: "How many laddoos can we make out of each pack?",
+    a: "One 250 g pack can make approximately 10–20 medium-sized laddoos, depending on the size you prefer.",
+  },
+  {
+    q: "Can we make laddoos with milk?",
+    a: "NO. However, adding ghee is a suitable option for binding the mixture. Follow the preparation instructions provided on the pack.",
+  },
+  {
+    q: "How many days can we store the laddoos once made?",
+    a: "For the best taste and freshness, prepare laddoos in small batches. Store them in a clean, airtight container. Laddoos once made can be stored up to 15–20 days in an airtight container.",
+  },
+  {
     q: "What is DUST made from?",
     a: "DUST powders are made from 100% real fruit and hand-selected Indian spices. We never use artificial flavours, synthetic colours, chemical preservatives, or fillers. Ever.",
   },

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown, HelpCircle } from "lucide-react";
+import { ChevronDown, HelpCircle, Sparkles } from "lucide-react";
 import { companyInfo } from "@/lib/data";
 
 interface FAQItem {
@@ -10,34 +10,40 @@ interface FAQItem {
 
 const faqData: FAQItem[] = [
   {
-    category: "Products & Ingredients",
-    question: "What makes DUST consumer products unique?",
-    answer: "DUST products combine wholesome traditional ingredients, real spray-dried fruits, and authentic Indian botanicals into convenient, hygienic formats. We use zero artificial dyes, zero synthetic preservatives, and zero added sugar.",
+    category: "DUST™ Ragi Laddoo Mix",
+    question: "What are the health benefits of this laddoo mix?",
+    answer:
+      "DUST™ Ragi & Dry Fruit Laddoo Mix combines calcium-rich ragi with almonds, cashews, pumpkin seeds, watermelon seeds and sunflower seeds. It provides dietary fibre, plant-based nutrients, healthy fats and energy, making it a wholesome traditional snacking option.",
   },
   {
-    category: "Products & Ingredients",
-    question: "Are DUST products 100% vegetarian and clean label?",
-    answer: "Yes, 100% of DUST products are pure vegetarian, crafted under strict hygienic manufacturing standards with clear ingredient disclosure.",
+    category: "DUST™ Ragi Laddoo Mix",
+    question: "How many laddoos can we make out of each pack?",
+    answer:
+      "One 250 g pack can make approximately 10–20 medium-sized laddoos, depending on the size you prefer.",
   },
   {
-    category: "Preparation & Usage",
-    question: "How do I prepare DUST Shahi Ragi Laddoo Mix or Paan Digestive Shots?",
-    answer: "For Shahi Ragi Laddoo Mix: Add ghee as per your requirement of mix, knead thoroughly, and shape into wholesome laddoos. For Paan Digestive Shots: Mix 10g into 60ml chilled water, stir for 15 seconds, and drink after meals.",
+    category: "DUST™ Ragi Laddoo Mix",
+    question: "Can we make laddoos with milk?",
+    answer:
+      "NO. However, adding ghee is a suitable option for binding the mixture. Follow the preparation instructions provided on the pack.",
   },
   {
-    category: "Preparation & Usage",
-    question: "What is the shelf life of DUST sachet packs?",
-    answer: "Unopened DUST sachets have a shelf life of 9 to 12 months when stored in a cool, dry place away from direct sunlight.",
+    category: "DUST™ Ragi Laddoo Mix",
+    question: "How many days can we store the laddoos once made?",
+    answer:
+      "For the best taste and freshness, prepare laddoos in small batches. Store them in a clean, airtight container. Laddoos once made can be stored up to 15–20 days in an airtight container.",
   },
   {
     category: "Orders & Shipping",
     question: "What are the shipping charges and delivery timelines?",
-    answer: "We offer FREE Express Shipping across India on all prepaid orders of ₹799 and above. For prepaid orders below ₹799, standard shipping is ₹50. For Cash on Delivery (COD) orders, a flat delivery fee of ₹120 applies. Orders are dispatched within 24 hours and delivered in 3–5 business days.",
+    answer:
+      "We offer FREE Express Shipping across India on all prepaid orders of ₹799 and above. For prepaid orders below ₹799, standard shipping is ₹50. For Cash on Delivery (COD) orders, a flat delivery fee of ₹120 applies. Orders are dispatched within 24 hours and delivered in 3–5 business days.",
   },
   {
     category: "Orders & Shipping",
     question: "Can I place Cash on Delivery (COD) orders?",
-    answer: "Yes, COD is available across serviceable PIN codes in India. Please note that COD orders incur a delivery and handling fee of ₹120. Free shipping applies exclusively to prepaid orders of ₹799 and above.",
+    answer:
+      "Yes, COD is available across serviceable PIN codes in India. Please note that COD orders incur a delivery and handling fee of ₹120. Free shipping applies exclusively to prepaid orders of ₹799 and above.",
   },
   {
     category: "Company & Support",
@@ -48,10 +54,18 @@ const faqData: FAQItem[] = [
 
 export const FAQ: React.FC = () => {
   const [openIdx, setOpenIdx] = useState<number | null>(0);
+  const [activeCategory, setActiveCategory] = useState<string>("All");
+
+  const categories = ["All", "DUST™ Ragi Laddoo Mix", "Orders & Shipping", "Company & Support"];
+
+  const filteredFaqs =
+    activeCategory === "All"
+      ? faqData
+      : faqData.filter((item) => item.category === activeCategory);
 
   return (
     <div className="pt-32 pb-24 px-4 sm:px-8 md:px-12 lg:px-16 w-full min-h-screen bg-[#F6F5F0] text-[#0E382E]">
-      <div className="max-w-3xl mb-12 space-y-3">
+      <div className="max-w-3xl mb-10 space-y-3">
         <span className="text-xs uppercase tracking-[0.25em] text-[#E67E22] font-extrabold flex items-center gap-2">
           <HelpCircle className="w-4 h-4" /> FREQUENTLY ASKED QUESTIONS
         </span>
@@ -59,17 +73,43 @@ export const FAQ: React.FC = () => {
           Got Questions?
         </h1>
         <p className="text-base text-[#1F684B]">
-          Find quick answers about our recipes, sachet preparation, ingredients, and delivery across India.
+          Find answers about DUST™ Ragi & Dry Fruit Laddoo Mix, preparation methods, storage tips, and delivery across India.
         </p>
       </div>
 
+      {/* Category Filter Pills */}
+      <div className="flex flex-wrap gap-2 mb-8">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => {
+              setActiveCategory(cat);
+              setOpenIdx(0);
+            }}
+            className={`px-4 py-2 rounded-full text-xs font-bold transition-all ${
+              activeCategory === cat
+                ? "bg-[#0E382E] text-white shadow-sm"
+                : "bg-white text-[#0E382E] border border-[#74B487]/40 hover:border-[#E67E22]"
+            }`}
+          >
+            {cat === "DUST™ Ragi Laddoo Mix" ? (
+              <span className="inline-flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#E67E22]" /> {cat}
+              </span>
+            ) : (
+              cat
+            )}
+          </button>
+        ))}
+      </div>
+
       <div className="max-w-4xl space-y-4">
-        {faqData.map((item, idx) => {
+        {filteredFaqs.map((item, idx) => {
           const isOpen = openIdx === idx;
           return (
             <div
               key={idx}
-              className="bg-white rounded-2xl border border-[#74B487]/40 overflow-hidden shadow-xs transition-all"
+              className="bg-white rounded-2xl border border-[#74B487]/40 overflow-hidden shadow-xs transition-all hover:border-[#E67E22]/50"
             >
               <button
                 onClick={() => setOpenIdx(isOpen ? null : idx)}
@@ -91,7 +131,7 @@ export const FAQ: React.FC = () => {
               </button>
 
               {isOpen && (
-                <div className="px-6 pb-6 pt-2 text-xs text-[#1F684B] leading-relaxed border-t border-[#74B487]/20 font-medium">
+                <div className="px-6 pb-6 pt-2 text-xs sm:text-sm text-[#1F684B] leading-relaxed border-t border-[#74B487]/20 font-medium whitespace-pre-line">
                   {item.answer}
                 </div>
               )}
