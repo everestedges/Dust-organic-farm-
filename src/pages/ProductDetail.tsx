@@ -534,7 +534,7 @@ export const ProductDetail: React.FC = () => {
             INGREDIENTS & NUTRITION
           </span>
           <h2 className="text-3xl font-extrabold text-[#0E382E]">
-            Nutritional Facts
+            Nutritional Facts (Approx. values)
           </h2>
 
           <div className="bg-white p-6 rounded-3xl border border-[#74B487]/40 space-y-4 shadow-xs">
