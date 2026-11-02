@@ -38,7 +38,7 @@ const homeHeroBanners = [
     alt: "Warm Family Laddoo Mix - DUST Wholesome Goodness",
     title: "Shahi Ragi & Dry Fruit Laddoo Mix",
     subtitle: "Wholesome Laddoo Premix | Premium Nuts",
-    price: "₹219",
+    price: "₹229",
     tag: "BEST SELLER",
     productIndex: 0,
   },
@@ -89,11 +89,11 @@ export const Home: React.FC = () => {
     pitch: "Wholesome Laddoo Premix & Premium Nuts — Ready to Shape",
     category: "wholesome-millets",
     categoryLabel: "Wholesome Laddoo Premix",
-    price: 219,
-    originalPrice: 249,
-    priceDisplay: "₹219",
-    originalPriceDisplay: "₹249",
-    unitDisplay: "₹219 / 250g Pack",
+    price: 229,
+    originalPrice: 259,
+    priceDisplay: "₹229",
+    originalPriceDisplay: "₹259",
+    unitDisplay: "₹229 / 250g Pack",
     savePercent: 12,
     netWeight: "250g",
     badges: ["Wholesome Laddoo Premix", "Premium Dry Fruits", "No Added Sugar"],
@@ -587,7 +587,7 @@ export const Home: React.FC = () => {
                   onClick={() => addToCart(storyRagiProduct)}
                   className="py-3.5 px-6 btn-dust-orange text-white font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center gap-2 shadow-md"
                 >
-                  <ShoppingBag className="w-4 h-4" /> Add to Cart (₹219)
+                  <ShoppingBag className="w-4 h-4" /> Add to Cart (₹229)
                 </button>
                 <button
                   onClick={() => handleBuyNow(storyRagiProduct)}

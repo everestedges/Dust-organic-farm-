@@ -60,8 +60,8 @@ export const Admin: React.FC = () => {
   // New Product Form State
   const [newProductName, setNewProductName] = useState("");
   const [newProductCategory, setNewProductCategory] = useState<"wholesome-millets" | "heritage-wellness">("wholesome-millets");
-  const [newProductPrice, setNewProductPrice] = useState(219);
-  const [newProductOriginalPrice, setNewProductOriginalPrice] = useState(249);
+  const [newProductPrice, setNewProductPrice] = useState(229);
+  const [newProductOriginalPrice, setNewProductOriginalPrice] = useState(259);
   const [newProductWeight, setNewProductWeight] = useState("250g");
   const [newProductServings, setNewProductServings] = useState("Makes 10-12 Laddoos");
   const [newProductImageUrl, setNewProductImageUrl] = useState("/ragi_pouch.png");

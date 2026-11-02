@@ -112,8 +112,8 @@ export const OrderConfirmation: React.FC = () => {
                       Shahi Ragi & Dry Fruit Laddoo Mix (250g Pack)
                     </td>
                     <td className="p-3 text-center font-bold">2</td>
-                    <td className="p-3 text-right">₹219</td>
-                    <td className="p-3 text-right font-extrabold text-[#0E382E]">₹438</td>
+                    <td className="p-3 text-right">₹229</td>
+                    <td className="p-3 text-right font-extrabold text-[#0E382E]">₹458</td>
                   </tr>
                   <tr>
                     <td className="p-3 font-semibold text-[#0E382E]">
