@@ -11,6 +11,8 @@ import {
   X,
   CheckCircle2,
   ArrowUpRight,
+  Activity,
+  Zap,
 } from "lucide-react";
 import { products, Product } from "@/lib/data";
 import { useCartStore } from "@/lib/cart-store";
@@ -103,6 +105,51 @@ export const ProductDetail: React.FC = () => {
   const suggestedCombos = [...allCombos]
     .sort((a, b) => a.priority - b.priority)
     .slice(0, 2);
+
+  const laddooHealthBenefits = [
+    {
+      title: "Naturally Rich in Calcium",
+      description:
+        "Ragi is a natural source of calcium, which contributes to the maintenance of normal bones and teeth.",
+      icon: ShieldCheck,
+      highlight: "Bones & Teeth",
+    },
+    {
+      title: "Source of Dietary Fibre",
+      description:
+        "Ragi and seeds provide dietary fibre that supports normal digestive function.",
+      icon: Activity,
+      highlight: "Digestive Wellness",
+    },
+    {
+      title: "Nutrient-Rich Ingredients",
+      description:
+        "Almonds, cashews, pumpkin seeds, watermelon seeds and sunflower seeds contribute plant-based protein, healthy fats and essential minerals.",
+      icon: Sparkles,
+      highlight: "Protein & Healthy Fats",
+    },
+    {
+      title: "Provides Everyday Energy",
+      description:
+        "Ragi and jaggery provide carbohydrates, while nuts and seeds contribute energy from fats.",
+      icon: Zap,
+      highlight: "Sustained Energy",
+    },
+    {
+      title: "Goodness of Nuts and Seeds",
+      description:
+        "Includes ingredients that naturally provide vitamin E, magnesium and zinc.",
+      icon: Heart,
+      highlight: "Essential Minerals",
+    },
+    {
+      title: "Traditional Ingredients, Wholesome Nutrition",
+      description:
+        "Made with ragi, nuts, seeds, jaggery, dry ginger and cardamom for a delicious traditional snacking experience.",
+      icon: CheckCircle2,
+      highlight: "Authentic Recipe",
+    },
+  ];
 
   return (
     <div className="pt-32 pb-24 px-4 sm:px-8 md:px-12 lg:px-16 w-full min-h-screen text-[#0E382E] bg-[#F6F5F0]">
@@ -357,6 +404,54 @@ export const ProductDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* What are the Health Benefits? (For Laddoo Mix) */}
+      {(product.id.includes("laddoo") || product.slug.includes("laddoo")) && (
+        <section className="mt-20 pt-16 border-t border-[#74B487]/40 space-y-8">
+          <div className="max-w-3xl space-y-3">
+            <span className="text-xs uppercase tracking-[0.25em] text-[#E67E22] font-extrabold flex items-center gap-2">
+              <Sparkles className="w-4 h-4" /> WHOLESOME TRADITIONAL NUTRITION
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0E382E]">
+              What are the Health Benefits?
+            </h2>
+            <p className="text-sm sm:text-base text-[#1F684B] font-medium leading-relaxed">
+              DUST™ Ragi &amp; Dry Fruit Laddoo Mix brings together the goodness of ragi, premium nuts and seeds for a wholesome traditional snack.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {laddooHealthBenefits.map((benefit, idx) => {
+              const IconComp = benefit.icon;
+              return (
+                <div
+                  key={idx}
+                  className="bg-white rounded-3xl border border-[#74B487]/40 p-6 flex flex-col justify-between shadow-xs hover:shadow-md hover:border-[#E67E22]/60 transition-all duration-300 group"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="w-10 h-10 rounded-2xl bg-[#E8F1E9] text-[#0E382E] group-hover:bg-[#E67E22] group-hover:text-white flex items-center justify-center transition-colors shadow-2xs">
+                        <IconComp className="w-5 h-5" />
+                      </div>
+                      <span className="text-[10px] uppercase tracking-wider font-extrabold text-[#E67E22] bg-[#E8F1E9]/60 px-2.5 py-1 rounded-full border border-[#74B487]/30">
+                        {benefit.highlight}
+                      </span>
+                    </div>
+
+                    <h3 className="text-base font-extrabold text-[#0E382E] group-hover:text-[#E67E22] transition-colors leading-snug">
+                      {benefit.title}
+                    </h3>
+
+                    <p className="text-xs text-stone-600 leading-relaxed font-normal">
+                      {benefit.description}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Ritual & Nutrition Specs */}
       <section className="mt-24 pt-16 border-t border-[#74B487]/40 grid grid-cols-1 lg:grid-cols-12 gap-12">
