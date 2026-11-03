@@ -151,6 +151,202 @@ export interface Collection {
 
 export const products: Product[] = [
   {
+    id: "ragi-laddoo-01",
+    slug: "shahi-ragi-dry-fruit-laddoo-mix",
+    name: "Shahi Ragi & Dry Fruit Laddoo Mix",
+    shortName: "Ragi Laddoo Mix",
+    subtitle: "Wholesome Laddoo Premix | Premium Nuts | Traditional Taste",
+    pitch: "Wholesome Laddoo Premix & Premium Nuts — Ready to Shape",
+    category: "wholesome-millets",
+    categoryLabel: "Wholesome Laddoo Premix",
+    price: 229,
+    originalPrice: 259,
+    priceDisplay: "₹229",
+    originalPriceDisplay: "₹259",
+    unitDisplay: "₹229 / 250g Pack",
+    savePercent: 12,
+    netWeight: "250g",
+    badges: ["Wholesome Laddoo Premix", "Premium Dry Fruits", "No Added Sugar"],
+    description: [
+      "Made with nutritious Ragi and a delicious blend of dry fruits, our Ragi & Dry Fruit Laddoo Mix is a convenient way to prepare tasty, wholesome laddoos at home.",
+      "Perfect for breakfast, snacking, or whenever you crave something naturally delicious.",
+      "Rooted in Indian tradition and packed with natural nutrition for a healthier tomorrow.",
+    ],
+    disclaimer:
+      "Product image shown for illustrative purposes only. Actual product, ingredients, appearance and packaging may vary. Please refer to the actual product label for complete details.",
+    preparation:
+      "Add ghee as per your requirement of mix. Mix knead thoroughly and shape into laddoos.enjoy it .",
+    ingredients:
+      "Ragi, Date Powder, Almond, Cashew, Pumpkin Seed, Sunflower Seed, Watermelon Seed, Flax Seed, Cardamom.",
+    allergen:
+      "Contains: Ghee, Almonds, Cashews, Pistachios & Other Tree Nuts.",
+    storage:
+      "Store in a cool, dry place away from sunlight, heat & moisture. Shelf life: 6 months. Consume within 20-25 days after opening.",
+    nutrition: {
+      serving: "Per 100g",
+      note: "Pack Net Wt: 250g",
+      rows: [
+        ["Energy", "423.63 kcal", "21%*"],
+        ["Protein", "14.66g", "27%*"],
+        ["Fat", "16.75g", "25%*"],
+        ["Carbohydrate", "53.56g", "19%*"],
+        ["Total Sugar", "40.76g", "—"],
+        ["Added Sugar", "0g", "0%*"],
+      ],
+    },
+    claims: [
+      "Energy Snack — natural, sustained fuel throughout the day",
+      "Supports Bone Health — calcium and mineral rich finger millet (ragi)",
+      "Keeps You Fuller For Longer — nutrient-dense seeds and wholesome dry fruits",
+      "No Added Sugar — naturally sweetened with pure date powder",
+      "100% Wholesome Ingredients & Premium Nuts",
+    ],
+    ritualLabel: "Preparation Method",
+    ritual: [
+      {
+        title: "Measure & Add Ghee",
+        detail:
+          "Add ghee as per your requirement of mix into a clean mixing bowl.",
+      },
+      {
+        title: "Knead Thoroughly",
+        detail:
+          "Mix and knead thoroughly until the warm ghee blends evenly with the roasted ragi and nut mix.",
+      },
+      {
+        title: "Shape into Laddoos & Enjoy",
+        detail:
+          "Shape the mixture by hand into round, wholesome laddoos. Enjoy fresh, healthy nutrition anytime.",
+      },
+    ],
+    heritageTitle: "Wholesome Laddoo premix Heritage",
+    heritageQuote:
+      "Natural nutrition for a healthier tomorrow. Made for those who choose better — crafted with pure finger millet (ragi), crunchy roasted nuts, and pure date powder.",
+    images: [
+      {
+        src: ragiPouch,
+        alt: "DUST Shahi Ragi & Dry Fruit Laddoo Mix 250g front pouch packaging",
+      },
+      {
+        src: ragiPoster,
+        alt: "DUST Shahi Ragi & Dry Fruit Laddoo Mix official brand poster",
+      },
+      {
+        src: ragiInfographic,
+        alt: "DUST Shahi Ragi & Dry Fruit Laddoo Mix nutritional & ingredient infographic",
+      },
+      {
+        src: ragiPack,
+        alt: "DUST Shahi Ragi & Dry Fruit Laddoo Mix back packaging with nutritional facts and preparation",
+      },
+      {
+        src: ragiHero,
+        alt: "DUST Shahi Ragi & Dry Fruit Laddoo Mix full pack display",
+      },
+    ],
+    storyImage: ragiPouch,
+    posterImage: ragiPoster,
+    infographicImage: ragiInfographic,
+    accent: "amber",
+    stock: 50,
+    sku: "DUST-RAGI-250",
+    fssai: "12545678901024",
+    featured: true,
+    newArrival: true,
+    bestSeller: true,
+  },
+  {
+    id: "paan-digestive-shot-01",
+    slug: "paan-digestive-shot",
+    name: "Paan Digestive Shot",
+    shortName: "Paan Digestive Shot",
+    subtitle: "Heritage Wellness — Digestive Blend",
+    pitch: "Experience the royal taste of Paan",
+    category: "heritage-wellness",
+    categoryLabel: "Heritage Wellness",
+    price: 299,
+    originalPrice: 350,
+    priceDisplay: "₹299",
+    originalPriceDisplay: "₹350",
+    unitDisplay: "Box of 10 Sachets",
+    savePercent: 15,
+    netWeight: "Box of 10 Sachets",
+    badges: ["Royal Blend", "Digestive Shot"],
+    description: [
+      "Crafted with real betel leaf extract, aromatic gulkand, fennel, rose and cardamom.",
+      "Each box contains 10 individual digestive shot sachets (each sachet makes 2 refreshing shots — 20 shots total).",
+      "DUST Paan Digestive Shot is your perfect after-meal ritual for freshness and digestion.",
+      "Mix sachet in 60 ml of water and drink after your meal",
+    ],
+    caution:
+      "Pregnant or lactating women and people with medical conditions should consult a health professional before use.",
+    ingredients:
+      "Cane sugar, gulkand powder, betel leaf extract, fennel powder, coconut powder, rose petal powder, cardamom powder, mint powder, inulin (prebiotic fiber), calcium citrate, citric acid, natural paan flavor.",
+    storage: "Store in dry, cool conditions. Shelf life 9 months from manufacture.",
+    disclaimer:
+      "Product images, serving suggestions, and packaging visuals are for illustrative purposes only. Actual product appearance, packaging, and color may vary. Please refer to the physical product label for complete details.",
+    nutrition: {
+      serving: "Serving Size: 10g (Half Pouch)",
+      note: "Per 20g Pouch",
+      rows: [
+        ["Energy", "70 kcal", "—"],
+        ["Total Fat", "0.3g", "0.5%*"],
+        ["Sodium", "25mg", "1%*"],
+        ["Total Carbohydrate", "17g", "6%*"],
+        ["Total Sugars", "14g", "28%*"],
+        ["Dietary Fiber", "1.0g", "4%*"],
+        ["Protein", "0.3g", "1%*"],
+        ["Calcium", "80mg", "8%*"],
+      ],
+    },
+    claims: [
+      "Box of 10 Sachets",
+      "Real Betel Leaf",
+      "Aromatic Gulkand",
+      "Digestive Herbs",
+      "Mouth Freshener",
+      "Instant Shot",
+      "No Colors",
+      "No Preservatives",
+      "100% Vegetarian",
+      "Source of Calcium",
+      "Prebiotic Fiber",
+    ],
+    ritualLabel: "How to Enjoy",
+    ritual: [
+      {
+        title: "Tear & Pour",
+        detail: "Empty the digestive shot powder from the pouch into a glass.",
+      },
+      { title: "Add Water", detail: "Pour 60 ml of chilled water into the glass." },
+      {
+        title: "Stir Well",
+        detail:
+          "Stir well until the gulkand and betel leaf extracts dissolve completely.",
+      },
+      {
+        title: "Enjoy After Meals",
+        detail: "Drink after lunch or dinner as a refreshing digestive ritual.",
+      },
+    ],
+    heritageTitle: "The Royal Paan Legacy",
+    heritageQuote:
+      "For centuries, royal Paan was served in silver boxes to nobility as the ultimate after-meal Digestive. Crafted with real betel leaf extract, fennel, and premium rose gulkand, every sip of DUST Paan Digestive Shot captures that exact traditional fresh Digestive ritual.",
+    images: [
+      { src: "/paan_image_2.jpeg", alt: "DUST Paan Digestive Shot standup pouch front and back with nutritional info" },
+      { src: "/paan_image_1.jpeg", alt: "DUST Paan Digestive Shot authentic pack box and glass shot" },
+      { src: "/paan_image_3.jpeg", alt: "DUST Paan Digestive Shot box back and ingredient details" },
+    ],
+    storyImage: "/paan_image_2.jpeg",
+    accent: "rose",
+    stock: 36,
+    sku: "DUST-BP-20",
+    fssai: "12545678901024",
+    featured: true,
+    newArrival: true,
+    bestSeller: true,
+  },
+  {
     id: "almond-powder-01",
     slug: "pure-almond-powder",
     name: "DUST™ Almond Powder",
@@ -486,202 +682,6 @@ export const products: Product[] = [
     stock: 75,
     sku: "DUST-SHAMPOO-100",
     fssai: "AYUSH / Cosmetic License In Process",
-    featured: true,
-    newArrival: true,
-    bestSeller: true,
-  },
-  {
-    id: "ragi-laddoo-01",
-    slug: "shahi-ragi-dry-fruit-laddoo-mix",
-    name: "Shahi Ragi & Dry Fruit Laddoo Mix",
-    shortName: "Ragi Laddoo Mix",
-    subtitle: "Wholesome Laddoo Premix | Premium Nuts | Traditional Taste",
-    pitch: "Wholesome Laddoo Premix & Premium Nuts — Ready to Shape",
-    category: "wholesome-millets",
-    categoryLabel: "Wholesome Laddoo Premix",
-    price: 229,
-    originalPrice: 259,
-    priceDisplay: "₹229",
-    originalPriceDisplay: "₹259",
-    unitDisplay: "₹229 / 250g Pack",
-    savePercent: 12,
-    netWeight: "250g",
-    badges: ["Wholesome Laddoo Premix", "Premium Dry Fruits", "No Added Sugar"],
-    description: [
-      "Made with nutritious Ragi and a delicious blend of dry fruits, our Ragi & Dry Fruit Laddoo Mix is a convenient way to prepare tasty, wholesome laddoos at home.",
-      "Perfect for breakfast, snacking, or whenever you crave something naturally delicious.",
-      "Rooted in Indian tradition and packed with natural nutrition for a healthier tomorrow.",
-    ],
-    disclaimer:
-      "Product image shown for illustrative purposes only. Actual product, ingredients, appearance and packaging may vary. Please refer to the actual product label for complete details.",
-    preparation:
-      "Add ghee as per your requirement of mix. Mix knead thoroughly and shape into laddoos.enjoy it .",
-    ingredients:
-      "Ragi, Date Powder, Almond, Cashew, Pumpkin Seed, Sunflower Seed, Watermelon Seed, Flax Seed, Cardamom.",
-    allergen:
-      "Contains: Ghee, Almonds, Cashews, Pistachios & Other Tree Nuts.",
-    storage:
-      "Store in a cool, dry place away from sunlight, heat & moisture. Shelf life: 6 months. Consume within 20-25 days after opening.",
-    nutrition: {
-      serving: "Per 100g",
-      note: "Pack Net Wt: 250g",
-      rows: [
-        ["Energy", "423.63 kcal", "21%*"],
-        ["Protein", "14.66g", "27%*"],
-        ["Fat", "16.75g", "25%*"],
-        ["Carbohydrate", "53.56g", "19%*"],
-        ["Total Sugar", "40.76g", "—"],
-        ["Added Sugar", "0g", "0%*"],
-      ],
-    },
-    claims: [
-      "Energy Snack — natural, sustained fuel throughout the day",
-      "Supports Bone Health — calcium and mineral rich finger millet (ragi)",
-      "Keeps You Fuller For Longer — nutrient-dense seeds and wholesome dry fruits",
-      "No Added Sugar — naturally sweetened with pure date powder",
-      "100% Wholesome Ingredients & Premium Nuts",
-    ],
-    ritualLabel: "Preparation Method",
-    ritual: [
-      {
-        title: "Measure & Add Ghee",
-        detail:
-          "Add ghee as per your requirement of mix into a clean mixing bowl.",
-      },
-      {
-        title: "Knead Thoroughly",
-        detail:
-          "Mix and knead thoroughly until the warm ghee blends evenly with the roasted ragi and nut mix.",
-      },
-      {
-        title: "Shape into Laddoos & Enjoy",
-        detail:
-          "Shape the mixture by hand into round, wholesome laddoos. Enjoy fresh, healthy nutrition anytime.",
-      },
-    ],
-    heritageTitle: "Wholesome Laddoo premix Heritage",
-    heritageQuote:
-      "Natural nutrition for a healthier tomorrow. Made for those who choose better — crafted with pure finger millet (ragi), crunchy roasted nuts, and pure date powder.",
-    images: [
-      {
-        src: ragiPouch,
-        alt: "DUST Shahi Ragi & Dry Fruit Laddoo Mix 250g front pouch packaging",
-      },
-      {
-        src: ragiPoster,
-        alt: "DUST Shahi Ragi & Dry Fruit Laddoo Mix official brand poster",
-      },
-      {
-        src: ragiInfographic,
-        alt: "DUST Shahi Ragi & Dry Fruit Laddoo Mix nutritional & ingredient infographic",
-      },
-      {
-        src: ragiPack,
-        alt: "DUST Shahi Ragi & Dry Fruit Laddoo Mix back packaging with nutritional facts and preparation",
-      },
-      {
-        src: ragiHero,
-        alt: "DUST Shahi Ragi & Dry Fruit Laddoo Mix full pack display",
-      },
-    ],
-    storyImage: ragiPouch,
-    posterImage: ragiPoster,
-    infographicImage: ragiInfographic,
-    accent: "amber",
-    stock: 50,
-    sku: "DUST-RAGI-250",
-    fssai: "12545678901024",
-    featured: true,
-    newArrival: true,
-    bestSeller: true,
-  },
-  {
-    id: "paan-digestive-shot-01",
-    slug: "paan-digestive-shot",
-    name: "Paan Digestive Shot",
-    shortName: "Paan Digestive Shot",
-    subtitle: "Heritage Wellness — Digestive Blend",
-    pitch: "Experience the royal taste of Paan",
-    category: "heritage-wellness",
-    categoryLabel: "Heritage Wellness",
-    price: 299,
-    originalPrice: 350,
-    priceDisplay: "₹299",
-    originalPriceDisplay: "₹350",
-    unitDisplay: "Box of 10 Sachets",
-    savePercent: 15,
-    netWeight: "Box of 10 Sachets",
-    badges: ["Royal Blend", "Digestive Shot"],
-    description: [
-      "Crafted with real betel leaf extract, aromatic gulkand, fennel, rose and cardamom.",
-      "Each box contains 10 individual digestive shot sachets (each sachet makes 2 refreshing shots — 20 shots total).",
-      "DUST Paan Digestive Shot is your perfect after-meal ritual for freshness and digestion.",
-      "Mix sachet in 60 ml of water and drink after your meal",
-    ],
-    caution:
-      "Pregnant or lactating women and people with medical conditions should consult a health professional before use.",
-    ingredients:
-      "Cane sugar, gulkand powder, betel leaf extract, fennel powder, coconut powder, rose petal powder, cardamom powder, mint powder, inulin (prebiotic fiber), calcium citrate, citric acid, natural paan flavor.",
-    storage: "Store in dry, cool conditions. Shelf life 9 months from manufacture.",
-    disclaimer:
-      "Product images, serving suggestions, and packaging visuals are for illustrative purposes only. Actual product appearance, packaging, and color may vary. Please refer to the physical product label for complete details.",
-    nutrition: {
-      serving: "Serving Size: 10g (Half Pouch)",
-      note: "Per 20g Pouch",
-      rows: [
-        ["Energy", "70 kcal", "—"],
-        ["Total Fat", "0.3g", "0.5%*"],
-        ["Sodium", "25mg", "1%*"],
-        ["Total Carbohydrate", "17g", "6%*"],
-        ["Total Sugars", "14g", "28%*"],
-        ["Dietary Fiber", "1.0g", "4%*"],
-        ["Protein", "0.3g", "1%*"],
-        ["Calcium", "80mg", "8%*"],
-      ],
-    },
-    claims: [
-      "Box of 10 Sachets",
-      "Real Betel Leaf",
-      "Aromatic Gulkand",
-      "Digestive Herbs",
-      "Mouth Freshener",
-      "Instant Shot",
-      "No Colors",
-      "No Preservatives",
-      "100% Vegetarian",
-      "Source of Calcium",
-      "Prebiotic Fiber",
-    ],
-    ritualLabel: "How to Enjoy",
-    ritual: [
-      {
-        title: "Tear & Pour",
-        detail: "Empty the digestive shot powder from the pouch into a glass.",
-      },
-      { title: "Add Water", detail: "Pour 60 ml of chilled water into the glass." },
-      {
-        title: "Stir Well",
-        detail:
-          "Stir well until the gulkand and betel leaf extracts dissolve completely.",
-      },
-      {
-        title: "Enjoy After Meals",
-        detail: "Drink after lunch or dinner as a refreshing digestive ritual.",
-      },
-    ],
-    heritageTitle: "The Royal Paan Legacy",
-    heritageQuote:
-      "For centuries, royal Paan was served in silver boxes to nobility as the ultimate after-meal Digestive. Crafted with real betel leaf extract, fennel, and premium rose gulkand, every sip of DUST Paan Digestive Shot captures that exact traditional fresh Digestive ritual.",
-    images: [
-      { src: "/paan_image_2.jpeg", alt: "DUST Paan Digestive Shot standup pouch front and back with nutritional info" },
-      { src: "/paan_image_1.jpeg", alt: "DUST Paan Digestive Shot authentic pack box and glass shot" },
-      { src: "/paan_image_3.jpeg", alt: "DUST Paan Digestive Shot box back and ingredient details" },
-    ],
-    storyImage: "/paan_image_2.jpeg",
-    accent: "rose",
-    stock: 36,
-    sku: "DUST-BP-20",
-    fssai: "12545678901024",
     featured: true,
     newArrival: true,
     bestSeller: true,
