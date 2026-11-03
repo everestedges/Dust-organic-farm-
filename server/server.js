@@ -150,10 +150,18 @@ app.post("/api/admin/login", async (req, res) => {
   }
 });
 
-// GET /api/users - Fetch all registered users in MySQL
+// GET /api/users - Fetch all registered users in MySQL with order totals
 app.get("/api/users", async (req, res) => {
   try {
-    const users = await query("SELECT id, full_name, email, phone, role, created_at FROM users");
+    const users = await query(`
+      SELECT u.id, u.full_name, u.email, u.phone, u.role, u.created_at,
+             COUNT(o.id) as orders_count,
+             COALESCE(SUM(o.total_amount), 0) as total_spent
+      FROM users u
+      LEFT JOIN orders o ON o.customer_email = u.email
+      GROUP BY u.id, u.full_name, u.email, u.phone, u.role, u.created_at
+      ORDER BY u.id DESC
+    `);
     res.json({ success: true, count: users.length, users });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -161,7 +169,7 @@ app.get("/api/users", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------
-// 2. B2B DISTRIBUTOR LEADS ENDPOINT (Inserts into MySQL distributor_leads)
+// 2. B2B DISTRIBUTOR LEADS ENDPOINTS
 // ---------------------------------------------------------------------
 app.post("/api/distributor-leads", async (req, res) => {
   const { name, company, phone, email, cityState, channel, investment, message } = req.body;
@@ -181,24 +189,127 @@ app.post("/api/distributor-leads", async (req, res) => {
   }
 });
 
+app.get("/api/distributor-leads", async (req, res) => {
+  try {
+    const leads = await query(`
+      SELECT id, contact_name, company_name, phone, email, city_state, channel, investment_capacity, message, created_at
+      FROM distributor_leads
+      ORDER BY id DESC
+    `);
+    return res.json({ success: true, count: leads.length, leads });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // ---------------------------------------------------------------------
-// 3. ORDERS ENDPOINT (Inserts into MySQL orders & order_items)
+// 3. ORDERS ENDPOINTS (Inserts & Fetches from MySQL orders & order_items)
 // ---------------------------------------------------------------------
 app.post("/api/orders", async (req, res) => {
-  const { reference, customerName, customerEmail, customerPhone, address, city, state, pincode, total } = req.body;
+  const {
+    reference,
+    customerName,
+    customerEmail,
+    customerPhone,
+    address,
+    city,
+    state,
+    pincode,
+    total,
+    subtotal,
+    paymentMethod,
+    items,
+  } = req.body;
 
   try {
+    const payment = (paymentMethod || "UPI").toUpperCase();
     const result = await query(
-      `INSERT INTO orders (order_reference, customer_name, customer_email, customer_phone, shipping_address, city, state, pincode, subtotal_amount, total_amount, payment_status, order_status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'PAID', 'Order Received')`,
-      [reference, customerName, customerEmail, customerPhone, address, city, state, pincode, total, total]
+      `INSERT INTO orders (order_reference, customer_name, customer_email, customer_phone, shipping_address, city, state, pincode, subtotal_amount, total_amount, payment_method, payment_status, order_status)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Order Received')`,
+      [
+        reference,
+        customerName,
+        customerEmail || "",
+        customerPhone,
+        address,
+        city || "",
+        state || "Maharashtra",
+        pincode || "",
+        subtotal || total,
+        total,
+        payment === "COD" ? "COD" : "UPI",
+        payment === "COD" ? "PENDING" : "PAID",
+      ]
     );
 
+    const orderId = result.insertId;
+
+    if (Array.isArray(items) && items.length > 0) {
+      for (const item of items) {
+        try {
+          await query(
+            `INSERT INTO order_items (order_id, product_id, product_name, quantity, unit_price, subtotal)
+             VALUES (?, 1, ?, ?, ?, ?)`,
+            [
+              orderId,
+              item.name || "DUST Product",
+              item.quantity || 1,
+              item.price || 0,
+              (item.price || 0) * (item.quantity || 1),
+            ]
+          );
+        } catch (itemErr) {
+          console.warn("Could not insert order item:", itemErr.message);
+        }
+      }
+    }
+
     console.log(`✅ [MySQL SUCCESS] Order saved to DB: ${reference} for ${customerName} (Total: ₹${total})`);
-    return res.json({ success: true, message: "Order created successfully!", orderId: result.insertId });
+    return res.json({ success: true, message: "Order created successfully!", orderId });
   } catch (err) {
     console.error("❌ MySQL Order Error:", err.message);
     return res.status(500).json({ success: false, message: "Database error: " + err.message });
+  }
+});
+
+// GET /api/orders - Fetch all orders for Admin Fulfillment or by user email
+app.get("/api/orders", async (req, res) => {
+  try {
+    const { email } = req.query;
+    let sql = `
+      SELECT o.id, o.order_reference, o.customer_name, o.customer_email, o.customer_phone,
+             o.shipping_address, o.city, o.state, o.pincode, o.subtotal_amount, o.total_amount,
+             o.payment_method, o.payment_status, o.order_status, o.tracking_awb, o.created_at,
+             COALESCE(GROUP_CONCAT(CONCAT(oi.quantity, 'x ', oi.product_name) SEPARATOR ', '), '1x DUST Organic Blend') as items_summary
+      FROM orders o
+      LEFT JOIN order_items oi ON oi.order_id = o.id
+    `;
+    const params = [];
+    if (email) {
+      sql += " WHERE o.customer_email = ? ";
+      params.push(email);
+    }
+    sql += " GROUP BY o.id, o.order_reference, o.customer_name, o.customer_email, o.customer_phone, o.shipping_address, o.city, o.state, o.pincode, o.subtotal_amount, o.total_amount, o.payment_method, o.payment_status, o.order_status, o.tracking_awb, o.created_at ORDER BY o.id DESC ";
+    
+    const orders = await query(sql, params);
+    return res.json({ success: true, count: orders.length, orders });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PUT /api/orders/:id/status - Update order status & AWB tracking
+app.put("/api/orders/:id/status", async (req, res) => {
+  const { id } = req.params;
+  const { status, awb } = req.body;
+  try {
+    await query(
+      "UPDATE orders SET order_status = ?, tracking_awb = COALESCE(?, tracking_awb) WHERE id = ? OR order_reference = ?",
+      [status, awb || null, id, id]
+    );
+    return res.json({ success: true, message: "Order status updated successfully" });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
   }
 });
 

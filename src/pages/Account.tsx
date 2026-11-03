@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { User as UserIcon, Package, MapPin, Heart, LogOut, ArrowUpRight, Truck, CheckCircle2, Lock } from "lucide-react";
 import { companyInfo } from "@/lib/data";
@@ -52,6 +52,37 @@ export const Account: React.FC = () => {
   const userInitial = user.name ? user.name.charAt(0).toUpperCase() : "U";
 
   const [userOrders, setUserOrders] = useState<UserOrder[]>([]);
+
+  useEffect(() => {
+    if (user?.email) {
+      const apiBase =
+        typeof window !== "undefined" && window.location.hostname !== "localhost"
+          ? "/api"
+          : "http://localhost:5000/api";
+      fetch(`${apiBase}/orders?email=${encodeURIComponent(user.email)}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && Array.isArray(data.orders)) {
+            setUserOrders(
+              data.orders.map((o: any) => ({
+                id: o.order_reference || `DST-${o.id}`,
+                date: o.created_at
+                  ? new Date(o.created_at).toLocaleDateString("en-IN", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    })
+                  : "Recent",
+                total: Number(o.total_amount) || 0,
+                status: o.order_status || "Order Received",
+                items: o.items_summary || "DUST Organic Order",
+              }))
+            );
+          }
+        })
+        .catch((err) => console.warn("Could not load user orders:", err));
+    }
+  }, [user?.email]);
 
   return (
     <div className="pt-32 pb-24 px-4 sm:px-8 md:px-12 lg:px-16 w-full min-h-screen bg-[#F6F5F0] text-[#0E382E]">

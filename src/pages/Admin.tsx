@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Navigate, Link } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -31,6 +31,7 @@ import {
   Play,
   X,
   ThumbsUp,
+  RefreshCw,
 } from "lucide-react";
 import { products as initialProducts, companyInfo, Product } from "@/lib/data";
 import { useAdminAuthStore } from "@/lib/admin-auth-store";
@@ -234,6 +235,106 @@ export const Admin: React.FC = () => {
   // State 9: Distributor Leads
   const [distributorLeads, setDistributorLeads] = useState<any[]>([]);
 
+  const [isLoadingLive, setIsLoadingLive] = useState(false);
+
+  const API_BASE =
+    typeof window !== "undefined" && window.location.hostname !== "localhost"
+      ? "/api"
+      : "http://localhost:5000/api";
+
+  const fetchLiveDatabaseData = async () => {
+    setIsLoadingLive(true);
+    try {
+      // 1. Fetch live orders
+      const ordersRes = await fetch(`${API_BASE}/orders`);
+      if (ordersRes.ok) {
+        const data = await ordersRes.json();
+        if (data.success && Array.isArray(data.orders)) {
+          setOrders(
+            data.orders.map((o: any) => ({
+              id: o.order_reference || `DST-${o.id}`,
+              customer: o.customer_name || "Valued Customer",
+              email: o.customer_email || "N/A",
+              phone: o.customer_phone || "N/A",
+              total: Number(o.total_amount) || 0,
+              payment: `${o.payment_status || "PAID"} (${o.payment_method || "UPI"})`,
+              status: o.order_status || "Order Received",
+              awb: o.tracking_awb || "Pending Dispatch",
+              date: o.created_at
+                ? new Date(o.created_at).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "Today",
+            }))
+          );
+        }
+      }
+
+      // 2. Fetch live registered customers
+      const usersRes = await fetch(`${API_BASE}/users`);
+      if (usersRes.ok) {
+        const data = await usersRes.json();
+        if (data.success && Array.isArray(data.users)) {
+          setCustomers(
+            data.users.map((u: any) => ({
+              id: u.id,
+              name: u.full_name || "Registered User",
+              email: u.email,
+              phone: u.phone || "N/A",
+              orders: u.orders_count || 0,
+              totalSpent: `₹${Number(u.total_spent || 0).toLocaleString("en-IN")}`,
+              date: u.created_at
+                ? new Date(u.created_at).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "Recent",
+            }))
+          );
+        }
+      }
+
+      // 3. Fetch distributor leads
+      const leadsRes = await fetch(`${API_BASE}/distributor-leads`);
+      if (leadsRes.ok) {
+        const data = await leadsRes.json();
+        if (data.success && Array.isArray(data.leads)) {
+          setDistributorLeads(
+            data.leads.map((l: any) => ({
+              id: l.id,
+              name: l.contact_name,
+              company: l.company_name,
+              phone: l.phone,
+              email: l.email,
+              location: l.city_state,
+              channel: l.channel,
+              investment: l.investment_capacity,
+              status: "New",
+              date: l.created_at
+                ? new Date(l.created_at).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "Recent",
+            }))
+          );
+        }
+      }
+    } catch (err) {
+      console.warn("Could not load live database records:", err);
+    } finally {
+      setIsLoadingLive(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLiveDatabaseData();
+  }, []);
+
   // Actions
   const handleAddProduct = (e: React.FormEvent) => {
     e.preventDefault();
@@ -292,10 +393,19 @@ export const Admin: React.FC = () => {
     );
   };
 
-  const handleUpdateOrderStatus = (orderId: string, newStatus: string) => {
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
     setOrders((prev) =>
       prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
     );
+    try {
+      await fetch(`${API_BASE}/orders/${orderId}/status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+    } catch (err) {
+      console.warn("Could not sync order status with backend DB:", err);
+    }
   };
 
   return (
@@ -316,6 +426,14 @@ export const Admin: React.FC = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <button
+              onClick={fetchLiveDatabaseData}
+              disabled={isLoadingLive}
+              className="bg-[#1F684B] hover:bg-[#165039] text-white px-4 py-2.5 rounded-2xl text-xs font-extrabold uppercase tracking-wider inline-flex items-center gap-1.5 transition-colors shadow-md disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-[#E67E22] ${isLoadingLive ? "animate-spin" : ""}`} />
+              {isLoadingLive ? "Refreshing..." : "Refresh Live Data"}
+            </button>
             <div className="bg-[#1F684B] px-4 py-2 rounded-2xl text-right text-xs">
               <span className="text-[#E67E22] font-bold block uppercase">Admin Authenticated</span>
               <span className="text-white font-extrabold">{adminUser?.name || "Master Admin"}</span>
@@ -701,39 +819,49 @@ export const Admin: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#74B487]/20 text-[#1F684B]">
-                  {orders.map((order) => (
-                    <tr key={order.id}>
-                      <td className="p-4 font-mono font-bold text-[#0E382E]">{order.id}</td>
-                      <td className="p-4">
-                        <p className="font-extrabold text-[#0E382E]">{order.customer}</p>
-                        <p className="text-[10px] text-[#74B487]">{order.email} • {order.phone}</p>
-                      </td>
-                      <td className="p-4 font-extrabold text-[#0E382E]">₹{order.total}</td>
-                      <td className="p-4 font-bold text-[#25D366]">{order.payment}</td>
-                      <td className="p-4 font-extrabold text-[#E67E22]">{order.status}</td>
-                      <td className="p-4 font-mono text-[11px] text-[#0E382E]">{order.awb}</td>
-                      <td className="p-4 text-right space-x-2">
-                        <select
-                          value={order.status}
-                          onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                          className="bg-[#F6F5F0] border border-[#74B487]/40 rounded-lg p-1.5 text-[11px] font-extrabold text-[#0E382E]"
-                        >
-                          <option value="Order Received">Order Received</option>
-                          <option value="Packed">Packed</option>
-                          <option value="Handed to Courier">Handed to Courier</option>
-                          <option value="Out for Delivery">Out for Delivery</option>
-                          <option value="Delivered">Delivered</option>
-                        </select>
-
-                        <Link
-                          to={`/order-confirmation?id=${order.id}`}
-                          className="px-2.5 py-1 bg-[#0E382E] text-white rounded-lg text-[10px] font-bold hover:bg-[#E67E22]"
-                        >
-                          Invoice
-                        </Link>
+                  {orders.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="p-8 text-center text-stone-500 font-medium italic">
+                        No orders in the database yet. When customers complete checkout, their orders will appear here automatically.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    orders.map((order) => (
+                      <tr key={order.id}>
+                        <td className="p-4 font-mono font-bold text-[#0E382E]">{order.id}</td>
+                        <td className="p-4">
+                          <p className="font-extrabold text-[#0E382E]">{order.customer}</p>
+                          <p className="text-[10px] text-[#74B487]">
+                            {order.email} • {order.phone}
+                          </p>
+                        </td>
+                        <td className="p-4 font-extrabold text-[#0E382E]">₹{order.total}</td>
+                        <td className="p-4 font-bold text-[#25D366]">{order.payment}</td>
+                        <td className="p-4 font-extrabold text-[#E67E22]">{order.status}</td>
+                        <td className="p-4 font-mono text-[11px] text-[#0E382E]">{order.awb}</td>
+                        <td className="p-4 text-right space-x-2">
+                          <select
+                            value={order.status}
+                            onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
+                            className="bg-[#F6F5F0] border border-[#74B487]/40 rounded-lg p-1.5 text-[11px] font-extrabold text-[#0E382E]"
+                          >
+                            <option value="Order Received">Order Received</option>
+                            <option value="Packed">Packed</option>
+                            <option value="Handed to Courier">Handed to Courier</option>
+                            <option value="Out for Delivery">Out for Delivery</option>
+                            <option value="Delivered">Delivered</option>
+                          </select>
+
+                          <Link
+                            to={`/order-confirmation?id=${order.id}`}
+                            className="px-2.5 py-1 bg-[#0E382E] text-white rounded-lg text-[10px] font-bold hover:bg-[#E67E22]"
+                          >
+                            Invoice
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -761,16 +889,24 @@ export const Admin: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#74B487]/20 text-[#1F684B]">
-                  {customers.map((cust) => (
-                    <tr key={cust.id}>
-                      <td className="p-4 font-extrabold text-[#0E382E]">{cust.name}</td>
-                      <td className="p-4">{cust.email}</td>
-                      <td className="p-4 font-mono">{cust.phone}</td>
-                      <td className="p-4 font-bold text-[#0E382E]">{cust.orders} Orders</td>
-                      <td className="p-4 font-extrabold text-[#0E382E]">{cust.totalSpent}</td>
-                      <td className="p-4 font-medium text-stone-500">{cust.date}</td>
+                  {customers.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-stone-500 font-medium italic">
+                        No registered customers found in the database. When new users register, they will appear here automatically.
+                      </td>
                     </tr>
-                  ))}
+                  ) : (
+                    customers.map((cust) => (
+                      <tr key={cust.id}>
+                        <td className="p-4 font-extrabold text-[#0E382E]">{cust.name}</td>
+                        <td className="p-4">{cust.email}</td>
+                        <td className="p-4 font-mono">{cust.phone}</td>
+                        <td className="p-4 font-bold text-[#0E382E]">{cust.orders} Orders</td>
+                        <td className="p-4 font-extrabold text-[#0E382E]">{cust.totalSpent}</td>
+                        <td className="p-4 font-medium text-stone-500">{cust.date}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1192,8 +1328,15 @@ export const Admin: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#74B487]/20 text-[#1F684B]">
-                  {distributorLeads.map((lead) => (
-                    <tr key={lead.id}>
+                  {distributorLeads.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="p-8 text-center text-stone-500 font-medium italic">
+                        No distributor inquiries received yet. When B2B leads submit the partnership form, they will appear here.
+                      </td>
+                    </tr>
+                  ) : (
+                    distributorLeads.map((lead) => (
+                      <tr key={lead.id}>
                       <td className="p-4">
                         <p className="font-extrabold text-[#0E382E]">{lead.name}</p>
                         <p className="text-[11px] font-bold text-[#E67E22]">{lead.company}</p>
@@ -1211,7 +1354,8 @@ export const Admin: React.FC = () => {
                         </span>
                       </td>
                     </tr>
-                  ))}
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
