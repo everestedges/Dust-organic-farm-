@@ -221,6 +221,16 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
           </button>
 
           <button
+            onClick={() => setActiveFilter("natural-powder-shampoo-men")}
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold tracking-wide transition-all shrink-0 ${
+              activeFilter.includes("shampoo")
+                ? "bg-[#0E382E] text-white shadow-xs"
+                : "bg-white text-[#0E382E] hover:bg-[#E8F1E9] border border-[#74B487]/40"
+            }`}
+          >
+            Herbal Powder Shampoo
+          </button>
+          <button
             onClick={() => setActiveFilter("banarasi-paan-01")}
             className={`px-4 py-2 rounded-xl text-xs font-extrabold tracking-wide transition-all shrink-0 ${
               activeFilter.includes("paan")
@@ -637,3 +647,4 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
     </section>
   );
 };
+

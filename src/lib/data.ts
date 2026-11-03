@@ -24,6 +24,10 @@ import cashewPouch from "@/assets/cashew-powder-pouch.png";
 import cashewPouchAlt from "@/assets/cashew-powder-pouch-alt.png";
 import cashewCollage from "@/assets/cashew-powder-collage.png";
 import cashewInfographic from "@/assets/cashew-powder-infographic.png";
+import shampooBottle from "@/assets/shampoo-bottle.png";
+import shampooShowcase from "@/assets/shampoo-packaging-showcase.png";
+import shampooBenefits from "@/assets/shampoo-benefits.png";
+import shampooInfographic from "@/assets/shampoo-infographic.png";
 
 export const img = {
   ragiHero,
@@ -46,6 +50,10 @@ export const img = {
   cashewPouchAlt,
   cashewCollage,
   cashewInfographic,
+  shampooBottle,
+  shampooShowcase,
+  shampooBenefits,
+  shampooInfographic,
 };
 
 export const companyInfo = {
@@ -85,7 +93,7 @@ export interface Product {
   shortName: string;
   subtitle: string;
   pitch: string;
-  category: "wholesome-millets" | "pure-fruit-powders" | "heritage-wellness" | "pure-nut-powders";
+  category: "wholesome-millets" | "pure-fruit-powders" | "heritage-wellness" | "pure-nut-powders" | "herbal-haircare";
   categoryLabel: string;
   price: number;
   originalPrice?: number;
@@ -122,7 +130,7 @@ export interface Product {
 }
 
 export interface Collection {
-  slug: "wholesome-millets" | "pure-fruit-powders" | "heritage-wellness" | "pure-nut-powders";
+  slug: "wholesome-millets" | "pure-fruit-powders" | "heritage-wellness" | "pure-nut-powders" | "herbal-haircare";
   name: string;
   titleLines: [string, string];
   tagline: string;
@@ -373,6 +381,114 @@ export const products: Product[] = [
     featured: true,
     newArrival: true,
     bestSeller: false,
+  },
+  {
+    id: "powder-shampoo-01",
+    slug: "natural-powder-shampoo-men",
+    name: "DUST™ Natural Powder Shampoo for Men",
+    shortName: "Natural Powder Shampoo",
+    subtitle: "Designed for Men | 5 Traditional Herbs | No-Foam Herbal Mask",
+    pitch: "Designed for Men. Inspired by Nature. Powered by 5 Traditional Herbs.",
+    category: "herbal-haircare",
+    categoryLabel: "Herbal Hair Care",
+    price: 246,
+    originalPrice: 299,
+    priceDisplay: "₹246",
+    originalPriceDisplay: "₹299",
+    unitDisplay: "₹246 / 100ml Bottle",
+    savePercent: 18,
+    netWeight: "100ml",
+    badges: ["Designed for Men", "5 Traditional Herbs", "Zero Foam • Zero Sulfates", "Clean Label"],
+    description: [
+      "Meet a different approach to hair care with DUST™ Natural Powder Shampoo – a traditional herbal powder blend made with Amla, Ritha, Shikakai, Hibiscus and Bhringraj.",
+      "No complicated routines. No unnecessary fuss. Just the goodness of traditional herbs in a convenient powder-to-paste hair mask.",
+      "Specially designed with men's hair-care needs in mind, DUST™ brings together time-tested botanical ingredients to help cleanse the scalp, condition hair and maintain naturally healthy-looking hair.",
+      "Less dependence on conventional chemical shampoos. More love for herbal hair care.",
+    ],
+    disclaimer:
+      "Product image shown for illustrative purposes only. Actual product appearance and packaging may vary. 100% natural herbal powder with zero sulfates, parabens, synthetic fragrances or chemical preservatives.",
+    preparation:
+      "Take required amount of powder in a bowl, mix with plain or warm water to form a smooth herbal paste (hair mask), apply evenly on wet hair & scalp, leave for 5–10 minutes, and rinse thoroughly with water. Use 2–3 times a week for best results.",
+    ingredients:
+      "100% Natural Herbal Powder Blend: Amla Powder (Emblica officinalis), Reetha Powder (Sapindus mukorossi), Shikakai Powder (Acacia concinna), Hibiscus Powder (Hibiscus rosa-sinensis), Bhringraj Powder (Eclipta alba).",
+    allergen:
+      "100% Plant-Based & Herbal. Free from Sulfates, Parabens, Silicones, Synthetic Fragrances, Artificial Colors & Chemical Preservatives. Patch test recommended before first use.",
+    storage:
+      "Store in a cool, dry place away from direct sunlight and moisture. Close cap tightly after every use.",
+    nutrition: {
+      serving: "Per 100ml / 100g",
+      note: "100% Herbal Actives",
+      rows: [
+        ["Amla (Indian Gooseberry)", "Rich in Natural Vitamin C & Antioxidants", "Active Botanical"],
+        ["Ritha (Soapnut)", "Natural Saponins for Gentle Cleansing", "Active Botanical"],
+        ["Shikakai (Fruit for Hair)", "Low pH Scalp Clarifier & Cleanser", "Active Botanical"],
+        ["Hibiscus (Gudhal)", "Natural Amino Acids & Conditioning Mucilage", "Active Botanical"],
+        ["Bhringraj (False Daisy)", "Keshraj — Root Strengthener & Scalp Tonic", "Active Botanical"],
+        ["Chemical Preservatives & Sulfates", "0%", "Zero / None"],
+        ["Synthetic Fragrance & Dyes", "0%", "Zero / None"],
+      ],
+    },
+    claims: [
+      "5 Traditional Ayurvedic Herbs",
+      "Specially Designed for Men's Hair",
+      "No-Foam Herbal Hair Mask Experience",
+      "Zero Sulfates, Parabens & Artificial Fragrance",
+      "Cleanses Gently, Strengthens Roots & Nourishes Scalp",
+    ],
+    ritualLabel: "How to Use — Herbal Hair Mask",
+    ritual: [
+      {
+        title: "Measure Required Amount",
+        detail:
+          "Take the required amount of powder (1–2 tablespoons depending on hair length) into a clean bowl.",
+      },
+      {
+        title: "Mix with Water into Paste",
+        detail:
+          "Add plain or warm water gradually and mix thoroughly to create a smooth, lump-free herbal paste.",
+      },
+      {
+        title: "Apply on Hair & Scalp",
+        detail:
+          "Gently massage the herbal hair mask onto damp scalp and hair strands, ensuring roots are well covered.",
+      },
+      {
+        title: "Leave for 5–10 Mins & Rinse",
+        detail:
+          "Allow the botanical herbs to sit for 5 to 10 minutes to nourish roots, then rinse thoroughly with clean water.",
+      },
+    ],
+    heritageTitle: "Traditional Herbal Hair Care — Choice of Motherland",
+    heritageQuote:
+      "Your hair deserves more than ordinary chemical shampoo. Cleanse gently, nourish deeply, and care naturally.",
+    images: [
+      {
+        src: shampooBottle,
+        alt: "DUST Natural Powder Shampoo for Men 100ml amber bottle with gold cap",
+      },
+      {
+        src: shampooShowcase,
+        alt: "DUST Natural Powder Shampoo packaging showcase front and back view",
+      },
+      {
+        src: shampooInfographic,
+        alt: "DUST Natural Powder Shampoo 3-step ritual and use cases infographic",
+      },
+      {
+        src: shampooBenefits,
+        alt: "DUST Natural Powder Shampoo why to buy and botanical benefits",
+      },
+    ],
+    storyImage: shampooBottle,
+    posterImage: shampooBenefits,
+    infographicImage: shampooInfographic,
+    accent: "emerald",
+    stock: 75,
+    sku: "DUST-SHAMPOO-100",
+    fssai: "AYUSH / Cosmetic License In Process",
+    featured: true,
+    newArrival: true,
+    bestSeller: true,
   },
   {
     id: "ragi-laddoo-01",
@@ -689,6 +805,45 @@ export const collections: Collection[] = [
     crossCta: "Explore Laddoo Mix",
     crossHref: "/product/shahi-ragi-dry-fruit-laddoo-mix",
     heroImage: cashewCollage,
+  },
+  {
+    slug: "herbal-haircare",
+    name: "Natural Herbal Hair Care",
+    titleLines: ["Herbal", "Hair Care."],
+    tagline: "Traditional 5-herb powder shampoo designed for men. No foam, zero sulfates, pure scalp nourishment.",
+    description:
+      "A traditional approach to hair care with Amla, Ritha, Shikakai, Hibiscus and Bhringraj. A convenient powder-to-paste herbal hair mask for stronger roots and healthier scalp.",
+    meta: [
+      { label: "Format", value: "Herbal Powder-to-Paste" },
+      { label: "Net Wt.", value: "100ml Bottle" },
+      { label: "Promise", value: "Zero Sulfates • No Chemicals" },
+    ],
+    shelfTitle: "The Herbal Grooming Shelf",
+    shelfDescription:
+      "Time-tested Ayurvedic botanicals formulated for modern men seeking clean, chemical-free hair care.",
+    shelfNote: "01 Creation · 5 Traditional Herbs",
+    comingTitle: "More herbal care coming",
+    comingText: "New botanical grooming and scalp care formulations are in development.",
+    pillars: [
+      {
+        title: "5 Traditional Ayurvedic Herbs",
+        text: "Synergistic blend of Amla, Ritha, Shikakai, Hibiscus and Bhringraj.",
+      },
+      {
+        title: "No-Foam Hair Mask Experience",
+        text: "Gentle plant-based cleansing without harsh surfactants, parabens or synthetic foaming agents.",
+      },
+      {
+        title: "Specially Formulated for Men",
+        text: "Deep cleanses excess oil, strengthens roots and refreshes scalp with minimal routine fuss.",
+      },
+    ],
+    crossTitle: "Looking for wholesome daily nutrition?",
+    crossText:
+      "Explore our pure Almond and Cashew powders for daily smoothies, milk and cooking.",
+    crossCta: "Explore Nut Powders",
+    crossHref: "/collections/pure-nut-powders",
+    heroImage: shampooBenefits,
   },
 ];
 

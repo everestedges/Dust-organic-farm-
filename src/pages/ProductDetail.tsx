@@ -197,6 +197,51 @@ export const ProductDetail: React.FC = () => {
     },
   ];
 
+  const shampooHealthBenefits = [
+    {
+      title: "Specially Designed for Men",
+      description:
+        "Men's grooming deserves a natural alternative. Easy-to-use herbal hair care for men who prefer plant-based ingredients.",
+      icon: Sparkles,
+      highlight: "Men's Grooming",
+    },
+    {
+      title: "Goodness of 5 Traditional Herbs",
+      description:
+        "Carefully selected synergy of Amla (shine), Ritha (cleansing), Shikakai (gentle wash), Hibiscus (conditioning), and Bhringraj (root care).",
+      icon: ShieldCheck,
+      highlight: "5 Ayurvedic Herbs",
+    },
+    {
+      title: "No-Foam Herbal Hair Mask",
+      description:
+        "Forget harsh foaming chemicals. Mix powder with water to create a smooth, deeply nourishing herbal paste.",
+      icon: Activity,
+      highlight: "Zero Harsh Foam",
+    },
+    {
+      title: "A Simpler Hair-Care Routine",
+      description:
+        "Prepare herbal paste, apply to hair and scalp, allow it to sit for 5–10 minutes, and rinse thoroughly.",
+      icon: CheckCircle2,
+      highlight: "5-10 Min Mask",
+    },
+    {
+      title: "100% Plant-Based & Clean Label",
+      description:
+        "Zero sulfates, parabens, silicones, synthetic fragrances, or harsh preservatives. Pure botanical hair therapy.",
+      icon: Heart,
+      highlight: "Clean & Sulfate-Free",
+    },
+    {
+      title: "Care for Naturally Healthy Hair",
+      description:
+        "Helps maintain clean, soft and manageable hair while strengthening roots and balancing scalp moisture.",
+      icon: Zap,
+      highlight: "Stronger Roots",
+    },
+  ];
+
   const laddooHealthBenefits = [
     {
       title: "Naturally Rich in Calcium",
@@ -493,21 +538,27 @@ export const ProductDetail: React.FC = () => {
         </div>
       </div>
 
-      {/* What are the Health Benefits? (For Laddoo Mix, Almond Powder & Cashew Powder) */}
-      {(product.id.includes("laddoo") || product.slug.includes("laddoo") || product.slug.includes("almond") || product.slug.includes("cashew")) && (
+      {/* What are the Health Benefits? (For Laddoo Mix, Almond Powder, Cashew Powder & Shampoo) */}
+      {(product.id.includes("laddoo") || product.slug.includes("laddoo") || product.slug.includes("almond") || product.slug.includes("cashew") || product.slug.includes("shampoo")) && (
         <section className="mt-20 pt-16 border-t border-[#74B487]/40 space-y-8">
           <div className="max-w-3xl space-y-3">
             <span className="text-xs uppercase tracking-[0.25em] text-[#E67E22] font-extrabold flex items-center gap-2">
               <Sparkles className="w-4 h-4" />{" "}
-              {product.slug.includes("almond") || product.slug.includes("cashew")
+              {product.slug.includes("shampoo")
+                ? "AYURVEDIC HERBAL CARE & BENEFITS"
+                : product.slug.includes("almond") || product.slug.includes("cashew")
                 ? "HEALTH & NUTRITIONAL BENEFITS"
                 : "WHOLESOME TRADITIONAL NUTRITION"}
             </span>
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0E382E]">
-              What are the Health Benefits?
+              {product.slug.includes("shampoo")
+                ? "Why Choose DUST™ Natural Powder Shampoo?"
+                : "What are the Health Benefits?"}
             </h2>
             <p className="text-sm sm:text-base text-[#1F684B] font-medium leading-relaxed">
-              {product.slug.includes("cashew")
+              {product.slug.includes("shampoo")
+                ? "DUST™ brings together 5 time-tested Ayurvedic herbs (Amla, Ritha, Shikakai, Hibiscus, Bhringraj) in a simple powder-to-paste hair mask specially designed for men."
+                : product.slug.includes("cashew")
                 ? "DUST™ Premium Cashew Powder brings the rich, velvety taste and pure goodness of cashews into your everyday recipes."
                 : product.slug.includes("almond")
                 ? "DUST™ Almond Powder brings the pure goodness of skin-on almonds into your everyday meals for natural nourishment."
@@ -516,7 +567,9 @@ export const ProductDetail: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(product.slug.includes("cashew")
+            {(product.slug.includes("shampoo")
+              ? shampooHealthBenefits
+              : product.slug.includes("cashew")
               ? cashewHealthBenefits
               : product.slug.includes("almond")
               ? almondHealthBenefits
@@ -561,7 +614,9 @@ export const ProductDetail: React.FC = () => {
             {product.ritualLabel}
           </span>
           <h2 className="text-3xl font-extrabold text-[#0E382E]">
-            {product.slug.includes("almond") || product.slug.includes("cashew")
+            {product.slug.includes("shampoo")
+              ? "How to Use — Herbal Hair Mask"
+              : product.slug.includes("almond") || product.slug.includes("cashew")
               ? "Delicious Ways to Use"
               : "Preparation Ritual"}
           </h2>
@@ -584,6 +639,69 @@ export const ProductDetail: React.FC = () => {
               </div>
             ))}
           </div>
+
+          {/* Liquid Shampoo vs DUST Comparison (for Shampoo) */}
+          {product.slug.includes("shampoo") && (
+            <div className="p-6 bg-white rounded-3xl border border-[#74B487]/40 shadow-xs space-y-4 mt-6">
+              <div className="flex items-center justify-between border-b border-[#74B487]/30 pb-3">
+                <div>
+                  <h4 className="text-sm font-extrabold text-[#0E382E]">
+                    Ordinary Liquid Shampoo vs. DUST™ Powder Shampoo
+                  </h4>
+                  <p className="text-[11px] text-[#1F684B]">
+                    Format and botanical ingredient comparison
+                  </p>
+                </div>
+                <span className="text-[10px] font-black uppercase text-[#E67E22] bg-[#E8F1E9] px-2.5 py-1 rounded-full border border-[#74B487]/30">
+                  Herbal Alternative
+                </span>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-stone-700">
+                  <thead>
+                    <tr className="border-b border-[#74B487]/20 text-[#0E382E] font-extrabold text-left bg-[#F6F5F0]">
+                      <th className="py-2.5 px-3 rounded-l-xl">Feature</th>
+                      <th className="py-2.5 px-3 text-stone-500">Ordinary Liquid Shampoo</th>
+                      <th className="py-2.5 px-3 text-right text-[#0E382E] font-black bg-[#E8F1E9]/60 rounded-r-xl">
+                        DUST™ Powder Shampoo
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#E8F1E9] font-medium">
+                    <tr>
+                      <td className="py-3 px-3 text-[#0E382E] font-bold">Product Format</td>
+                      <td className="py-3 px-3 text-stone-500">Ready-to-use liquid format</td>
+                      <td className="py-3 px-3 text-right font-extrabold text-[#E67E22]">Mix powder with water into paste</td>
+                    </tr>
+                    <tr>
+                      <td className="py-3 px-3 text-[#0E382E] font-bold">Washing Experience</td>
+                      <td className="py-3 px-3 text-stone-500">Chemical foaming lather</td>
+                      <td className="py-3 px-3 text-right font-extrabold text-[#0E382E]">No-foam herbal hair mask</td>
+                    </tr>
+                    <tr>
+                      <td className="py-3 px-3 text-[#0E382E] font-bold">Key Ingredients</td>
+                      <td className="py-3 px-3 text-stone-500">Varies (chemical surfactants)</td>
+                      <td className="py-3 px-3 text-right font-extrabold text-[#E67E22]">5 Traditional Ayurvedic herbs</td>
+                    </tr>
+                    <tr>
+                      <td className="py-3 px-3 text-[#0E382E] font-bold">Fragrance & Additives</td>
+                      <td className="py-3 px-3 text-stone-500">Synthetic perfumes & parabens</td>
+                      <td className="py-3 px-3 text-right font-extrabold text-[#0E382E]">100% Botanical formulation</td>
+                    </tr>
+                    <tr>
+                      <td className="py-3 px-3 text-[#0E382E] font-bold">Scalp Benefit</td>
+                      <td className="py-3 px-3 text-stone-500">Can strip natural scalp oils</td>
+                      <td className="py-3 px-3 text-right font-extrabold text-[#25D366]">Nourishes roots & balances scalp</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-[10px] text-stone-500 italic pt-1">
+                *This is a format and ingredient comparison, not a claim that all liquid shampoos contain the same ingredients.
+              </p>
+            </div>
+          )}
 
           {/* Suggested Quantity Guide (for Cashew Powder) */}
           {product.slug.includes("cashew") && (
@@ -639,13 +757,15 @@ export const ProductDetail: React.FC = () => {
           )}
         </div>
 
-        {/* Nutritional Information */}
+        {/* Nutritional & Botanical Information */}
         <div className="lg:col-span-6 space-y-6">
           <span className="text-xs uppercase tracking-[0.2em] text-[#E67E22] font-extrabold">
-            INGREDIENTS & NUTRITION
+            {product.slug.includes("shampoo") ? "HERBAL INGREDIENTS & COMPOSITION" : "INGREDIENTS & NUTRITION"}
           </span>
           <h2 className="text-3xl font-extrabold text-[#0E382E]">
-            Nutritional Facts (Approx. values)
+            {product.slug.includes("shampoo")
+              ? "Botanical Actives & Composition"
+              : "Nutritional Facts (Approx. values)"}
           </h2>
 
           <div className="bg-white p-6 rounded-3xl border border-[#74B487]/40 space-y-4 shadow-xs">
@@ -657,9 +777,15 @@ export const ProductDetail: React.FC = () => {
             <table className="w-full text-xs text-stone-700">
               <thead>
                 <tr className="border-b border-[#74B487]/30 text-[#0E382E] font-extrabold">
-                  <th className="text-left py-2">Nutrient</th>
-                  <th className="text-right py-2">Amount</th>
-                  <th className="text-right py-2">% RDA*</th>
+                  <th className="text-left py-2">
+                    {product.slug.includes("shampoo") ? "Botanical Herb" : "Nutrient"}
+                  </th>
+                  <th className="text-right py-2">
+                    {product.slug.includes("shampoo") ? "Active Function" : "Amount"}
+                  </th>
+                  <th className="text-right py-2">
+                    {product.slug.includes("shampoo") ? "Category" : "% RDA*"}
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E8F1E9] font-medium">
@@ -680,16 +806,18 @@ export const ProductDetail: React.FC = () => {
               </p>
               {product.allergen && (
                 <p>
-                  <strong className="text-[#0E382E]">Allergen Info:</strong>{" "}
+                  <strong className="text-[#0E382E]">{product.slug.includes("shampoo") ? "Suitability & Safety:" : "Allergen Info:"}</strong>{" "}
                   {product.allergen}
                 </p>
               )}
               <p>
                 <strong className="text-[#0E382E]">Storage:</strong> {product.storage}
               </p>
-              <p className="text-[10.5px] text-stone-600 italic leading-relaxed pt-1">
-                *% RDA (Recommended dietary allowance) is calculated on the basis of 2000 calories a day. Your daily values may be higher or lower depending on your calorie needs.
-              </p>
+              {!product.slug.includes("shampoo") && (
+                <p className="text-[10.5px] text-stone-600 italic leading-relaxed pt-1">
+                  *% RDA (Recommended dietary allowance) is calculated on the basis of 2000 calories a day. Your daily values may be higher or lower depending on your calorie needs.
+                </p>
+              )}
               {product.disclaimer && (
                 <div className="pt-2.5 mt-2 border-t border-[#74B487]/30 flex items-start gap-2">
                   <span className="text-[10px] font-black uppercase tracking-wider text-[#E67E22] shrink-0">

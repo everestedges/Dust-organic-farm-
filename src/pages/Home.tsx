@@ -33,9 +33,19 @@ import aboutBannerFarmWaste from "@/assets/about-banner-farm-waste.png";
 import aboutBannerLaddoo from "@/assets/about-banner-laddoo.png";
 import almondCollage from "@/assets/almond-powder-collage.png";
 import cashewCollage from "@/assets/cashew-powder-collage.png";
+import shampooInfographic from "@/assets/shampoo-infographic.png";
 import { CustomerTestimonials } from "@/components/cinematic/CustomerTestimonials";
 
 const homeHeroBanners = [
+  {
+    image: shampooInfographic,
+    alt: "DUST Natural Powder Shampoo for Men - 5 Traditional Herbs",
+    title: "DUST™ Natural Powder Shampoo",
+    subtitle: "Designed for Men | 5 Traditional Herbs | No-Foam Mask",
+    price: "₹246",
+    tag: "HERBAL GROOMING",
+    productIndex: 2,
+  },
   {
     image: cashewCollage,
     alt: "DUST Premium Cashew Powder - Pure Cashew Goodness",
@@ -52,7 +62,7 @@ const homeHeroBanners = [
     subtitle: "Wholesome Laddoo Premix | Premium Nuts",
     price: "₹229",
     tag: "BEST SELLER",
-    productIndex: 2,
+    productIndex: 3,
   },
   {
     image: almondCollage,
@@ -70,7 +80,7 @@ const homeHeroBanners = [
     subtitle: "100% Real Fruit & Pure Nutrition",
     price: "₹299",
     tag: "HERITAGE WELLNESS",
-    productIndex: 3,
+    productIndex: 4,
   },
 ];
 

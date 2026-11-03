@@ -168,6 +168,23 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
     date: "3 weeks ago",
     helpfulCount: 19,
   },
+  {
+    id: "test-08",
+    customerName: "Aditya Verma",
+    location: "Koramangala, Bengaluru",
+    productSlug: "natural-powder-shampoo-men",
+    productName: "DUST™ Natural Powder Shampoo for Men",
+    rating: 5,
+    title: "Game changer for oily scalp — stopped using chemical shampoos!",
+    comment:
+      "As a man with an oily scalp and thinning hair, chemical foaming shampoos always left my scalp dry and irritated. Switching to DUST herbal powder paste was the best decision. The Amla and Shikakai cleanse without stripping moisture, and my hair feels significantly thicker and healthier.",
+    mediaType: "text",
+    verifiedBuyer: true,
+    isFeatured: true,
+    isApproved: true,
+    date: "1 day ago",
+    helpfulCount: 35,
+  },
 ];
 
 export const useTestimonialsStore = create<TestimonialsStore>()(
