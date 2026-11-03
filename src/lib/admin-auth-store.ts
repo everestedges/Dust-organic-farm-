@@ -33,12 +33,15 @@ export const useAdminAuthStore = create<AdminAuthState>()(
       adminLogin: async (email: string, pass: string) => {
         set({ adminError: null });
 
-        // Hardcoded master admin credentials check
-        if (email.toLowerCase() === "admin@dustofficial.com" && pass === "DustAdmin@2026") {
+        // Master admin credentials check
+        const masterEmail = ((import.meta.env["VITE_ADMIN_EMAIL"] as string | undefined) || "admin@dustofficial.com").toLowerCase();
+        const masterPass = (import.meta.env["VITE_ADMIN_PASSWORD"] as string | undefined) || "DustAdmin@2026";
+
+        if (email.toLowerCase() === masterEmail && pass === masterPass) {
           const masterAdmin: AdminUser = {
             id: 1,
             name: "Everest Edges Admin",
-            email: "admin@dustofficial.com",
+            email: masterEmail,
             role: "admin",
           };
           set({

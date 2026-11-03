@@ -8,8 +8,8 @@ export const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const { adminLogin, isAdminLoggedIn, adminError } = useAdminAuthStore();
 
-  const [email, setEmail] = useState("admin@dustofficial.com");
-  const [password, setPassword] = useState("DustAdmin@2026");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [localError, setLocalError] = useState("");
 
   if (isAdminLoggedIn) {
@@ -70,7 +70,7 @@ export const AdminLogin: React.FC = () => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@dustofficial.com"
+                placeholder="Enter admin email"
                 className="w-full bg-[#0E382E]/90 border border-[#74B487]/50 rounded-xl pl-10 pr-4 py-3.5 text-xs text-white placeholder-stone-400 outline-none focus:border-[#E67E22] font-semibold"
               />
             </div>
@@ -100,13 +100,6 @@ export const AdminLogin: React.FC = () => {
             Authenticate Admin Portal <ArrowRight className="w-4 h-4" />
           </button>
         </form>
-
-        {/* Credentials Helper Note */}
-        <div className="pt-4 border-t border-[#74B487]/30 text-center space-y-1 text-[11px] text-[#E8F1E9]">
-          <span className="text-[#E67E22] font-extrabold block uppercase">Default Demo Admin Credentials</span>
-          <p className="font-mono text-stone-200">Email: admin@dustofficial.com</p>
-          <p className="font-mono text-stone-200">Password: DustAdmin@2026</p>
-        </div>
       </div>
     </div>
   );
