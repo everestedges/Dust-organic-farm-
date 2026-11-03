@@ -26,9 +26,15 @@ import {
   Filter,
   ArrowUpRight,
   ShieldCheck,
+  Video,
+  Film,
+  Play,
+  X,
+  ThumbsUp,
 } from "lucide-react";
 import { products as initialProducts, companyInfo, Product } from "@/lib/data";
 import { useAdminAuthStore } from "@/lib/admin-auth-store";
+import { useTestimonialsStore, Testimonial } from "@/lib/testimonials-store";
 
 export const Admin: React.FC = () => {
   const navigate = useNavigate();
@@ -38,7 +44,7 @@ export const Admin: React.FC = () => {
     return <Navigate to="/admin-login" replace />;
   }
 
-  // Active Tab State (16 Client Requirements organized in 10 Control Tabs)
+  // Active Tab State (16 Client Requirements organized in 11 Control Tabs)
   const [activeTab, setActiveTab] = useState<
     | "reports"
     | "products"
@@ -48,9 +54,127 @@ export const Admin: React.FC = () => {
     | "customers"
     | "coupons"
     | "banners"
+    | "reviews"
     | "content"
     | "leads"
   >("reports");
+
+  // State: Testimonials & Video Stories Store
+  const {
+    testimonials,
+    addTestimonial,
+    updateTestimonial,
+    deleteTestimonial,
+    toggleApproval,
+    toggleFeatured,
+    resetToDefaults,
+  } = useTestimonialsStore();
+
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
+  const [previewVideoUrl, setPreviewVideoUrl] = useState<string | null>(null);
+  const [reviewSearch, setReviewSearch] = useState("");
+  const [reviewTypeFilter, setReviewTypeFilter] = useState<"all" | "video" | "text">("all");
+  const [reviewProductFilter, setReviewProductFilter] = useState("all");
+
+  // Form Fields for Testimonial Add/Edit
+  const [tName, setTName] = useState("");
+  const [tLocation, setTLocation] = useState("");
+  const [tProductSlug, setTProductSlug] = useState(
+    initialProducts[0]?.slug ?? "shahi-ragi-dry-fruit-laddoo-mix"
+  );
+  const [tRating, setTRating] = useState(5);
+  const [tTitle, setTTitle] = useState("");
+  const [tComment, setTComment] = useState("");
+  const [tMediaType, setTMediaType] = useState<"video" | "text">("video");
+  const [tVideoUrl, setTVideoUrl] = useState("");
+  const [tVideoPoster, setTVideoPoster] = useState("");
+  const [tVideoDuration, setTVideoDuration] = useState("0:45");
+  const [tVerified, setTVerified] = useState(true);
+  const [tFeatured, setTFeatured] = useState(true);
+  const [tApproved, setTApproved] = useState(true);
+
+  const openNewReviewModal = () => {
+    setEditingTestimonial(null);
+    setTName("");
+    setTLocation("");
+    setTProductSlug(initialProducts[0]?.slug ?? "shahi-ragi-dry-fruit-laddoo-mix");
+    setTRating(5);
+    setTTitle("");
+    setTComment("");
+    setTMediaType("video");
+    setTVideoUrl("");
+    setTVideoPoster("");
+    setTVideoDuration("0:45");
+    setTVerified(true);
+    setTFeatured(true);
+    setTApproved(true);
+    setIsReviewModalOpen(true);
+  };
+
+  const openEditReviewModal = (t: Testimonial) => {
+    setEditingTestimonial(t);
+    setTName(t.customerName);
+    setTLocation(t.location);
+    setTProductSlug(t.productSlug);
+    setTRating(t.rating);
+    setTTitle(t.title);
+    setTComment(t.comment);
+    setTMediaType(t.mediaType === "video" ? "video" : "text");
+    setTVideoUrl(t.videoUrl || "");
+    setTVideoPoster(t.videoPoster || "");
+    setTVideoDuration(t.videoDuration || "0:45");
+    setTVerified(t.verifiedBuyer);
+    setTFeatured(t.isFeatured);
+    setTApproved(t.isApproved);
+    setIsReviewModalOpen(true);
+  };
+
+  const handleSaveReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tName.trim() || !tComment.trim()) return;
+
+    const matchedProd = initialProducts.find((p) => p.slug === tProductSlug);
+    const prodName = matchedProd ? matchedProd.name : "DUST Superfoods";
+    const defaultPoster = matchedProd?.storyImage ?? "";
+
+    if (editingTestimonial) {
+      updateTestimonial(editingTestimonial.id, {
+        customerName: tName.trim(),
+        location: tLocation.trim(),
+        productSlug: tProductSlug,
+        productName: prodName,
+        rating: tRating,
+        title: tTitle.trim(),
+        comment: tComment.trim(),
+        mediaType: tMediaType,
+        videoUrl: tMediaType === "video" ? tVideoUrl.trim() : undefined,
+        videoPoster: tMediaType === "video" ? (tVideoPoster.trim() || defaultPoster) : undefined,
+        videoDuration: tMediaType === "video" ? tVideoDuration.trim() : undefined,
+        verifiedBuyer: tVerified,
+        isFeatured: tFeatured,
+        isApproved: tApproved,
+      });
+    } else {
+      addTestimonial({
+        customerName: tName.trim(),
+        location: tLocation.trim(),
+        productSlug: tProductSlug,
+        productName: prodName,
+        rating: tRating,
+        title: tTitle.trim(),
+        comment: tComment.trim(),
+        mediaType: tMediaType,
+        videoUrl: tMediaType === "video" ? tVideoUrl.trim() : undefined,
+        videoPoster: tMediaType === "video" ? (tVideoPoster.trim() || defaultPoster) : undefined,
+        videoDuration: tMediaType === "video" ? tVideoDuration.trim() : undefined,
+        verifiedBuyer: tVerified,
+        isFeatured: tFeatured,
+        isApproved: tApproved,
+      });
+    }
+    setIsReviewModalOpen(false);
+  };
 
   // State 1: Products & Image Management (Add/Edit/Delete)
   const [productsList, setProductsList] = useState<Product[]>(initialProducts);
@@ -327,6 +451,16 @@ export const Admin: React.FC = () => {
               }`}
           >
             <ImageIcon className="w-4 h-4 text-[#E67E22]" /> Homepage Banners
+          </button>
+
+          <button
+            onClick={() => setActiveTab("reviews")}
+            className={`px-5 py-2.5 rounded-full font-extrabold text-xs uppercase tracking-wider inline-flex items-center gap-2 transition-all ${activeTab === "reviews"
+              ? "bg-[#0E382E] text-white shadow-md"
+              : "bg-white text-[#0E382E] hover:bg-[#E8F1E9]"
+              }`}
+          >
+            <Video className="w-4 h-4 text-[#E67E22]" /> Customer Videos & Reviews
           </button>
 
           <button
@@ -765,6 +899,264 @@ export const Admin: React.FC = () => {
           </div>
         )}
 
+        {/* Tab 8.5: Video Testimonials & Customer Reviews Management */}
+        {activeTab === "reviews" && (
+          <div className="bg-white p-8 rounded-3xl border border-[#74B487]/40 shadow-sm space-y-8">
+            {/* Header & Controls */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h3 className="text-xl font-extrabold text-[#0E382E] flex items-center gap-2">
+                  <Video className="w-5 h-5 text-[#E67E22]" /> Customer Reviews & Video Stories Hub
+                </h3>
+                <p className="text-xs text-[#1F684B]">
+                  Manage real customer feedback, add product video testimonials, and publish verified reviews directly to the website.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={resetToDefaults}
+                  className="px-4 py-2 border border-[#74B487]/40 text-[#0E382E] hover:bg-[#E8F1E9] text-xs font-bold rounded-xl transition-colors"
+                  title="Restore initial seed testimonials"
+                >
+                  Reset Defaults
+                </button>
+                <button
+                  onClick={openNewReviewModal}
+                  className="btn-dust-orange px-5 py-2.5 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl inline-flex items-center gap-2 shadow-sm hover:shadow-md"
+                >
+                  <Plus className="w-4 h-4" /> Add Video / Review
+                </button>
+              </div>
+            </div>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div className="p-4 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/30 text-center space-y-1">
+                <span className="text-[10px] uppercase font-bold text-stone-500">Total Reviews</span>
+                <p className="text-2xl font-black text-[#0E382E]">{testimonials.length}</p>
+              </div>
+              <div className="p-4 bg-[#E8F1E9] rounded-2xl border border-[#74B487]/40 text-center space-y-1">
+                <span className="text-[10px] uppercase font-bold text-[#1F684B]">Video Stories</span>
+                <p className="text-2xl font-black text-[#E67E22]">
+                  {testimonials.filter((t) => t.mediaType === "video").length}
+                </p>
+              </div>
+              <div className="p-4 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/30 text-center space-y-1">
+                <span className="text-[10px] uppercase font-bold text-stone-500">Live on Site</span>
+                <p className="text-2xl font-black text-[#25D366]">
+                  {testimonials.filter((t) => t.isApproved).length}
+                </p>
+              </div>
+              <div className="p-4 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/30 text-center space-y-1">
+                <span className="text-[10px] uppercase font-bold text-stone-500">Average Rating</span>
+                <p className="text-2xl font-black text-[#E67E22] flex items-center justify-center gap-1">
+                  5.0 <Star className="w-4 h-4 fill-current inline stroke-none" />
+                </p>
+              </div>
+            </div>
+
+            {/* Filters Bar */}
+            <div className="flex flex-col sm:flex-row gap-3 text-xs">
+              <div className="relative flex-1">
+                <Search className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+                <input
+                  type="text"
+                  placeholder="Search by customer name, city, or title..."
+                  value={reviewSearch}
+                  onChange={(e) => setReviewSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl text-[#0E382E] focus:outline-none focus:border-[#E67E22]"
+                />
+              </div>
+
+              <select
+                value={reviewTypeFilter}
+                onChange={(e) => setReviewTypeFilter(e.target.value as any)}
+                className="p-2 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl font-bold text-[#0E382E]"
+              >
+                <option value="all">All Types</option>
+                <option value="video">Videos Only</option>
+                <option value="text">Text Reviews Only</option>
+              </select>
+
+              <select
+                value={reviewProductFilter}
+                onChange={(e) => setReviewProductFilter(e.target.value)}
+                className="p-2 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl font-bold text-[#0E382E]"
+              >
+                <option value="all">All Products</option>
+                {initialProducts.map((p) => (
+                  <option key={p.slug} value={p.slug}>
+                    {p.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Testimonials List */}
+            <div className="space-y-4">
+              {testimonials
+                .filter((t) => {
+                  if (reviewTypeFilter === "video" && t.mediaType !== "video") return false;
+                  if (reviewTypeFilter === "text" && t.mediaType === "video") return false;
+                  if (reviewProductFilter !== "all" && t.productSlug !== reviewProductFilter) return false;
+                  if (reviewSearch) {
+                    const q = reviewSearch.toLowerCase();
+                    return (
+                      t.customerName.toLowerCase().includes(q) ||
+                      t.location.toLowerCase().includes(q) ||
+                      t.title.toLowerCase().includes(q) ||
+                      t.comment.toLowerCase().includes(q)
+                    );
+                  }
+                  return true;
+                })
+                .map((t) => (
+                  <div
+                    key={t.id}
+                    className="p-5 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/40 flex flex-col md:flex-row gap-5 justify-between items-start md:items-center hover:border-[#E67E22] transition-colors"
+                  >
+                    {/* Left: Thumbnail & Details */}
+                    <div className="flex gap-4 items-start">
+                      {/* Video Thumbnail or Text Icon */}
+                      {t.mediaType === "video" ? (
+                        <div
+                          onClick={() => t.videoUrl && setPreviewVideoUrl(t.videoUrl)}
+                          className="relative w-24 h-24 rounded-xl overflow-hidden bg-black shrink-0 cursor-pointer border border-[#74B487]/40 group shadow-xs"
+                        >
+                          {t.videoPoster ? (
+                            <img
+                              src={t.videoPoster}
+                              alt={t.customerName}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-[#0E382E]">
+                              <Film className="w-6 h-6 text-[#E67E22]" />
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                            <div className="w-8 h-8 rounded-full bg-[#E67E22] text-white flex items-center justify-center shadow-md group-hover:scale-110 transition-transform">
+                              <Play className="w-4 h-4 fill-current stroke-none ml-0.5" />
+                            </div>
+                          </div>
+                          {t.videoDuration && (
+                            <span className="absolute bottom-1 right-1 text-[9px] font-bold text-white bg-black/70 px-1 rounded">
+                              {t.videoDuration}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-16 h-16 rounded-xl bg-[#E8F1E9] text-[#0E382E] flex items-center justify-center shrink-0 border border-[#74B487]/40">
+                          <MessageSquare className="w-7 h-7 text-[#E67E22]" />
+                        </div>
+                      )}
+
+                      <div className="space-y-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="font-extrabold text-[#0E382E] text-sm">
+                            {t.customerName}
+                          </span>
+                          <span className="text-[11px] text-stone-500">({t.location})</span>
+                          {t.verifiedBuyer && (
+                            <span className="inline-flex items-center gap-0.5 text-[9px] font-black uppercase text-[#1F684B] bg-[#E8F1E9] px-2 py-0.5 rounded-full border border-[#74B487]/30">
+                              <CheckCircle2 className="w-3 h-3 text-[#25D366]" /> Verified Buyer
+                            </span>
+                          )}
+                          <span className="text-[10px] font-bold text-[#E67E22] bg-white px-2 py-0.5 rounded-full border border-[#E67E22]/30">
+                            {t.mediaType === "video" ? "🎥 Video Story" : "📝 Written Review"}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <div className="flex text-[#E67E22]">
+                            {[...Array(t.rating)].map((_, i) => (
+                              <Star key={i} className="w-3.5 h-3.5 fill-current stroke-none" />
+                            ))}
+                          </div>
+                          <span className="text-xs font-bold text-[#0E382E]">"{t.title}"</span>
+                        </div>
+
+                        <p className="text-xs text-stone-600 line-clamp-2 max-w-xl">
+                          {t.comment}
+                        </p>
+
+                        <div className="flex items-center gap-3 pt-1 text-[11px] text-stone-500">
+                          <span className="font-bold text-[#0E382E]">Product: {t.productName}</span>
+                          <span>•</span>
+                          <span>{t.date}</span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1 text-[#E67E22] font-bold">
+                            <ThumbsUp className="w-3 h-3" /> {t.helpfulCount} helpful
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right: Actions */}
+                    <div className="flex flex-wrap md:flex-col items-end gap-2 shrink-0">
+                      <div className="flex items-center gap-2">
+                        {/* Live Toggle */}
+                        <button
+                          onClick={() => toggleApproval(t.id)}
+                          className={`px-3 py-1.5 rounded-lg text-[11px] font-extrabold transition-colors ${
+                            t.isApproved
+                              ? "bg-[#25D366]/20 text-[#0E382E] hover:bg-[#25D366]/30"
+                              : "bg-stone-200 text-stone-600 hover:bg-stone-300"
+                          }`}
+                        >
+                          {t.isApproved ? "✓ Live on Site" : "✕ Hidden"}
+                        </button>
+
+                        {/* Featured Toggle */}
+                        <button
+                          onClick={() => toggleFeatured(t.id)}
+                          className={`px-3 py-1.5 rounded-lg text-[11px] font-extrabold transition-colors ${
+                            t.isFeatured
+                              ? "bg-[#E67E22] text-white"
+                              : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                          }`}
+                        >
+                          ★ Featured
+                        </button>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {t.mediaType === "video" && t.videoUrl && (
+                          <button
+                            onClick={() => setPreviewVideoUrl(t.videoUrl!)}
+                            className="p-1.5 bg-white border border-[#74B487]/40 rounded-lg text-[#0E382E] hover:bg-[#E8F1E9]"
+                            title="Preview Video"
+                          >
+                            <Play className="w-3.5 h-3.5 text-[#E67E22]" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => openEditReviewModal(t)}
+                          className="p-1.5 bg-white border border-[#74B487]/40 rounded-lg text-[#0E382E] hover:bg-[#E8F1E9]"
+                          title="Edit"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (confirm(`Delete review from "${t.customerName}"?`)) {
+                              deleteTestimonial(t.id);
+                            }
+                          }}
+                          className="p-1.5 bg-white border border-red-200 rounded-lg text-red-600 hover:bg-red-50"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        )}
+
         {/* Tab 9: Reviews, Blogs & Recipes (#12, #13, #14) */}
         {activeTab === "content" && (
           <div className="bg-white p-8 rounded-3xl border border-[#74B487]/40 shadow-sm space-y-8">
@@ -974,6 +1366,298 @@ export const Admin: React.FC = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add / Edit Customer Testimonial Modal */}
+      {isReviewModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs">
+          <div className="relative w-full max-w-lg bg-white rounded-3xl p-8 space-y-5 border border-[#74B487]/50 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-extrabold text-[#0E382E]">
+                {editingTestimonial ? "Edit Customer Review / Story" : "Add Customer Video / Review"}
+              </h3>
+              <button
+                onClick={() => setIsReviewModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveReview} className="space-y-4 text-xs">
+              {/* Media Type Selection */}
+              <div>
+                <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                  Format / Media Type *
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setTMediaType("video")}
+                    className={`py-2.5 px-3 rounded-xl border text-center font-bold flex items-center justify-center gap-2 ${
+                      tMediaType === "video"
+                        ? "bg-[#0E382E] text-white border-[#0E382E]"
+                        : "bg-[#F6F5F0] text-[#0E382E] border-[#74B487]/40"
+                    }`}
+                  >
+                    <Video className="w-4 h-4 text-[#E67E22]" /> 🎥 Video Testimonial
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTMediaType("text")}
+                    className={`py-2.5 px-3 rounded-xl border text-center font-bold flex items-center justify-center gap-2 ${
+                      tMediaType === "text"
+                        ? "bg-[#0E382E] text-white border-[#0E382E]"
+                        : "bg-[#F6F5F0] text-[#0E382E] border-[#74B487]/40"
+                    }`}
+                  >
+                    <MessageSquare className="w-4 h-4 text-[#E67E22]" /> 📝 Written Review
+                  </button>
+                </div>
+              </div>
+
+              {/* Customer Name & City */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                    Customer Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Dr. Sneha Kulkarni"
+                    value={tName}
+                    onChange={(e) => setTName(e.target.value)}
+                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                    Location / City *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Pune, Maharashtra"
+                    value={tLocation}
+                    onChange={(e) => setTLocation(e.target.value)}
+                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                  />
+                </div>
+              </div>
+
+              {/* Product Selection */}
+              <div>
+                <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                  Product Reviewed *
+                </label>
+                <select
+                  value={tProductSlug}
+                  onChange={(e) => setTProductSlug(e.target.value)}
+                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-bold"
+                >
+                  {initialProducts.map((p) => (
+                    <option key={p.slug} value={p.slug}>
+                      {p.name} ({p.netWeight})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Rating */}
+              <div>
+                <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                  Star Rating (1 - 5)
+                </label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      type="button"
+                      key={star}
+                      onClick={() => setTRating(star)}
+                      className="p-1 hover:scale-110 transition-transform"
+                    >
+                      <Star
+                        className={`w-6 h-6 ${
+                          star <= tRating ? "fill-current text-[#E67E22]" : "text-stone-300"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Video URL & Poster (if video) */}
+              {tMediaType === "video" && (
+                <div className="space-y-3 p-4 bg-[#E8F1E9]/50 rounded-2xl border border-[#74B487]/40">
+                  <div>
+                    <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                      Video URL (MP4, YouTube, or Reel link) *
+                    </label>
+                    <input
+                      type="url"
+                      required
+                      placeholder="https://.../video.mp4 or YouTube link"
+                      value={tVideoUrl}
+                      onChange={(e) => setTVideoUrl(e.target.value)}
+                      className="w-full bg-white border border-[#74B487]/40 rounded-xl p-2.5 text-[#0E382E] font-semibold"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                        Video Duration
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="e.g. 0:45"
+                        value={tVideoDuration}
+                        onChange={(e) => setTVideoDuration(e.target.value)}
+                        className="w-full bg-white border border-[#74B487]/40 rounded-xl p-2.5 text-[#0E382E] font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                        Poster Image URL (optional)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Image URL or leave blank"
+                        value={tVideoPoster}
+                        onChange={(e) => setTVideoPoster(e.target.value)}
+                        className="w-full bg-white border border-[#74B487]/40 rounded-xl p-2.5 text-[#0E382E] font-semibold"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Review Headline & Comment */}
+              <div>
+                <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                  Headline / Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Authentic taste and zero sugar spike!"
+                  value={tTitle}
+                  onChange={(e) => setTTitle(e.target.value)}
+                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                  Customer Review Comment *
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  placeholder="Detailed customer experience and review..."
+                  value={tComment}
+                  onChange={(e) => setTComment(e.target.value)}
+                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                />
+              </div>
+
+              {/* Toggles */}
+              <div className="flex flex-wrap gap-4 pt-2">
+                <label className="flex items-center gap-2 cursor-pointer font-bold text-[#0E382E]">
+                  <input
+                    type="checkbox"
+                    checked={tVerified}
+                    onChange={(e) => setTVerified(e.target.checked)}
+                    className="rounded accent-[#E67E22] w-4 h-4"
+                  />
+                  <span>Verified Buyer</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer font-bold text-[#0E382E]">
+                  <input
+                    type="checkbox"
+                    checked={tApproved}
+                    onChange={(e) => setTApproved(e.target.checked)}
+                    className="rounded accent-[#E67E22] w-4 h-4"
+                  />
+                  <span>Publish Live on Website</span>
+                </label>
+
+                <label className="flex items-center gap-2 cursor-pointer font-bold text-[#0E382E]">
+                  <input
+                    type="checkbox"
+                    checked={tFeatured}
+                    onChange={(e) => setTFeatured(e.target.checked)}
+                    className="rounded accent-[#E67E22] w-4 h-4"
+                  />
+                  <span>Feature on Home</span>
+                </label>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setIsReviewModalOpen(false)}
+                  className="w-1/2 bg-stone-200 text-stone-700 py-3 rounded-xl font-bold uppercase"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="w-1/2 btn-dust-orange text-white py-3 rounded-xl font-bold uppercase shadow-md"
+                >
+                  {editingTestimonial ? "Save Changes" : "Publish Testimonial"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Video Preview Player Modal */}
+      {previewVideoUrl && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="relative w-full max-w-2xl bg-[#0E382E] rounded-3xl overflow-hidden border border-[#74B487]/50 shadow-2xl">
+            <button
+              onClick={() => setPreviewVideoUrl(null)}
+              className="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-[#E67E22] text-white flex items-center justify-center transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="relative aspect-video bg-black flex items-center justify-center">
+              {previewVideoUrl.includes("youtube") || previewVideoUrl.includes("youtu.be") ? (
+                <iframe
+                  src={
+                    previewVideoUrl.includes("watch?v=")
+                      ? previewVideoUrl.replace("watch?v=", "embed/")
+                      : previewVideoUrl
+                  }
+                  title="Video Preview"
+                  className="w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : (
+                <video src={previewVideoUrl} controls autoPlay className="w-full h-full object-contain">
+                  Your browser does not support the video tag.
+                </video>
+              )}
+            </div>
+
+            <div className="p-4 bg-[#0E382E] text-white flex items-center justify-between text-xs">
+              <span className="font-bold text-[#E67E22]">Admin Video Playback Preview</span>
+              <button
+                onClick={() => setPreviewVideoUrl(null)}
+                className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-white"
+              >
+                Close Preview
+              </button>
+            </div>
           </div>
         </div>
       )}

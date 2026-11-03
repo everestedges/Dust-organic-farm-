@@ -20,6 +20,7 @@ import laddooMix from "@/assets/laddooMix.png";
 import ragiPouch from "@/assets/ragi-pouch.png";
 import paanPouchStick from "@/assets/paan-pouch-stick.png";
 import paanPouchBack from "@/assets/paan-pouch-back.png";
+import { CustomerTestimonials } from "@/components/cinematic/CustomerTestimonials";
 
 export const ProductDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -816,6 +817,14 @@ export const ProductDetail: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Customer Feedback & Video Testimonials Section */}
+      <CustomerTestimonials
+        currentProductSlug={product.slug}
+        title={`Customer Reviews & Stories for ${product.name}`}
+        subtitle={`See what verified customers across India are saying about ${product.name}.`}
+        className="mt-20 pt-16 border-t border-[#74B487]/40 px-0"
+      />
 
       {/* You May Also Like — Always Suggest Combo Packets */}
       <section className="mt-24 pt-16 border-t border-[#74B487]/40 space-y-8">

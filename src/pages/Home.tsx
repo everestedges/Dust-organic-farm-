@@ -33,6 +33,7 @@ import aboutBannerFarmWaste from "@/assets/about-banner-farm-waste.png";
 import aboutBannerLaddoo from "@/assets/about-banner-laddoo.png";
 import almondCollage from "@/assets/almond-powder-collage.png";
 import cashewCollage from "@/assets/cashew-powder-collage.png";
+import { CustomerTestimonials } from "@/components/cinematic/CustomerTestimonials";
 
 const homeHeroBanners = [
   {
@@ -939,6 +940,12 @@ export const Home: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Customer Feedback & Video Testimonials Section */}
+      <CustomerTestimonials
+        title="Real Stories & Verified Experiences"
+        subtitle="Discover why thousands of Indian households have made DUST their daily tradition for nutrition and digestive wellness."
+      />
 
       {/* 5. Collections Banner Grid */}
       <section className="py-24 px-4 sm:px-8 md:px-12 lg:px-16 w-full">        <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
