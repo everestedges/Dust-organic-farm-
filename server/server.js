@@ -171,7 +171,7 @@ app.get("/api/users", async (req, res) => {
              COUNT(o.id) as orders_count,
              COALESCE(SUM(o.total_amount), 0) as total_spent
       FROM users u
-      LEFT JOIN orders o ON o.customer_email = u.email
+      LEFT JOIN orders o ON LOWER(TRIM(o.customer_email)) = LOWER(TRIM(u.email))
       GROUP BY u.id, u.full_name, u.email, u.phone, u.role, u.created_at
       ORDER BY u.id DESC
     `);
@@ -299,7 +299,7 @@ app.get("/api/orders", async (req, res) => {
     `;
     const params = [];
     if (email) {
-      sql += " WHERE o.customer_email = ? ";
+      sql += " WHERE LOWER(TRIM(o.customer_email)) = LOWER(TRIM(?)) ";
       params.push(email);
     }
     sql += " GROUP BY o.id, o.order_reference, o.customer_name, o.customer_email, o.customer_phone, o.shipping_address, o.city, o.state, o.pincode, o.subtotal_amount, o.total_amount, o.payment_method, o.payment_status, o.order_status, o.tracking_awb, o.created_at ORDER BY o.id DESC ";
@@ -367,6 +367,9 @@ app.get("/api/health", async (req, res) => {
 // 4. FRONTEND STATIC SERVING (Serves built React Vite app on Hostinger)
 // ---------------------------------------------------------------------
 const distPath = path.join(__dirname, "../dist");
+const publicPath = path.join(__dirname, "../public");
+
+app.use(express.static(publicPath));
 app.use(express.static(distPath));
 
 // Express 5 compatible SPA fallback middleware

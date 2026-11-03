@@ -59,25 +59,59 @@ export const Account: React.FC = () => {
         typeof window !== "undefined" && window.location.hostname !== "localhost"
           ? "/api"
           : "http://localhost:5000/api";
-      fetch(`${apiBase}/orders?email=${encodeURIComponent(user.email)}`)
+
+      // Load local backup orders first
+      let localOrders: UserOrder[] = [];
+      try {
+        const localBackup = JSON.parse(
+          localStorage.getItem("dust_orders_history_backup") || "[]"
+        );
+        localOrders = localBackup
+          .filter((o: any) => !o.customerEmail || o.customerEmail.toLowerCase() === user.email.toLowerCase())
+          .map((o: any) => ({
+            id: o.id,
+            date: o.date || "Recent",
+            total: Number(o.total) || 0,
+            status: o.status || "Pending",
+            items: o.items || "DUST Organic Order",
+          }));
+        if (localOrders.length > 0) {
+          setUserOrders(localOrders);
+        }
+      } catch (err) {
+        // Ignored
+      }
+
+      fetch(`${apiBase}/orders?email=${encodeURIComponent(user.email)}`, {
+        cache: "no-store",
+      })
         .then((res) => res.json())
         .then((data) => {
           if (data.success && Array.isArray(data.orders)) {
-            setUserOrders(
-              data.orders.map((o: any) => ({
-                id: o.order_reference || `DST-${o.id}`,
-                date: o.created_at
-                  ? new Date(o.created_at).toLocaleDateString("en-IN", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })
-                  : "Recent",
-                total: Number(o.total_amount) || 0,
-                status: o.order_status || "Order Received",
-                items: o.items_summary || "DUST Organic Order",
-              }))
-            );
+            const dbOrders: UserOrder[] = data.orders.map((o: any) => ({
+              id: o.order_reference || `DST-${o.id}`,
+              date: o.created_at
+                ? new Date(o.created_at).toLocaleDateString("en-IN", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })
+                : "Recent",
+              total: Number(o.total_amount) || 0,
+              status: o.order_status || "Pending",
+              items: o.items_summary || "DUST Organic Order",
+            }));
+
+            // Merge DB orders with local fallback orders
+            const seen = new Set<string>();
+            const combined: UserOrder[] = [];
+            for (const o of [...dbOrders, ...localOrders]) {
+              if (!seen.has(o.id)) {
+                seen.add(o.id);
+                combined.push(o);
+              }
+            }
+            setUserOrders(combined);
           }
         })
         .catch((err) => console.warn("Could not load user orders:", err));

@@ -246,7 +246,7 @@ export const Admin: React.FC = () => {
     setIsLoadingLive(true);
     try {
       // 1. Fetch live orders
-      const ordersRes = await fetch(`${API_BASE}/orders`);
+      const ordersRes = await fetch(`${API_BASE}/orders`, { cache: "no-store" });
       if (ordersRes.ok) {
         const data = await ordersRes.json();
         if (data.success && Array.isArray(data.orders)) {
@@ -274,7 +274,7 @@ export const Admin: React.FC = () => {
       }
 
       // 2. Fetch live registered customers
-      const usersRes = await fetch(`${API_BASE}/users`);
+      const usersRes = await fetch(`${API_BASE}/users`, { cache: "no-store" });
       if (usersRes.ok) {
         const data = await usersRes.json();
         if (data.success && Array.isArray(data.users)) {
@@ -299,7 +299,7 @@ export const Admin: React.FC = () => {
       }
 
       // 3. Fetch distributor leads
-      const leadsRes = await fetch(`${API_BASE}/distributor-leads`);
+      const leadsRes = await fetch(`${API_BASE}/distributor-leads`, { cache: "no-store" });
       if (leadsRes.ok) {
         const data = await leadsRes.json();
         if (data.success && Array.isArray(data.leads)) {

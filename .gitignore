@@ -8,13 +8,26 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
 dist-ssr
 .output
 .vinxi
 .tanstack/**
 .nitro
 *.local
+
+# Ignore heavy media duplicates in dist/ so git commits are lightweight
+dist/**/*.png
+dist/**/*.jpg
+dist/**/*.jpeg
+dist/**/*.pdf
+dist/**/*.svg
+dist/**/*.mp4
+dist/**/*.webp
+dist/*.png
+dist/*.jpg
+dist/*.jpeg
+dist/*.pdf
+dist/*.svg
 
 # Wrangler / Cloudflare
 .wrangler/

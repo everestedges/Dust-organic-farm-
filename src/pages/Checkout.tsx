@@ -35,6 +35,7 @@ export const Checkout: React.FC = () => {
 
   const [orderComplete, setOrderComplete] = useState(false);
   const [orderId, setOrderId] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const subtotal = getSubtotal();
   const discountAmount = Math.round((subtotal * discountPercent) / 100);
@@ -54,6 +55,8 @@ export const Checkout: React.FC = () => {
       alert("Please fill in your name, phone, and shipping address.");
       return;
     }
+
+    setIsSubmitting(true);
     const generatedId = "DST-8600-" + Math.floor(1000 + Math.random() * 9000);
     setOrderId(generatedId);
 
@@ -62,36 +65,88 @@ export const Checkout: React.FC = () => {
         ? "/api"
         : "http://localhost:5000/api";
 
+    const payload = {
+      reference: generatedId,
+      customerName: formData.name.trim(),
+      customerEmail: (formData.email || user?.email || "customer@dustofficial.com").trim(),
+      customerPhone: formData.phone.trim(),
+      address: formData.address.trim(),
+      city: (formData.city || "Pune").trim(),
+      state: "Maharashtra",
+      pincode: (formData.pincode || "411045").trim(),
+      total: grandTotal,
+      subtotal: subtotal,
+      paymentMethod: isCOD ? "COD" : "UPI",
+      items:
+        cart.length > 0
+          ? cart.map((item) => ({
+              productId: 1,
+              name: item.product?.name || "DUST Organic Powder",
+              quantity: item.quantity || 1,
+              price: item.product?.price || 0,
+            }))
+          : [
+              {
+                productId: 1,
+                name: "DUST Organic Heritage Powder",
+                quantity: 1,
+                price: grandTotal,
+              },
+            ],
+    };
+
     try {
-      await fetch(`${apiBase}/orders`, {
+      const response = await fetch(`${apiBase}/orders`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          reference: generatedId,
-          customerName: formData.name,
-          customerEmail: formData.email || user?.email || "customer@dustofficial.com",
-          customerPhone: formData.phone,
-          address: formData.address,
-          city: formData.city || "Pune",
-          state: "Maharashtra",
-          pincode: formData.pincode || "411045",
-          total: grandTotal,
-          subtotal: subtotal,
-          paymentMethod: isCOD ? "COD" : "UPI",
-          items: cart.map((item) => ({
-            productId: 1,
-            name: item.product?.name || "DUST Organic Powder",
-            quantity: item.quantity || 1,
-            price: item.product?.price || 0,
-          })),
-        }),
+        body: JSON.stringify(payload),
       });
-    } catch (err) {
-      console.warn("Order saved locally, database API sync error:", err);
-    }
 
-    setOrderComplete(true);
-    clearCart();
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok || !data.success) {
+        alert(
+          "Could not place order: " +
+            (data.message || response.statusText || "Database server error")
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Save order to local fallback storage
+      try {
+        const localBackup = JSON.parse(
+          localStorage.getItem("dust_orders_history_backup") || "[]"
+        );
+        localBackup.unshift({
+          id: generatedId,
+          date: new Date().toLocaleDateString("en-IN", {
+            day: "numeric",
+            month: "short",
+            year: "numeric",
+          }),
+          total: grandTotal,
+          status: "Pending",
+          items: payload.items
+            .map((i: any) => `${i.quantity}x ${i.name}`)
+            .join(", "),
+          customerEmail: payload.customerEmail,
+        });
+        localStorage.setItem(
+          "dust_orders_history_backup",
+          JSON.stringify(localBackup)
+        );
+      } catch (backupErr) {
+        // Ignored
+      }
+
+      setOrderComplete(true);
+      clearCart();
+    } catch (err: any) {
+      alert("Network error submitting order: " + err.message + ". Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (orderComplete) {
@@ -239,9 +294,17 @@ export const Checkout: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full py-4 btn-dust-orange text-white font-extrabold text-sm uppercase tracking-widest rounded-2xl transition-all shadow-md"
+            disabled={isSubmitting}
+            className="w-full py-4 btn-dust-orange text-white font-extrabold text-sm uppercase tracking-widest rounded-2xl transition-all shadow-md disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            Place Order (₹{grandTotal})
+            {isSubmitting ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Saving Order to Live Database...
+              </>
+            ) : (
+              `Place Order (₹${grandTotal})`
+            )}
           </button>
         </form>
 
