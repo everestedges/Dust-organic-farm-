@@ -4,6 +4,14 @@ import { User as UserIcon, Package, MapPin, Heart, LogOut, ArrowUpRight, Truck, 
 import { companyInfo } from "@/lib/data";
 import { useAuthStore } from "@/lib/auth-store";
 
+interface UserOrder {
+  id: string;
+  date: string;
+  total: number;
+  status: string;
+  items: string;
+}
+
 export const Account: React.FC = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout, openAuthModal } = useAuthStore();
@@ -43,25 +51,7 @@ export const Account: React.FC = () => {
 
   const userInitial = user.name ? user.name.charAt(0).toUpperCase() : "U";
 
-  const userOrders =
-    user.email === "rajesh.kumar@example.com"
-      ? [
-          {
-            id: "DST-8600-9482",
-            date: "26 August 2026",
-            total: 647,
-            status: "In Transit",
-            items: "2× Shahi Ragi Laddoo Mix + 1× Paan Digestive Shot Box",
-          },
-          {
-            id: "DST-8600-3810",
-            date: "12 August 2026",
-            total: 398,
-            status: "Delivered",
-            items: "2× Shahi Ragi & Dry Fruit Laddoo Mix",
-          },
-        ]
-      : [];
+  const [userOrders, setUserOrders] = useState<UserOrder[]>([]);
 
   return (
     <div className="pt-32 pb-24 px-4 sm:px-8 md:px-12 lg:px-16 w-full min-h-screen bg-[#F6F5F0] text-[#0E382E]">
@@ -247,15 +237,30 @@ export const Account: React.FC = () => {
                   Saved Shipping Addresses
                 </h3>
 
-                <div className="p-6 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/40 space-y-2 text-xs">
-                  <span className="bg-[#0E382E] text-white text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full">
-                    DEFAULT HOME ADDRESS
-                  </span>
-                  <h4 className="font-extrabold text-[#0E382E]">Rajesh Kumar</h4>
-                  <p className="text-[#1F684B]">Flat 402, Green Acres Apartment, Baner Road</p>
-                  <p className="text-[#1F684B]">Pune, Maharashtra — 411045</p>
-                  <p className="text-[#74B487] font-semibold">Phone: +91 98765 43210</p>
-                </div>
+                {user.address ? (
+                  <div className="p-6 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/40 space-y-2 text-xs">
+                    <span className="bg-[#0E382E] text-white text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full">
+                      DEFAULT HOME ADDRESS
+                    </span>
+                    <h4 className="font-extrabold text-[#0E382E]">{user.name}</h4>
+                    <p className="text-[#1F684B]">{user.address}</p>
+                    {user.city && (
+                      <p className="text-[#1F684B]">
+                        {user.city} {user.pincode ? `— ${user.pincode}` : ""}
+                      </p>
+                    )}
+                    {user.phone && (
+                      <p className="text-[#74B487] font-semibold">Phone: {user.phone}</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-6 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/30 text-center py-8 text-xs text-[#1F684B]">
+                    <p className="font-bold text-[#0E382E]">No saved address yet</p>
+                    <p className="text-[11px] text-stone-500 mt-1">
+                      Your address will be automatically saved here when you place an order.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
           </div>

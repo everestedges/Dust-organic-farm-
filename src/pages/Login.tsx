@@ -74,7 +74,7 @@ export const Login: React.FC = () => {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Rajesh Kumar"
+                  placeholder="Enter your full name"
                   className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl pl-10 pr-3 py-3 text-xs outline-none focus:border-[#E67E22] text-[#0E382E]"
                 />
               </div>

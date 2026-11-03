@@ -36,16 +36,8 @@ const API_BASE_URL =
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
-      user: {
-        id: 1,
-        name: "Rajesh Kumar",
-        email: "rajesh.kumar@example.com",
-        phone: "9876543210",
-        city: "Pune",
-        address: "Flat 402, Green Acres Apartment, Baner Road",
-        pincode: "411045",
-      },
-      isAuthenticated: true,
+      user: null,
+      isAuthenticated: false,
       isAuthModalOpen: false,
       authView: "login",
       authError: null,
@@ -81,10 +73,10 @@ export const useAuthStore = create<AuthState>()(
           const formattedName = existingName.charAt(0).toUpperCase() + existingName.slice(1);
           set({
             user: {
-              name: formattedName === "Rajesh.kumar" ? "Rajesh Kumar" : formattedName,
+              name: formattedName,
               email: email,
-              phone: get().user?.phone || "9876543210",
-              address: get().user?.address || "Pune, Maharashtra",
+              phone: get().user?.phone || "",
+              address: get().user?.address || "",
             },
             isAuthenticated: true,
             isAuthModalOpen: false,
@@ -161,11 +153,16 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: "dust_auth_storage",
+      name: "dust_auth_storage_v2",
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.user?.email === "rajesh.kumar@example.com") {
+          state.logout();
+        }
+      },
     }
   )
 );

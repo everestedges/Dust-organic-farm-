@@ -226,52 +226,13 @@ export const Admin: React.FC = () => {
   ]);
 
   // State 7: Customers
-  const [customers, setCustomers] = useState([
-    { id: 1, name: "Rajesh Kumar", email: "rajesh.kumar@example.com", phone: "9876543210", orders: 2, totalSpent: "₹1,045", date: "26 Aug 2026" },
-    { id: 2, name: "Vipul Mandal", email: "vipul.m@gmail.com", phone: "1234567890", orders: 1, totalSpent: "₹249", date: "27 Aug 2026" },
-  ]);
+  const [customers, setCustomers] = useState<any[]>([]);
 
   // State 8: Customer Orders
-  const [orders, setOrders] = useState([
-    {
-      id: "DST-8600-9482",
-      customer: "Rajesh Kumar",
-      email: "rajesh.kumar@example.com",
-      phone: "9876543210",
-      total: 647,
-      payment: "PAID (UPI)",
-      status: "Handed to Courier",
-      awb: "SR-994821",
-      date: "26 Aug 2026",
-    },
-    {
-      id: "DST-8600-3810",
-      customer: "Priya Sharma",
-      email: "priya.sharma@example.com",
-      phone: "9812345678",
-      total: 398,
-      payment: "PAID (Card)",
-      status: "Delivered",
-      awb: "DEL-882910",
-      date: "24 Aug 2026",
-    },
-  ]);
+  const [orders, setOrders] = useState<any[]>([]);
 
   // State 9: Distributor Leads
-  const [distributorLeads, setDistributorLeads] = useState([
-    {
-      id: 1,
-      name: "Rajesh Kumar",
-      company: "Om Traders & Agency",
-      phone: "9876543210",
-      email: "rajesh@omtraders.com",
-      location: "Pune, Maharashtra",
-      channel: "Regional Distributor",
-      investment: "₹2 Lakhs – ₹5 Lakhs",
-      status: "New",
-      date: "26 Aug 2026",
-    },
-  ]);
+  const [distributorLeads, setDistributorLeads] = useState<any[]>([]);
 
   // Actions
   const handleAddProduct = (e: React.FormEvent) => {
