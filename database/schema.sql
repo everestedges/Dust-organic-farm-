@@ -6,9 +6,6 @@
 --           Banners, Reviews, Blogs, Recipes, Contact & B2B Leads.
 -- =====================================================================
 
-CREATE DATABASE IF NOT EXISTS `dust_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE `dust_db`;
-
 -- ---------------------------------------------------------------------
 -- Table 1: Categories
 -- ---------------------------------------------------------------------
