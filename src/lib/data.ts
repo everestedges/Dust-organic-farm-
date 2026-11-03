@@ -971,8 +971,8 @@ export const faqs = [
     a: "Yes! We offer Free Express Shipping on all prepaid orders of ₹799 and above. For Cash on Delivery (COD) orders, a delivery fee of ₹120 applies.",
   },
   {
-    q: "How long does shipping take?",
-    a: "All orders are processed and dispatched within 24 hours of confirmation. Delivery takes 2-4 business days for major metro cities, and 5-7 business days for regional locations.",
+    q: "How long does order packing and shipping take?",
+    a: "Our order packing time is 24 to 48 hrs of fresh packing and delivery dispatch. Delivery takes 2-4 business days for major metro cities, and 5-7 business days for regional locations.",
   },
   {
     q: "Do you ship across India?",

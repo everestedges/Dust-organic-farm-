@@ -13,6 +13,8 @@ import {
   ArrowUpRight,
   Activity,
   Zap,
+  Clock,
+  Truck,
 } from "lucide-react";
 import { products, Product } from "@/lib/data";
 import { useCartStore } from "@/lib/cart-store";
@@ -483,9 +485,20 @@ export const ProductDetail: React.FC = () => {
               </Link>
             </div>
 
-            <div className="text-[11px] text-[#1F684B] text-center pt-2 flex items-center justify-center gap-2 font-bold">
+            {/* Fresh Packing & Delivery Guarantee */}
+            <div className="p-3 bg-[#E8F1E9]/80 border border-[#74B487]/40 rounded-2xl flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-[#0E382E] text-white flex items-center justify-center shrink-0 shadow-xs">
+                <Clock className="w-4 h-4 text-[#E67E22]" />
+              </div>
+              <div className="text-[11px] leading-tight">
+                <span className="font-extrabold text-[#0E382E] block">Fresh Batch Guarantee</span>
+                <span className="text-stone-700 font-medium">Order packing time: 24 to 48 hrs of fresh packing and delivery</span>
+              </div>
+            </div>
+
+            <div className="text-[11px] text-[#1F684B] text-center pt-1 flex items-center justify-center gap-2 font-bold flex-wrap">
               <ShieldCheck className="w-4 h-4 text-[#E67E22]" />
-              <span>In Stock • Dispatched within 24 Hours • FSSAI Certified</span>
+              <span>In Stock • 24 to 48 hrs of fresh packing and delivery • FSSAI Certified</span>
             </div>
           </div>
 
@@ -812,6 +825,9 @@ export const ProductDetail: React.FC = () => {
               )}
               <p>
                 <strong className="text-[#0E382E]">Storage:</strong> {product.storage}
+              </p>
+              <p>
+                <strong className="text-[#0E382E]">Order Packing Time:</strong> 24 to 48 hrs of fresh packing and delivery
               </p>
               {!product.slug.includes("shampoo") && (
                 <p className="text-[10.5px] text-stone-600 italic leading-relaxed pt-1">

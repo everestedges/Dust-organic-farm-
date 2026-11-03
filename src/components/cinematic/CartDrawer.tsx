@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag } from "lucide-react";
+import { X, Trash2, Plus, Minus, ArrowRight, ShoppingBag, Clock } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 
 export const CartDrawer: React.FC = () => {
@@ -74,6 +74,10 @@ export const CartDrawer: React.FC = () => {
             <p className="text-[10px] text-stone-600 leading-tight">
               *Free delivery on prepaid orders ₹799+. For COD orders, ₹120 delivery fee applies.
             </p>
+            <div className="flex items-center gap-1.5 pt-1 text-[10px] text-[#0E382E] font-medium">
+              <Clock className="w-3 h-3 text-[#E67E22] shrink-0" />
+              <span>Order Packing Time: 24 to 48 hrs of fresh packing and delivery</span>
+            </div>
           </div>
 
           {/* Cart List */}

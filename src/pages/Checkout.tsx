@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { ShieldCheck, CheckCircle2, ArrowLeft } from "lucide-react";
+import { ShieldCheck, CheckCircle2, ArrowLeft, Clock } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 
 export const Checkout: React.FC = () => {
@@ -288,6 +288,11 @@ export const Checkout: React.FC = () => {
             <div className="flex justify-between border-t border-[#74B487]/30 pt-3 text-sm font-extrabold text-[#0E382E]">
               <span>Total Payable</span>
               <span className="text-[#E67E22] text-xl font-extrabold">₹{grandTotal}</span>
+            </div>
+
+            <div className="flex items-center gap-2 pt-3 border-t border-[#74B487]/30 text-[11px] text-[#0E382E] font-medium">
+              <Clock className="w-4 h-4 text-[#E67E22] shrink-0" />
+              <span><strong>Order Packing Time:</strong> 24 to 48 hrs of fresh packing and delivery</span>
             </div>
           </div>
         </div>

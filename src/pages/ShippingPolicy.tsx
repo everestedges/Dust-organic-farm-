@@ -20,9 +20,9 @@ export const ShippingPolicy: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-white p-6 rounded-3xl border border-[#74B487]/40 shadow-xs space-y-2">
-            <div className="text-2xl font-extrabold text-[#E67E22]">24 Hours</div>
-            <h3 className="text-xs font-extrabold text-[#0E382E] uppercase">Dispatch Guarantee</h3>
-            <p className="text-[11px] text-[#1F684B]">Orders placed before 2 PM IST are packed & dispatched the same day.</p>
+            <div className="text-2xl font-extrabold text-[#E67E22]">24 to 48 Hrs</div>
+            <h3 className="text-xs font-extrabold text-[#0E382E] uppercase">Order Packing Time</h3>
+            <p className="text-[11px] text-[#1F684B]">24 to 48 hrs of fresh packing and delivery dispatch for guaranteed freshness.</p>
           </div>
 
           <div className="bg-white p-6 rounded-3xl border border-[#74B487]/40 shadow-xs space-y-2">
