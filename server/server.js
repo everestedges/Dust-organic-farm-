@@ -212,7 +212,24 @@ app.get("/api/health", async (req, res) => {
   }
 });
 
-const PORT = 5000;
+// ---------------------------------------------------------------------
+// 4. FRONTEND STATIC SERVING (Serves built React Vite app on Hostinger)
+// ---------------------------------------------------------------------
+const distPath = path.join(__dirname, "../dist");
+app.use(express.static(distPath));
+
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/api/")) {
+    return next();
+  }
+  res.sendFile(path.join(distPath, "index.html"), (err) => {
+    if (err) {
+      res.status(200).send("DUST API Server Running. Please ensure 'npm run build' has completed.");
+    }
+  });
+});
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`🚀 DUST Backend API Server running on http://localhost:${PORT}`);
+  console.log(`🚀 DUST Server running on port ${PORT}`);
 });
