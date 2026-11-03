@@ -80,9 +80,9 @@ export const Checkout: React.FC = () => {
           paymentMethod: isCOD ? "COD" : "UPI",
           items: cart.map((item) => ({
             productId: 1,
-            name: item.product.name,
-            quantity: item.quantity,
-            price: item.product.price,
+            name: item.product?.name || "DUST Organic Powder",
+            quantity: item.quantity || 1,
+            price: item.product?.price || 0,
           })),
         }),
       });

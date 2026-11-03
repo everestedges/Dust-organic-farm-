@@ -44,6 +44,19 @@ async function query(sql, params) {
   }
 }
 
+// Auto-migration: ensure orders columns accept standard e-commerce lifecycle statuses
+async function initDatabaseTables() {
+  try {
+    await query("ALTER TABLE orders MODIFY COLUMN order_status VARCHAR(50) DEFAULT 'Pending'");
+    await query("ALTER TABLE orders MODIFY COLUMN payment_status VARCHAR(50) DEFAULT 'PAID'");
+    await query("ALTER TABLE orders MODIFY COLUMN payment_method VARCHAR(50) DEFAULT 'UPI'");
+    console.log("✅ [DB INIT] orders table columns verified (order_status VARCHAR(50))");
+  } catch (err) {
+    // Column already modified or table not yet created
+  }
+}
+initDatabaseTables();
+
 // ---------------------------------------------------------------------
 // 1. AUTHENTICATION ENDPOINTS (Register & Login connected to MySQL)
 // ---------------------------------------------------------------------
@@ -225,7 +238,7 @@ app.post("/api/orders", async (req, res) => {
     const payment = (paymentMethod || "UPI").toUpperCase();
     const result = await query(
       `INSERT INTO orders (order_reference, customer_name, customer_email, customer_phone, shipping_address, city, state, pincode, subtotal_amount, total_amount, payment_method, payment_status, order_status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Order Received')`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Pending')`,
       [
         reference,
         customerName,
@@ -309,6 +322,33 @@ app.put("/api/orders/:id/status", async (req, res) => {
     );
     return res.json({ success: true, message: "Order status updated successfully" });
   } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// DELETE /api/orders/:id - Permanently delete an order and its items
+app.delete("/api/orders/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Delete linked items first
+    try {
+      await query(
+        "DELETE FROM order_items WHERE order_id = ? OR order_id = (SELECT id FROM orders WHERE order_reference = ? LIMIT 1)",
+        [id, id]
+      );
+    } catch (itemErr) {
+      // Ignored if cascade or already empty
+    }
+
+    const result = await query("DELETE FROM orders WHERE id = ? OR order_reference = ?", [id, id]);
+    console.log(`🗑️ [MySQL] Deleted order: ${id} (Affected rows: ${result.affectedRows})`);
+    return res.json({
+      success: true,
+      message: `Order ${id} deleted successfully`,
+      affectedRows: result.affectedRows,
+    });
+  } catch (err) {
+    console.error("❌ Delete Order Error:", err.message);
     return res.status(500).json({ success: false, error: err.message });
   }
 });

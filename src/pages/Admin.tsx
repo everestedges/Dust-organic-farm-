@@ -258,7 +258,8 @@ export const Admin: React.FC = () => {
               phone: o.customer_phone || "N/A",
               total: Number(o.total_amount) || 0,
               payment: `${o.payment_status || "PAID"} (${o.payment_method || "UPI"})`,
-              status: o.order_status || "Order Received",
+              status: o.order_status || "Pending",
+              items: o.items_summary || "1x DUST Blend",
               awb: o.tracking_awb || "Pending Dispatch",
               date: o.created_at
                 ? new Date(o.created_at).toLocaleDateString("en-IN", {
@@ -405,6 +406,27 @@ export const Admin: React.FC = () => {
       });
     } catch (err) {
       console.warn("Could not sync order status with backend DB:", err);
+    }
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!window.confirm(`Are you sure you want to permanently delete order ${orderId}? This cannot be undone.`)) {
+      return;
+    }
+    // Optimistic removal from UI
+    setOrders((prev) => prev.filter((o) => o.id !== orderId));
+    try {
+      const res = await fetch(`${API_BASE}/orders/${orderId}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        alert("Failed to delete order: " + (data.error || "Unknown error"));
+        fetchLiveDatabaseData();
+      }
+    } catch (err: any) {
+      alert("Error deleting order: " + err.message);
+      fetchLiveDatabaseData();
     }
   };
 
@@ -828,36 +850,64 @@ export const Admin: React.FC = () => {
                   ) : (
                     orders.map((order) => (
                       <tr key={order.id}>
-                        <td className="p-4 font-mono font-bold text-[#0E382E]">{order.id}</td>
+                        <td className="p-4 font-mono font-bold text-[#0E382E] whitespace-nowrap">
+                          {order.id}
+                          <span className="block text-[10px] text-stone-500 font-sans font-normal">{order.date}</span>
+                        </td>
                         <td className="p-4">
                           <p className="font-extrabold text-[#0E382E]">{order.customer}</p>
-                          <p className="text-[10px] text-[#74B487]">
-                            {order.email} • {order.phone}
-                          </p>
+                          <p className="text-[11px] text-[#1F684B] font-mono">{order.phone}</p>
+                          <p className="text-[10px] text-[#74B487]">{order.email}</p>
+                          {order.items && (
+                            <p className="text-[10px] text-[#E67E22] font-semibold mt-1">🛒 {order.items}</p>
+                          )}
                         </td>
-                        <td className="p-4 font-extrabold text-[#0E382E]">₹{order.total}</td>
-                        <td className="p-4 font-bold text-[#25D366]">{order.payment}</td>
-                        <td className="p-4 font-extrabold text-[#E67E22]">{order.status}</td>
+                        <td className="p-4 font-extrabold text-[#0E382E] whitespace-nowrap">₹{order.total}</td>
+                        <td className="p-4 font-bold text-[#25D366] whitespace-nowrap">{order.payment}</td>
+                        <td className="p-4">
+                          <span className={`inline-block px-2.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-wider ${
+                            order.status === "Delivered"
+                              ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                              : order.status === "Shipped" || order.status === "Handed to Courier" || order.status === "Out for Delivery"
+                              ? "bg-purple-100 text-purple-800 border border-purple-300"
+                              : order.status === "Processing" || order.status === "Packed"
+                              ? "bg-blue-100 text-blue-800 border border-blue-300"
+                              : order.status === "Cancelled"
+                              ? "bg-rose-100 text-rose-800 border border-rose-300"
+                              : "bg-amber-100 text-amber-800 border border-amber-300"
+                          }`}>
+                            {order.status}
+                          </span>
+                        </td>
                         <td className="p-4 font-mono text-[11px] text-[#0E382E]">{order.awb}</td>
-                        <td className="p-4 text-right space-x-2">
+                        <td className="p-4 text-right space-x-2 whitespace-nowrap">
                           <select
                             value={order.status}
                             onChange={(e) => handleUpdateOrderStatus(order.id, e.target.value)}
-                            className="bg-[#F6F5F0] border border-[#74B487]/40 rounded-lg p-1.5 text-[11px] font-extrabold text-[#0E382E]"
+                            className="bg-[#F6F5F0] border border-[#74B487]/40 rounded-lg p-1.5 text-[11px] font-extrabold text-[#0E382E] shadow-2xs"
                           >
-                            <option value="Order Received">Order Received</option>
-                            <option value="Packed">Packed</option>
-                            <option value="Handed to Courier">Handed to Courier</option>
-                            <option value="Out for Delivery">Out for Delivery</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Shipped">Shipped</option>
                             <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
                           </select>
 
                           <Link
                             to={`/order-confirmation?id=${order.id}`}
-                            className="px-2.5 py-1 bg-[#0E382E] text-white rounded-lg text-[10px] font-bold hover:bg-[#E67E22]"
+                            className="px-2.5 py-1.5 bg-[#0E382E] text-white rounded-lg text-[10px] font-bold hover:bg-[#E67E22] transition-colors"
                           >
                             Invoice
                           </Link>
+
+                          <button
+                            onClick={() => handleDeleteOrder(order.id)}
+                            title="Delete Order"
+                            className="px-2 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-bold inline-flex items-center gap-1 transition-colors"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            Delete
+                          </button>
                         </td>
                       </tr>
                     ))
