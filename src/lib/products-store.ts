@@ -184,19 +184,30 @@ export const useProductsStore = create<ProductsState>()(
       updateProduct: async (updatedProd: Product) => {
         set((state) => ({
           products: state.products.map((p) =>
-            p.id === updatedProd.id || p.slug === updatedProd.slug
+            p.id === updatedProd.id ||
+            p.slug === updatedProd.slug ||
+            p.name.toLowerCase() === updatedProd.name.toLowerCase()
               ? { ...p, ...updatedProd }
               : p
           ),
         }));
 
         try {
-          const res = await fetch(`${API_BASE}/products/${encodeURIComponent(updatedProd.id || updatedProd.slug)}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(updatedProd),
-          });
-          return res.ok;
+          const res = await fetch(
+            `${API_BASE}/products/${encodeURIComponent(updatedProd.id || updatedProd.slug)}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(updatedProd),
+            }
+          );
+          if (res.ok) {
+            await get().fetchProducts();
+            return true;
+          }
+          const errData = await res.json().catch(() => ({}));
+          console.error("Backend error updating product:", errData);
+          return false;
         } catch (err) {
           console.warn("Could not update product in DB:", err);
           return false;

@@ -852,66 +852,121 @@ app.put("/api/products/:id", async (req, res) => {
   const { id } = req.params;
   const p = req.body;
   try {
+    const isNumId = !isNaN(Number(id)) && Number(id) > 0;
+    const targetSlug = p.slug || id;
+    const targetName = p.name || "";
+
+    // 1. First find which product row exists in MySQL:
+    let rows = [];
+    if (isNumId) {
+      rows = await query("SELECT id FROM products WHERE id = ? OR slug = ? LIMIT 1", [Number(id), targetSlug]);
+    } else {
+      rows = await query(
+        "SELECT id FROM products WHERE slug = ? OR slug = ? OR name = ? OR data_json LIKE ? LIMIT 1",
+        [id, targetSlug, targetName, `%"id":"${id}"%`]
+      );
+    }
+
+    if (rows.length === 0 && targetName) {
+      rows = await query("SELECT id FROM products WHERE name = ? LIMIT 1", [targetName]);
+    }
+
+    const rowId = rows.length > 0 ? rows[0].id : (isNumId ? Number(id) : null);
+
     // If full product payload is provided
     if (p.name || p.slug || (p.price !== undefined && p.subtitle !== undefined)) {
-      const name = p.name;
-      const price = p.price !== undefined ? Number(p.price) : null;
+      const name = p.name || "Product";
+      const price = p.price !== undefined ? Number(p.price) : 0;
       const comparePrice = p.originalPrice ? Number(p.originalPrice) : null;
       const subHeading = p.subtitle || p.pitch || "";
       const weight = p.netWeight || "200g";
       const servings = p.unitDisplay || "";
       const stock = p.stock !== undefined ? Number(p.stock) : 100;
-      const imageUrl = p.images && p.images[0] ? p.images[0].src : (p.storyImage || "");
+      const imageUrl = p.images && p.images[0] ? p.images[0].src : (p.storyImage || "/logo.png");
       const descriptionText = Array.isArray(p.description) ? p.description.join("\n\n") : (p.description || "");
       const ingredientsText = p.ingredients || "";
-      const dataJson = JSON.stringify(p);
+      const dataJson = JSON.stringify({
+        ...p,
+        id: p.id || String(rowId || id),
+        slug: targetSlug,
+        price,
+        originalPrice: comparePrice,
+        stock,
+      });
 
-      await query(
-        `UPDATE products 
-         SET name = COALESCE(?, name),
-             price = COALESCE(?, price),
-             compare_price = ?,
-             sub_heading = ?,
-             weight = ?,
-             servings = ?,
-             stock_qty = ?,
-             image_url = ?,
-             description = ?,
-             ingredients = ?,
-             data_json = ?
-         WHERE id = ? OR slug = ? OR slug = ? OR data_json LIKE ?`,
-        [
-          name,
-          price,
-          comparePrice,
-          subHeading,
-          weight,
-          servings,
-          stock,
-          imageUrl,
-          descriptionText,
-          ingredientsText,
-          dataJson,
-          id,
-          id,
-          p.slug || id,
-          `%"id":"${id}"%`,
-        ]
-      );
-      console.log(`✏️ [MySQL] Updated full product details for ${id}`);
+      if (rowId) {
+        await query(
+          `UPDATE products 
+           SET name = ?,
+               slug = ?,
+               price = ?,
+               compare_price = ?,
+               sub_heading = ?,
+               weight = ?,
+               servings = ?,
+               stock_qty = ?,
+               image_url = ?,
+               description = ?,
+               ingredients = ?,
+               data_json = ?
+           WHERE id = ?`,
+          [
+            name,
+            targetSlug,
+            price,
+            comparePrice,
+            subHeading,
+            weight,
+            servings,
+            stock,
+            imageUrl,
+            descriptionText,
+            ingredientsText,
+            dataJson,
+            rowId,
+          ]
+        );
+        console.log(`✏️ [MySQL] Updated product id=${rowId} (${name})`);
+      } else {
+        // Product didn't exist in DB yet, insert it!
+        await query(
+          `INSERT INTO products (slug, name, sub_heading, category_id, price, compare_price, weight, servings, stock_qty, image_url, description, ingredients, is_best_seller, is_featured, data_json)
+           VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?)`,
+          [
+            targetSlug,
+            name,
+            subHeading,
+            price,
+            comparePrice,
+            weight,
+            servings,
+            stock,
+            imageUrl,
+            descriptionText,
+            ingredientsText,
+            dataJson,
+          ]
+        );
+        console.log(`✨ [MySQL] Inserted edited product: ${name}`);
+      }
     } else {
-      if (p.price !== undefined) {
-        await query("UPDATE products SET price = ? WHERE id = ? OR slug = ?", [Number(p.price), id, id]);
-      }
-      if (p.stock !== undefined) {
-        await query("UPDATE products SET stock_qty = ? WHERE id = ? OR slug = ?", [Number(p.stock), id, id]);
-      }
-      if (p.data) {
-        await query("UPDATE products SET data_json = ? WHERE id = ? OR slug = ?", [JSON.stringify(p.data), id, id]);
+      // Partial updates (price or stock only)
+      if (rowId) {
+        if (p.price !== undefined) {
+          await query("UPDATE products SET price = ? WHERE id = ?", [Number(p.price), rowId]);
+        }
+        if (p.stock !== undefined) {
+          await query("UPDATE products SET stock_qty = ? WHERE id = ?", [Number(p.stock), rowId]);
+        }
+        if (p.data) {
+          await query("UPDATE products SET data_json = ? WHERE id = ?", [JSON.stringify(p.data), rowId]);
+        }
       }
     }
-    return res.json({ success: true, message: `Product ${id} updated successfully` });
+
+    return res.json({ success: true, message: `Product updated successfully` });
   } catch (err) {
+    console.error("❌ Product update error:", err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });

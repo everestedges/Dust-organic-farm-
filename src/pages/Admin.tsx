@@ -666,10 +666,14 @@ export const Admin: React.FC = () => {
         id: editingProduct.id,
         slug: editingProduct.slug,
       };
-      await updateProduct(updatedProd);
-      setIsAddModalOpen(false);
-      setEditingProduct(null);
-      alert(`✅ Product "${newProductName}" updated successfully!\n\nAll changes are now live across the storefront and database.`);
+      const ok = await updateProduct(updatedProd);
+      if (ok) {
+        setIsAddModalOpen(false);
+        setEditingProduct(null);
+        alert(`✅ Product "${newProductName}" updated successfully!\n\nAll changes are now live across the storefront and database.`);
+      } else {
+        alert(`❌ Failed to update product in database. Please try again.`);
+      }
       return;
     }
 
