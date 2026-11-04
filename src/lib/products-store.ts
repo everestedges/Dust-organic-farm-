@@ -13,6 +13,7 @@ interface ProductsState {
   addProduct: (product: Product) => Promise<boolean>;
   updateProductPrice: (id: string, newPrice: number) => Promise<boolean>;
   updateProductStock: (id: string, newStock: number) => Promise<boolean>;
+  updateProduct: (product: Product) => Promise<boolean>;
   deleteProduct: (id: string, slug?: string, name?: string) => Promise<boolean>;
 }
 
@@ -176,6 +177,28 @@ export const useProductsStore = create<ProductsState>()(
           return true;
         } catch (err) {
           console.warn("Could not update stock in DB:", err);
+          return false;
+        }
+      },
+
+      updateProduct: async (updatedProd: Product) => {
+        set((state) => ({
+          products: state.products.map((p) =>
+            p.id === updatedProd.id || p.slug === updatedProd.slug
+              ? { ...p, ...updatedProd }
+              : p
+          ),
+        }));
+
+        try {
+          const res = await fetch(`${API_BASE}/products/${encodeURIComponent(updatedProd.id || updatedProd.slug)}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updatedProd),
+          });
+          return res.ok;
+        } catch (err) {
+          console.warn("Could not update product in DB:", err);
           return false;
         }
       },

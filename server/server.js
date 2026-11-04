@@ -847,19 +847,68 @@ app.post("/api/products", async (req, res) => {
   }
 });
 
-// PUT /api/products/:id - Update product price, stock, or details
+// PUT /api/products/:id - Update product (price, stock, or full product details)
 app.put("/api/products/:id", async (req, res) => {
   const { id } = req.params;
-  const { price, stock, data } = req.body;
+  const p = req.body;
   try {
-    if (price !== undefined) {
-      await query("UPDATE products SET price = ? WHERE id = ? OR slug = ?", [Number(price), id, id]);
-    }
-    if (stock !== undefined) {
-      await query("UPDATE products SET stock_qty = ? WHERE id = ? OR slug = ?", [Number(stock), id, id]);
-    }
-    if (data) {
-      await query("UPDATE products SET data_json = ? WHERE id = ? OR slug = ?", [JSON.stringify(data), id, id]);
+    // If full product payload is provided
+    if (p.name || p.slug || (p.price !== undefined && p.subtitle !== undefined)) {
+      const name = p.name;
+      const price = p.price !== undefined ? Number(p.price) : null;
+      const comparePrice = p.originalPrice ? Number(p.originalPrice) : null;
+      const subHeading = p.subtitle || p.pitch || "";
+      const weight = p.netWeight || "200g";
+      const servings = p.unitDisplay || "";
+      const stock = p.stock !== undefined ? Number(p.stock) : 100;
+      const imageUrl = p.images && p.images[0] ? p.images[0].src : (p.storyImage || "");
+      const descriptionText = Array.isArray(p.description) ? p.description.join("\n\n") : (p.description || "");
+      const ingredientsText = p.ingredients || "";
+      const dataJson = JSON.stringify(p);
+
+      await query(
+        `UPDATE products 
+         SET name = COALESCE(?, name),
+             price = COALESCE(?, price),
+             compare_price = ?,
+             sub_heading = ?,
+             weight = ?,
+             servings = ?,
+             stock_qty = ?,
+             image_url = ?,
+             description = ?,
+             ingredients = ?,
+             data_json = ?
+         WHERE id = ? OR slug = ? OR slug = ? OR data_json LIKE ?`,
+        [
+          name,
+          price,
+          comparePrice,
+          subHeading,
+          weight,
+          servings,
+          stock,
+          imageUrl,
+          descriptionText,
+          ingredientsText,
+          dataJson,
+          id,
+          id,
+          p.slug || id,
+          `%"id":"${id}"%`,
+        ]
+      );
+      console.log(`✏️ [MySQL] Updated full product details for ${id}`);
+    } else {
+      if (p.price !== undefined) {
+        await query("UPDATE products SET price = ? WHERE id = ? OR slug = ?", [Number(p.price), id, id]);
+      }
+      if (p.stock !== undefined) {
+        await query("UPDATE products SET stock_qty = ? WHERE id = ? OR slug = ?", [Number(p.stock), id, id]);
+      }
+      if (p.data) {
+        await query("UPDATE products SET data_json = ? WHERE id = ? OR slug = ?", [JSON.stringify(p.data), id, id]);
+      }
     }
     return res.json({ success: true, message: `Product ${id} updated successfully` });
   } catch (err) {

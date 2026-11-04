@@ -184,6 +184,7 @@ export const Admin: React.FC = () => {
   const {
     products: productsList,
     addProduct,
+    updateProduct,
     updateProductPrice,
     updateProductStock,
     deleteProduct,
@@ -191,6 +192,7 @@ export const Admin: React.FC = () => {
   } = useProductsStore();
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productModalTab, setProductModalTab] = useState<"basic" | "media" | "nutrition" | "ritual">("basic");
 
   // Tab 1: Basic & Pricing
@@ -452,6 +454,101 @@ export const Admin: React.FC = () => {
     e.target.value = "";
   };
 
+  const handleOpenAddModal = () => {
+    setEditingProduct(null);
+    setProductModalTab("basic");
+    setNewProductName("");
+    setNewProductCategory("heritage-wellness");
+    setNewProductPrice(299);
+    setNewProductOriginalPrice(349);
+    setNewProductWeight("200g");
+    setNewProductServings("Makes 20 Servings");
+    setNewProductStock(150);
+    setNewProductSubtitle("");
+    setNewProductPitch("");
+    setNewProductImageUrl("");
+    setNewProductGalleryUrls("");
+    setNewProductBadges("100% NATURAL, SPRAY-DRIED, ZERO CHEMICALS");
+    setNewProductAccent("rose");
+    setNewProductDescription("");
+    setNewProductClaims("100% Pure & Natural, Zero Added Sugar, Fast Absorption");
+    setNewProductIngredients("");
+    setNewProductAllergen("Contains no common allergens. 100% vegetarian.");
+    setNewProductStorage("Store in a cool dry place away from direct sunlight.");
+    setNewProductNutritionServing("Serving Size: 1 Sachet (5g)");
+    setNewProductNutritionNote("Approximate values based on 2000 kcal diet");
+    setNewProductEnergy("45 kcal");
+    setNewProductProtein("1.2g");
+    setNewProductCarbs("9.4g");
+    setNewProductFiber("1.8g");
+    setNewProductFat("0.2g");
+    setNewProductRitualLabel("Preparation Ritual");
+    setNewProductStep1Title("Pour & Measure");
+    setNewProductStep1Detail("Empty 1 sachet or 1 teaspoon into a glass or bowl.");
+    setNewProductStep2Title("Blend Smoothly");
+    setNewProductStep2Detail("Add 60–100ml chilled water or milk and stir for 5 seconds.");
+    setNewProductStep3Title("Savor Natural Nutrition");
+    setNewProductStep3Detail("Enjoy immediate digestive refreshment and natural energy.");
+    setNewProductHeritageTitle("Indian Heritage Wisdom");
+    setNewProductHeritageQuote("Inspired by time-tested Indian wellness traditions.");
+    setIsAddModalOpen(true);
+  };
+
+  const handleOpenEditModal = (prod: Product) => {
+    setEditingProduct(prod);
+    setProductModalTab("basic");
+    setNewProductName(prod.name || "");
+    setNewProductCategory(prod.category || "heritage-wellness");
+    setNewProductPrice(prod.price || 0);
+    setNewProductOriginalPrice(prod.originalPrice || 0);
+    setNewProductWeight(prod.netWeight || "200g");
+    setNewProductServings(prod.unitDisplay || "");
+    setNewProductStock(prod.stock || 100);
+    setNewProductSubtitle(prod.subtitle || "");
+    setNewProductPitch(prod.pitch || "");
+    setNewProductImageUrl(prod.images?.[0]?.src || prod.storyImage || "");
+    setNewProductGalleryUrls(
+      prod.images && prod.images.length > 1
+        ? prod.images.slice(1).map((i) => i.src).join("\n")
+        : ""
+    );
+    setNewProductBadges(Array.isArray(prod.badges) ? prod.badges.join(", ") : "");
+    setNewProductAccent(prod.accent || "rose");
+    setNewProductDescription(
+      Array.isArray(prod.description) ? prod.description.join("\n\n") : (prod.description || "")
+    );
+    setNewProductClaims(Array.isArray(prod.claims) ? prod.claims.join(", ") : "");
+    setNewProductIngredients(prod.ingredients || "");
+    setNewProductAllergen(prod.allergen || "");
+    setNewProductStorage(prod.storage || "");
+    setNewProductNutritionServing(prod.nutrition?.serving || "");
+    setNewProductNutritionNote(prod.nutrition?.note || "");
+
+    const rows = prod.nutrition?.rows || [];
+    const energyRow = rows.find((r) => r[0]?.toLowerCase().includes("energy"));
+    const proteinRow = rows.find((r) => r[0]?.toLowerCase().includes("protein"));
+    const carbsRow = rows.find((r) => r[0]?.toLowerCase().includes("carb"));
+    const fiberRow = rows.find((r) => r[0]?.toLowerCase().includes("fiber") || r[0]?.toLowerCase().includes("fibre"));
+    const fatRow = rows.find((r) => r[0]?.toLowerCase().includes("fat"));
+
+    setNewProductEnergy(energyRow ? energyRow[1] : "45 kcal");
+    setNewProductProtein(proteinRow ? proteinRow[1] : "1.2g");
+    setNewProductCarbs(carbsRow ? carbsRow[1] : "9.4g");
+    setNewProductFiber(fiberRow ? fiberRow[1] : "1.8g");
+    setNewProductFat(fatRow ? fatRow[1] : "0.2g");
+
+    setNewProductRitualLabel(prod.ritualLabel || "Preparation Ritual");
+    setNewProductStep1Title(prod.ritual?.[0]?.title || "Pour & Measure");
+    setNewProductStep1Detail(prod.ritual?.[0]?.detail || "");
+    setNewProductStep2Title(prod.ritual?.[1]?.title || "Blend Smoothly");
+    setNewProductStep2Detail(prod.ritual?.[1]?.detail || "");
+    setNewProductStep3Title(prod.ritual?.[2]?.title || "Savor Natural Nutrition");
+    setNewProductStep3Detail(prod.ritual?.[2]?.detail || "");
+    setNewProductHeritageTitle(prod.heritageTitle || "Indian Heritage Wisdom");
+    setNewProductHeritageQuote(prod.heritageQuote || "");
+    setIsAddModalOpen(true);
+  };
+
   // Actions
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -561,6 +658,20 @@ export const Admin: React.FC = () => {
         ? { allergen: newProductAllergen.trim() }
         : {}),
     };
+
+    if (editingProduct) {
+      const updatedProd: Product = {
+        ...editingProduct,
+        ...newProd,
+        id: editingProduct.id,
+        slug: editingProduct.slug,
+      };
+      await updateProduct(updatedProd);
+      setIsAddModalOpen(false);
+      setEditingProduct(null);
+      alert(`✅ Product "${newProductName}" updated successfully!\n\nAll changes are now live across the storefront and database.`);
+      return;
+    }
 
     await addProduct(newProd);
     setIsAddModalOpen(false);
@@ -824,7 +935,7 @@ export const Admin: React.FC = () => {
               </div>
 
               <button
-                onClick={() => setIsAddModalOpen(true)}
+                onClick={handleOpenAddModal}
                 className="btn-dust-orange px-5 py-2.5 text-white font-extrabold text-xs uppercase tracking-wider rounded-xl inline-flex items-center gap-2 shadow-md"
               >
                 <Plus className="w-4 h-4" /> Add New Product SKU
@@ -879,15 +990,10 @@ export const Admin: React.FC = () => {
                         </Link>
 
                         <button
-                          onClick={() => {
-                            const newPrice = prompt(`Enter new price for ${product.name}:`, product.price.toString());
-                            if (newPrice && !isNaN(Number(newPrice))) {
-                              handleUpdatePrice(product.id, Number(newPrice));
-                            }
-                          }}
-                          className="px-3 py-1.5 bg-[#0E382E] text-white rounded-lg text-[10px] font-bold hover:bg-[#E67E22]"
+                          onClick={() => handleOpenEditModal(product)}
+                          className="px-3 py-1.5 bg-[#0E382E] text-white rounded-lg text-[10px] font-bold hover:bg-[#E67E22] inline-flex items-center gap-1 transition-colors"
                         >
-                          Edit Price
+                          <Edit3 className="w-3 h-3" /> Edit Product
                         </button>
 
                         <button
@@ -1616,10 +1722,12 @@ export const Admin: React.FC = () => {
                   DYNAMIC PRODUCT CMS
                 </span>
                 <h3 className="text-2xl font-extrabold text-[#0E382E]">
-                  Create New Product SKU & Live Page
+                  {editingProduct ? "Edit Product Details" : "Create New Product SKU & Live Page"}
                 </h3>
                 <p className="text-xs text-[#1F684B]">
-                  Fills out all sections of your dedicated <code>/product/:slug</code> page.
+                  {editingProduct
+                    ? `Update pricing, stock, media, and description for "${editingProduct.name}".`
+                    : "Fills out all sections of your dedicated /product/:slug page."}
                 </p>
               </div>
               <button
@@ -2237,7 +2345,7 @@ export const Admin: React.FC = () => {
                   type="submit"
                   className="sm:w-2/3 btn-dust-orange text-white py-3.5 rounded-xl font-extrabold uppercase shadow-md flex items-center justify-center gap-2 hover:scale-[1.01] transition-all"
                 >
-                  Publish Product SKU & Live Page 🚀
+                  {editingProduct ? "Save & Update Product SKU 💾" : "Publish Product SKU & Live Page 🚀"}
                 </button>
               </div>
             </form>
