@@ -64,9 +64,24 @@ export const useProductsStore = create<ProductsState>()(
                   mergedMap.set(getProductKey(p), p);
                 });
 
-              // Overlay DB products (DB rows take precedence)
+              // Overlay DB products (preserve high-res bundled media for core products unless custom image was uploaded)
               dbProducts.forEach((p) => {
-                mergedMap.set(getProductKey(p), p);
+                const key = getProductKey(p);
+                const defaultItem = mergedMap.get(key);
+                if (defaultItem) {
+                  const hasCustomUpload =
+                    (p.images?.[0]?.src && (p.images[0].src.startsWith("/uploads/") || p.images[0].src.startsWith("http"))) ||
+                    (p.storyImage && (p.storyImage.startsWith("/uploads/") || p.storyImage.startsWith("http")));
+
+                  mergedMap.set(key, {
+                    ...defaultItem,
+                    ...p,
+                    images: hasCustomUpload ? p.images : defaultItem.images,
+                    storyImage: hasCustomUpload ? p.storyImage : defaultItem.storyImage,
+                  });
+                } else {
+                  mergedMap.set(key, p);
+                }
               });
 
               const uniqueList = Array.from(mergedMap.values()).filter(
@@ -182,7 +197,7 @@ export const useProductsStore = create<ProductsState>()(
       },
     }),
     {
-      name: "dust_products_store_v2",
+      name: "dust_products_store_v3",
       storage: createJSONStorage(() => localStorage),
     }
   )

@@ -160,6 +160,14 @@ export const Shop: React.FC = () => {
                   src={mainImg}
                   alt={product.name}
                   className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (product.storyImage && target.src !== product.storyImage) {
+                      target.src = product.storyImage;
+                    } else {
+                      target.src = "/logo.png";
+                    }
+                  }}
                 />
 
                 <button

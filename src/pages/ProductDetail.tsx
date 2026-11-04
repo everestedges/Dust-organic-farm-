@@ -318,6 +318,14 @@ export const ProductDetail: React.FC = () => {
               src={activeImage.src}
               alt={activeImage.alt || product.name}
               className="max-h-full max-w-full object-contain transition-all duration-500 hover:scale-105"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (product.storyImage && target.src !== product.storyImage) {
+                  target.src = product.storyImage;
+                } else {
+                  target.src = "/logo.png";
+                }
+              }}
             />
             {product.savePercent && (
               <span className="absolute top-4 left-4 bg-[#E67E22] text-white font-extrabold text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-full shadow-md">
