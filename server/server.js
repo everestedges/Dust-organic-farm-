@@ -54,8 +54,9 @@ async function initDatabaseTables() {
     await query("ALTER TABLE orders MODIFY COLUMN payment_method VARCHAR(50) DEFAULT 'UPI'").catch(() => {});
     await query("ALTER TABLE products ADD COLUMN data_json LONGTEXT NULL").catch(() => {});
     await query("ALTER TABLE products MODIFY COLUMN category_id INT UNSIGNED NULL").catch(() => {});
-    // Purge legacy test duplicate products with numeric slugs (2, 3, 4, 5)
+    // Purge legacy test duplicate products with numeric slugs (2, 3, 4, 5) and deleted test SKU Hairoil
     await query("DELETE FROM products WHERE slug IN ('2', '3', '4', '5') OR name IN ('DUST Almond Powder (500g)', 'DUST Premium Cashew Powder (500g)', 'DUST Natural Powder Shampoo for Men (100ml)', 'Kacha Aam Instant Powder')").catch(() => {});
+    await query("DELETE FROM products WHERE name = 'Hairoil' OR slug = 'hairoil' OR slug LIKE '%1793768267280%'").catch(() => {});
     
     // Seed standard official products into MySQL if they are not already in the table
     const defaultOfficialProducts = [
@@ -866,13 +867,23 @@ app.put("/api/products/:id", async (req, res) => {
   }
 });
 
-// DELETE /api/products/:id - Delete product
+// DELETE /api/products/:id - Delete product (by ID, slug, name or data_json)
 app.delete("/api/products/:id", async (req, res) => {
   const { id } = req.params;
+  const slug = req.query.slug || id;
+  const name = req.query.name || id;
   try {
-    const result = await query("DELETE FROM products WHERE id = ? OR slug = ?", [id, id]);
-    console.log(`🗑️ [MySQL] Deleted product: ${id}`);
-    return res.json({ success: true, message: `Product ${id} deleted successfully`, affectedRows: result.affectedRows });
+    const result = await query(
+      `DELETE FROM products 
+       WHERE id = ? 
+          OR slug = ? 
+          OR slug = ? 
+          OR name = ? 
+          OR data_json LIKE ?`,
+      [id, id, slug, name, `%"id":"${id}"%`]
+    );
+    console.log(`🗑️ [MySQL] Deleted product: id=${id}, slug=${slug}, name=${name} (affectedRows: ${result.affectedRows})`);
+    return res.json({ success: true, message: `Product deleted successfully`, affectedRows: result.affectedRows });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
   }

@@ -570,9 +570,9 @@ export const Admin: React.FC = () => {
     alert(`✅ Product "${newProductName}" created successfully!\n\nLive Details Page is now available at /product/${slug}`);
   };
 
-  const handleDeleteProduct = async (id: string) => {
-    if (confirm("Are you sure you want to delete this product SKU? This will remove it from the store and database.")) {
-      await deleteProduct(id);
+  const handleDeleteProduct = async (product: Product) => {
+    if (confirm(`Are you sure you want to delete "${product.name}"? This will permanently remove it from the store and database.`)) {
+      await deleteProduct(product.id, product.slug, product.name);
     }
   };
 
@@ -891,7 +891,7 @@ export const Admin: React.FC = () => {
                         </button>
 
                         <button
-                          onClick={() => handleDeleteProduct(product.id)}
+                          onClick={() => handleDeleteProduct(product)}
                           className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-[10px] font-bold hover:bg-red-700"
                         >
                           Delete SKU

@@ -13,7 +13,7 @@ interface ProductsState {
   addProduct: (product: Product) => Promise<boolean>;
   updateProductPrice: (id: string, newPrice: number) => Promise<boolean>;
   updateProductStock: (id: string, newStock: number) => Promise<boolean>;
-  deleteProduct: (id: string) => Promise<boolean>;
+  deleteProduct: (id: string, slug?: string, name?: string) => Promise<boolean>;
 }
 
 const API_BASE =
@@ -180,13 +180,23 @@ export const useProductsStore = create<ProductsState>()(
         }
       },
 
-      deleteProduct: async (id: string) => {
+      deleteProduct: async (id: string, slug?: string, name?: string) => {
         set((state) => ({
-          products: state.products.filter((p) => p.id !== id && p.slug !== id),
+          products: state.products.filter(
+            (p) =>
+              p.id !== id &&
+              p.slug !== id &&
+              (!slug || p.slug !== slug) &&
+              (!name || p.name.toLowerCase() !== name.toLowerCase())
+          ),
         }));
 
         try {
-          await fetch(`${API_BASE}/products/${id}`, {
+          const params = new URLSearchParams();
+          if (slug) params.set("slug", slug);
+          if (name) params.set("name", name);
+          const qs = params.toString() ? `?${params.toString()}` : "";
+          await fetch(`${API_BASE}/products/${encodeURIComponent(id)}${qs}`, {
             method: "DELETE",
           });
           return true;
@@ -197,7 +207,7 @@ export const useProductsStore = create<ProductsState>()(
       },
     }),
     {
-      name: "dust_products_store_v3",
+      name: "dust_products_store_v4",
       storage: createJSONStorage(() => localStorage),
     }
   )
