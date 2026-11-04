@@ -734,6 +734,41 @@ export const Admin: React.FC = () => {
     }
   };
 
+  // Dynamic metrics computed from live database orders
+  const grossRevenue = orders.reduce((sum, o) => sum + (Number(o.total) || 0), 0);
+  const totalOrdersCount = orders.length;
+  const avgOrderValue = totalOrdersCount > 0 ? grossRevenue / totalOrdersCount : 0;
+
+  // Compute Top Selling SKU dynamically from live order items
+  const skuCounts: Record<string, number> = {};
+  orders.forEach((o) => {
+    if (o.items) {
+      const parts = String(o.items).split(",");
+      parts.forEach((p) => {
+        const trimmed = p.trim();
+        const match = trimmed.match(/^(\d+)x\s*(.*)$/);
+        if (match && match[1] && match[2]) {
+          const qty = parseInt(match[1], 10) || 1;
+          const skuName = match[2].trim();
+          skuCounts[skuName] = (skuCounts[skuName] || 0) + qty;
+        } else if (trimmed) {
+          skuCounts[trimmed] = (skuCounts[trimmed] || 0) + 1;
+        }
+      });
+    }
+  });
+
+  let topSellingSku = "No orders yet";
+  let topSellingSubtext = "Awaiting customer orders";
+  const sortedSkus = Object.entries(skuCounts).sort((a, b) => b[1] - a[1]);
+  const topSkuItem = sortedSkus[0];
+  if (topSkuItem) {
+    topSellingSku = topSkuItem[0];
+    const totalUnits = Object.values(skuCounts).reduce((a, b) => a + b, 0);
+    const pct = totalUnits > 0 ? Math.round((topSkuItem[1] / totalUnits) * 100) : 100;
+    topSellingSubtext = `${topSkuItem[1]} unit${topSkuItem[1] === 1 ? "" : "s"} sold (${pct}% of volume)`;
+  }
+
   return (
     <div className="pt-32 pb-24 px-4 sm:px-8 md:px-12 lg:px-16 w-full min-h-screen bg-[#F6F5F0] text-[#0E382E]">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -898,8 +933,12 @@ export const Admin: React.FC = () => {
                   <span className="text-xs uppercase font-extrabold tracking-wider">Gross Revenue</span>
                   <DollarSign className="w-5 h-5 text-[#E67E22]" />
                 </div>
-                <div className="text-3xl font-extrabold text-[#0E382E]">₹12,480.00</div>
-                <p className="text-[11px] text-[#25D366] font-bold">↑ +24.8% vs last month</p>
+                <div className="text-3xl font-extrabold text-[#0E382E]">
+                  ₹{grossRevenue.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <p className={`text-[11px] font-bold ${totalOrdersCount > 0 ? "text-[#25D366]" : "text-stone-400"}`}>
+                  {totalOrdersCount > 0 ? "↑ Live synced from orders" : "Real-time from live checkout"}
+                </p>
               </div>
 
               <div className="bg-white p-6 rounded-3xl border border-[#74B487]/40 shadow-sm space-y-2">
@@ -907,8 +946,12 @@ export const Admin: React.FC = () => {
                   <span className="text-xs uppercase font-extrabold tracking-wider">Total Orders</span>
                   <ShoppingBag className="w-5 h-5 text-[#E67E22]" />
                 </div>
-                <div className="text-3xl font-extrabold text-[#0E382E]">38 Orders</div>
-                <p className="text-[11px] text-[#74B487] font-bold">Pan-India Dispatched</p>
+                <div className="text-3xl font-extrabold text-[#0E382E]">
+                  {totalOrdersCount} {totalOrdersCount === 1 ? "Order" : "Orders"}
+                </div>
+                <p className="text-[11px] text-[#74B487] font-bold">
+                  {totalOrdersCount > 0 ? "Pan-India Dispatched / Active" : "No orders placed yet"}
+                </p>
               </div>
 
               <div className="bg-white p-6 rounded-3xl border border-[#74B487]/40 shadow-sm space-y-2">
@@ -916,8 +959,12 @@ export const Admin: React.FC = () => {
                   <span className="text-xs uppercase font-extrabold tracking-wider">Avg Order Value</span>
                   <TrendingUp className="w-5 h-5 text-[#E67E22]" />
                 </div>
-                <div className="text-3xl font-extrabold text-[#0E382E]">₹328.42</div>
-                <p className="text-[11px] text-[#74B487] font-bold">Average 2.4 SKUs per cart</p>
+                <div className="text-3xl font-extrabold text-[#0E382E]">
+                  ₹{avgOrderValue.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <p className="text-[11px] text-[#74B487] font-bold">
+                  {totalOrdersCount > 0 ? `Based on ${totalOrdersCount} live order${totalOrdersCount === 1 ? "" : "s"}` : "Calculated per placed order"}
+                </p>
               </div>
 
               <div className="bg-white p-6 rounded-3xl border border-[#74B487]/40 shadow-sm space-y-2">
@@ -925,10 +972,26 @@ export const Admin: React.FC = () => {
                   <span className="text-xs uppercase font-extrabold tracking-wider">Top Selling SKU</span>
                   <Package className="w-5 h-5 text-[#E67E22]" />
                 </div>
-                <div className="text-xl font-extrabold text-[#0E382E]">Paan Digestive Shot</div>
-                <p className="text-[11px] text-[#E67E22] font-bold">78% of Total Sales Revenue</p>
+                <div className="text-xl font-extrabold text-[#0E382E] truncate">
+                  {topSellingSku}
+                </div>
+                <p className="text-[11px] text-[#E67E22] font-bold">
+                  {topSellingSubtext}
+                </p>
               </div>
             </div>
+
+            {totalOrdersCount === 0 && (
+              <div className="bg-white p-8 rounded-3xl border border-[#74B487]/30 text-center space-y-3">
+                <div className="w-12 h-12 bg-[#E8F1E9] text-[#0E382E] rounded-2xl mx-auto flex items-center justify-center font-bold text-xl">
+                  🛒
+                </div>
+                <h4 className="text-base font-extrabold text-[#0E382E]">Awaiting Your First Order</h4>
+                <p className="text-xs text-[#1F684B] max-w-md mx-auto">
+                  All dummy revenue and fake order metrics have been removed. As soon as a customer places an order on your store, real-time revenue, order totals, and top-selling SKUs will automatically update here from your live MySQL database.
+                </p>
+              </div>
+            )}
           </div>
         )}
 
