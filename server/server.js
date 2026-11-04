@@ -54,7 +54,9 @@ async function initDatabaseTables() {
     await query("ALTER TABLE orders MODIFY COLUMN payment_method VARCHAR(50) DEFAULT 'UPI'").catch(() => {});
     await query("ALTER TABLE products ADD COLUMN data_json LONGTEXT NULL").catch(() => {});
     await query("ALTER TABLE products MODIFY COLUMN category_id INT UNSIGNED NULL").catch(() => {});
-    console.log("✅ [DB INIT] database tables and columns verified");
+    // Purge legacy test duplicate products with numeric slugs (2, 3, 4, 5)
+    await query("DELETE FROM products WHERE slug IN ('2', '3', '4', '5') OR name IN ('DUST Almond Powder (500g)', 'DUST Premium Cashew Powder (500g)', 'DUST Natural Powder Shampoo for Men (100ml)', 'Kacha Aam Instant Powder')").catch(() => {});
+    console.log("✅ [DB INIT] database tables and columns verified, legacy duplicates purged");
   } catch (err) {
     // Column already modified or table not yet created
   }
@@ -364,7 +366,9 @@ app.delete("/api/orders/:id", async (req, res) => {
 // GET /api/products - Fetch all products
 app.get("/api/products", async (req, res) => {
   try {
-    const rows = await query("SELECT * FROM products ORDER BY id DESC");
+    const rows = await query(
+      "SELECT * FROM products WHERE slug NOT IN ('2', '3', '4', '5') AND name NOT IN ('DUST Almond Powder (500g)', 'DUST Premium Cashew Powder (500g)', 'DUST Natural Powder Shampoo for Men (100ml)', 'Kacha Aam Instant Powder') ORDER BY id DESC"
+    );
     const products = rows.map((r) => {
       let richData = {};
       if (r.data_json) {

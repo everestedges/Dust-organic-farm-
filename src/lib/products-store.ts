@@ -21,10 +21,19 @@ const API_BASE =
     ? "/api"
     : "http://localhost:5000/api";
 
+const isLegacyDuplicate = (p: Product) =>
+  ["2", "3", "4", "5"].includes(String(p.slug)) ||
+  [
+    "DUST Almond Powder (500g)",
+    "DUST Premium Cashew Powder (500g)",
+    "DUST Natural Powder Shampoo for Men (100ml)",
+    "Kacha Aam Instant Powder",
+  ].includes(p.name);
+
 export const useProductsStore = create<ProductsState>()(
   persist(
     (set, get) => ({
-      products: defaultProducts,
+      products: defaultProducts.filter((p) => !isLegacyDuplicate(p)),
       isLoading: false,
       hasLoadedLive: false,
 
@@ -34,17 +43,17 @@ export const useProductsStore = create<ProductsState>()(
           const res = await fetch(`${API_BASE}/products`, { cache: "no-store" });
           if (res.ok) {
             const data = await res.json();
-            if (data.success && Array.isArray(data.products) && data.products.length > 0) {
-              // Merge live products with defaults:
-              // Custom products from DB take precedence, and any default products not yet in DB are preserved
-              const dbProducts: Product[] = data.products;
+            if (data.success && Array.isArray(data.products)) {
+              const dbProducts: Product[] = data.products.filter((p: Product) => !isLegacyDuplicate(p));
               const mergedMap = new Map<string, Product>();
 
               // Add defaults first
-              defaultProducts.forEach((p) => {
-                mergedMap.set(p.slug, p);
-                mergedMap.set(p.id, p);
-              });
+              defaultProducts
+                .filter((p) => !isLegacyDuplicate(p))
+                .forEach((p) => {
+                  mergedMap.set(p.slug, p);
+                  mergedMap.set(p.id, p);
+                });
 
               // Overlay DB products
               dbProducts.forEach((p) => {
@@ -52,7 +61,9 @@ export const useProductsStore = create<ProductsState>()(
                 mergedMap.set(p.id, p);
               });
 
-              const uniqueList = Array.from(new Set(Array.from(mergedMap.values())));
+              const uniqueList = Array.from(new Set(Array.from(mergedMap.values()))).filter(
+                (p) => !isLegacyDuplicate(p)
+              );
               set({ products: uniqueList, hasLoadedLive: true });
             }
           }
@@ -163,7 +174,7 @@ export const useProductsStore = create<ProductsState>()(
       },
     }),
     {
-      name: "dust_products_store_v1",
+      name: "dust_products_store_v2",
       storage: createJSONStorage(() => localStorage),
     }
   )
