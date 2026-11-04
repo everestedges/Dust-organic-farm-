@@ -30,6 +30,16 @@ const isLegacyDuplicate = (p: Product) =>
     "Kacha Aam Instant Powder",
   ].includes(p.name);
 
+const getProductKey = (p: Product) => {
+  const n = (p.name || "").toLowerCase();
+  if (n.includes("ragi")) return "ragi";
+  if (n.includes("paan")) return "paan";
+  if (n.includes("almond")) return "almond";
+  if (n.includes("cashew")) return "cashew";
+  if (n.includes("shampoo")) return "shampoo";
+  return (p.slug || p.id || p.name).toLowerCase().trim();
+};
+
 export const useProductsStore = create<ProductsState>()(
   persist(
     (set, get) => ({
@@ -51,17 +61,15 @@ export const useProductsStore = create<ProductsState>()(
               defaultProducts
                 .filter((p) => !isLegacyDuplicate(p))
                 .forEach((p) => {
-                  mergedMap.set(p.slug, p);
-                  mergedMap.set(p.id, p);
+                  mergedMap.set(getProductKey(p), p);
                 });
 
-              // Overlay DB products
+              // Overlay DB products (DB rows take precedence)
               dbProducts.forEach((p) => {
-                mergedMap.set(p.slug, p);
-                mergedMap.set(p.id, p);
+                mergedMap.set(getProductKey(p), p);
               });
 
-              const uniqueList = Array.from(new Set(Array.from(mergedMap.values()))).filter(
+              const uniqueList = Array.from(mergedMap.values()).filter(
                 (p) => !isLegacyDuplicate(p)
               );
               set({ products: uniqueList, hasLoadedLive: true });

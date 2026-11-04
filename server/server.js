@@ -56,7 +56,330 @@ async function initDatabaseTables() {
     await query("ALTER TABLE products MODIFY COLUMN category_id INT UNSIGNED NULL").catch(() => {});
     // Purge legacy test duplicate products with numeric slugs (2, 3, 4, 5)
     await query("DELETE FROM products WHERE slug IN ('2', '3', '4', '5') OR name IN ('DUST Almond Powder (500g)', 'DUST Premium Cashew Powder (500g)', 'DUST Natural Powder Shampoo for Men (100ml)', 'Kacha Aam Instant Powder')").catch(() => {});
-    console.log("✅ [DB INIT] database tables and columns verified, legacy duplicates purged");
+    
+    // Seed standard official products into MySQL if they are not already in the table
+    const defaultOfficialProducts = [
+      {
+        slug: "shahi-ragi-dry-fruit-laddoo-mix",
+        name: "Shahi Ragi & Dry Fruit Laddoo Mix",
+        sub_heading: "Wholesome Laddoo Premix | Premium Nuts | Traditional Taste",
+        category_id: 1,
+        price: 229.00,
+        compare_price: 259.00,
+        weight: "250g",
+        servings: "₹229 / 250g Pack",
+        stock_qty: 50,
+        image_url: "/ragi_pouch.png",
+        description: "Made with nutritious Ragi and a delicious blend of dry fruits, our Ragi & Dry Fruit Laddoo Mix is a convenient way to prepare tasty, wholesome laddoos at home.",
+        ingredients: "Ragi, Date Powder, Almond, Cashew, Pumpkin Seed, Sunflower Seed, Watermelon Seed, Flax Seed, Cardamom.",
+        data_json: JSON.stringify({
+          id: "ragi-laddoo-01",
+          slug: "shahi-ragi-dry-fruit-laddoo-mix",
+          name: "Shahi Ragi & Dry Fruit Laddoo Mix",
+          shortName: "Ragi Laddoo Mix",
+          subtitle: "Wholesome Laddoo Premix | Premium Nuts | Traditional Taste",
+          pitch: "Wholesome Laddoo Premix & Premium Nuts — Ready to Shape",
+          category: "wholesome-millets",
+          categoryLabel: "Wholesome Laddoo Premix",
+          price: 229,
+          originalPrice: 259,
+          priceDisplay: "₹229",
+          originalPriceDisplay: "₹259",
+          unitDisplay: "₹229 / 250g Pack",
+          netWeight: "250g",
+          badges: ["Wholesome Laddoo Premix", "Premium Dry Fruits", "No Added Sugar"],
+          description: [
+            "Made with nutritious Ragi and a delicious blend of dry fruits, our Ragi & Dry Fruit Laddoo Mix is a convenient way to prepare tasty, wholesome laddoos at home.",
+            "Perfect for breakfast, snacking, or whenever you crave something naturally delicious.",
+            "Rooted in Indian tradition and packed with natural nutrition for a healthier tomorrow."
+          ],
+          ingredients: "Ragi, Date Powder, Almond, Cashew, Pumpkin Seed, Sunflower Seed, Watermelon Seed, Flax Seed, Cardamom.",
+          allergen: "Contains: Ghee, Almonds, Cashews, Pistachios & Other Tree Nuts.",
+          storage: "Store in a cool, dry place away from sunlight, heat & moisture. Shelf life: 6 months.",
+          nutrition: {
+            serving: "Per 100g",
+            note: "Pack Net Wt: 250g",
+            rows: [
+              ["Energy", "423.63 kcal", "21%*"],
+              ["Protein", "14.66g", "27%*"],
+              ["Fat", "16.75g", "25%*"],
+              ["Carbohydrate", "53.56g", "19%*"],
+              ["Total Sugar", "40.76g", "—"],
+              ["Added Sugar", "0g", "0%*"]
+            ]
+          },
+          claims: [
+            "Energy Snack — natural, sustained fuel throughout the day",
+            "Supports Bone Health — calcium and mineral rich finger millet (ragi)",
+            "Keeps You Fuller For Longer — nutrient-dense seeds and wholesome dry fruits",
+            "No Added Sugar — naturally sweetened with pure date powder",
+            "100% Wholesome Ingredients & Premium Nuts"
+          ],
+          ritualLabel: "Preparation Method",
+          ritual: [
+            { title: "Measure & Add Ghee", detail: "Add ghee as per your requirement of mix into a clean mixing bowl." },
+            { title: "Knead Thoroughly", detail: "Mix and knead thoroughly until the warm ghee blends evenly with the roasted ragi and nut mix." },
+            { title: "Shape into Laddoos & Enjoy", detail: "Shape the mixture by hand into round, wholesome laddoos. Enjoy fresh, healthy nutrition anytime." }
+          ],
+          heritageTitle: "Wholesome Laddoo premix Heritage",
+          heritageQuote: "Natural nutrition for a healthier tomorrow. Made for those who choose better — crafted with pure finger millet (ragi), crunchy roasted nuts, and pure date powder.",
+          images: [{ src: "/ragi_pouch.png", alt: "DUST Shahi Ragi & Dry Fruit Laddoo Mix" }],
+          storyImage: "/ragi_pouch.png",
+          accent: "amber",
+          stock: 50,
+          sku: "DUST-RAGI-250",
+          fssai: "12545678901024",
+          featured: true,
+          newArrival: true,
+          bestSeller: true
+        })
+      },
+      {
+        slug: "pure-almond-powder",
+        name: "DUST™ Almond Powder",
+        sub_heading: "Pure Almond Goodness. Everyday Nutrition.",
+        category_id: 2,
+        price: 749.00,
+        compare_price: 899.00,
+        weight: "500g",
+        servings: "₹749 / 500g Pack",
+        stock_qty: 60,
+        image_url: "/almond_powder_pouch.png",
+        description: "Bring the goodness of almonds into your everyday meals with DUST™ Almond Powder. Made from almonds with their natural skin, this finely ground powder offers a convenient way to enjoy the familiar taste and richness of almonds.",
+        ingredients: "100% Pure Skin-On Almond Powder (Prunus dulcis).",
+        data_json: JSON.stringify({
+          id: "almond-powder-01",
+          slug: "pure-almond-powder",
+          name: "DUST™ Almond Powder",
+          shortName: "Almond Powder",
+          subtitle: "Pure Almond Goodness. Everyday Nutrition.",
+          pitch: "Made from skin-on almonds for versatile everyday kitchen nutrition",
+          category: "pure-nut-powders",
+          categoryLabel: "Pure Almond Powder",
+          price: 749,
+          originalPrice: 899,
+          priceDisplay: "₹749",
+          originalPriceDisplay: "₹899",
+          unitDisplay: "₹749 / 500g Pack",
+          netWeight: "500g",
+          badges: ["100% Pure Almonds", "Skin-On Goodness", "No Added Sugar"],
+          description: [
+            "Bring the goodness of almonds into your everyday meals with DUST™ Almond Powder. Made from almonds with their natural skin, this finely ground powder offers a convenient way to enjoy the familiar taste and richness of almonds.",
+            "A versatile kitchen ingredient, it blends easily into milk, smoothies, breakfast bowls, desserts and homemade recipes."
+          ],
+          ingredients: "100% Pure Skin-On Almond Powder (Prunus dulcis).",
+          allergen: "Contains Tree Nuts (Almonds).",
+          storage: "Store in a cool, dry place, away from direct sunlight, heat and moisture.",
+          nutrition: {
+            serving: "Per 100g",
+            note: "Pack Net Wt: 500g",
+            rows: [
+              ["Energy", "579 kcal", "29%*"],
+              ["Protein", "21.15g", "38%*"],
+              ["Fat", "49.93g", "74%*"],
+              ["Carbohydrate", "21.55g", "7%*"],
+              ["Dietary Fibre", "12.50g", "42%*"],
+              ["Added Sugar", "0g", "0%*"]
+            ]
+          },
+          claims: [
+            "100% Pure Skin-On Almond Powder",
+            "Naturally Contains Protein, Fibre & Vitamin E",
+            "No Added Sugar & Zero Additives",
+            "Ideal for Smoothies, Milk, Baking & Sweets"
+          ],
+          ritualLabel: "Ways to Use",
+          ritual: [
+            { title: "Almond Milk", detail: "Mix almond powder into warm milk or a plant-based milk alternative." },
+            { title: "Smoothies & Shakes", detail: "Add one or two spoonfuls to banana shakes or breakfast smoothies." },
+            { title: "Breakfast Bowls", detail: "Sprinkle over Greek yoghurt, oats or fresh fruit bowls." }
+          ],
+          heritageTitle: "Pure Almond Goodness — Choice of Motherland",
+          heritageQuote: "A simple ingredient. Countless delicious possibilities. Finely ground skin-on almonds for daily family wellness.",
+          images: [{ src: "/almond_powder_pouch.png", alt: "DUST Almond Powder" }],
+          storyImage: "/almond_powder_pouch.png",
+          accent: "amber",
+          stock: 60,
+          sku: "DUST-ALMOND-500",
+          fssai: "In Process",
+          featured: true,
+          newArrival: true,
+          bestSeller: false
+        })
+      },
+      {
+        slug: "premium-cashew-powder",
+        name: "DUST™ Premium Cashew Powder",
+        sub_heading: "Pure Cashew Goodness | Everyday Nutrition | Endless Possibilities",
+        category_id: 2,
+        price: 649.00,
+        compare_price: 799.00,
+        weight: "500g",
+        servings: "₹649 / 500g Pack",
+        stock_qty: 60,
+        image_url: "/cashew_powder_pouch.png",
+        description: "Bring the rich, creamy taste of cashews into your everyday recipes with DUST™ Premium Cashew Powder.",
+        ingredients: "100% Pure Natural Cashew Nuts (Anacardium occidentale).",
+        data_json: JSON.stringify({
+          id: "cashew-powder-01",
+          slug: "premium-cashew-powder",
+          name: "DUST™ Premium Cashew Powder",
+          shortName: "Cashew Powder",
+          subtitle: "Pure Cashew Goodness | Everyday Nutrition | Endless Possibilities",
+          pitch: "Pure Cashew Goodness. Everyday Nutrition. Endless Possibilities.",
+          category: "pure-nut-powders",
+          categoryLabel: "Pure Nut Powders",
+          price: 649,
+          originalPrice: 799,
+          priceDisplay: "₹649",
+          originalPriceDisplay: "₹799",
+          unitDisplay: "₹649 / 500g Pack",
+          netWeight: "500g",
+          badges: ["100% Natural", "Premium Quality", "Plant Protein", "Clean Label"],
+          description: [
+            "Bring the rich, creamy taste of cashews into your everyday recipes with DUST™ Premium Cashew Powder.",
+            "Made from finely ground premium cashews, this versatile ingredient adds natural nutty flavour, velvety texture and nutritional goodness."
+          ],
+          ingredients: "100% Pure Natural Cashew Nuts (Anacardium occidentale).",
+          allergen: "Contains Tree Nuts (Cashew Nuts).",
+          storage: "Store in a cool, dry place away from direct sunlight, heat and moisture.",
+          nutrition: {
+            serving: "Per 100g",
+            note: "Pack Net Wt: 500g",
+            rows: [
+              ["Energy", "553 kcal", "28%*"],
+              ["Protein", "18.2g", "33%*"],
+              ["Total Fat", "43.9g", "65%*"],
+              ["Carbohydrate", "30.2g", "10%*"],
+              ["Dietary Fibre", "3.3g", "11%*"],
+              ["Added Sugar", "0g", "0%*"]
+            ]
+          },
+          claims: [
+            "Natural Cashew Goodness & Creamy Texture",
+            "Source of Plant Protein & Healthy Fats",
+            "Naturally Provides Magnesium, Zinc & Iron",
+            "Ideal for Smoothies, Gravies, Baking & Sweets"
+          ],
+          ritualLabel: "Ways to Use",
+          ritual: [
+            { title: "Smoothies & Shakes", detail: "Add 1–2 tablespoons to your favourite smoothie or milkshake for rich creaminess." },
+            { title: "Curries & Gravies", detail: "Add to vegetable curries, paneer gravies and korma for thickness and richness." },
+            { title: "Sweets & Desserts", detail: "Use in kheer, halwa, barfi, and homemade sweets." }
+          ],
+          heritageTitle: "Pure Cashew Goodness — Choice of Motherland",
+          heritageQuote: "A versatile kitchen essential. Enjoy the convenience of finely ground premium cashews without grinding them yourself.",
+          images: [{ src: "/cashew_powder_pouch.png", alt: "DUST Premium Cashew Powder" }],
+          storyImage: "/cashew_powder_pouch.png",
+          accent: "amber",
+          stock: 60,
+          sku: "DUST-CASHEW-500",
+          fssai: "In Process",
+          featured: true,
+          newArrival: true,
+          bestSeller: false
+        })
+      },
+      {
+        slug: "natural-powder-shampoo-men",
+        name: "DUST™ Natural Powder Shampoo for Men",
+        sub_heading: "Designed for Men | 5 Traditional Herbs | No-Foam Herbal Mask",
+        category_id: 3,
+        price: 246.00,
+        compare_price: 299.00,
+        weight: "100ml",
+        servings: "₹246 / 100ml Bottle",
+        stock_qty: 75,
+        image_url: "/shampoo_bottle.png",
+        description: "Meet a different approach to hair care with DUST™ Natural Powder Shampoo – a traditional herbal powder blend made with Amla, Ritha, Shikakai, Hibiscus and Bhringraj.",
+        ingredients: "100% Natural Herbal Powder Blend: Amla Powder, Reetha Powder, Shikakai Powder, Hibiscus Powder, Bhringraj Powder.",
+        data_json: JSON.stringify({
+          id: "powder-shampoo-01",
+          slug: "natural-powder-shampoo-men",
+          name: "DUST™ Natural Powder Shampoo for Men",
+          shortName: "Natural Powder Shampoo",
+          subtitle: "Designed for Men | 5 Traditional Herbs | No-Foam Herbal Mask",
+          pitch: "Designed for Men. Inspired by Nature. Powered by 5 Traditional Herbs.",
+          category: "herbal-haircare",
+          categoryLabel: "Herbal Hair Care",
+          price: 246,
+          originalPrice: 299,
+          priceDisplay: "₹246",
+          originalPriceDisplay: "₹299",
+          unitDisplay: "₹246 / 100ml Bottle",
+          netWeight: "100ml",
+          badges: ["Designed for Men", "5 Traditional Herbs", "Zero Foam • Zero Sulfates", "Clean Label"],
+          description: [
+            "Meet a different approach to hair care with DUST™ Natural Powder Shampoo – a traditional herbal powder blend made with Amla, Ritha, Shikakai, Hibiscus and Bhringraj.",
+            "No complicated routines. Just the goodness of traditional herbs in a convenient powder-to-paste hair mask."
+          ],
+          ingredients: "100% Natural Herbal Powder Blend: Amla Powder, Reetha Powder, Shikakai Powder, Hibiscus Powder, Bhringraj Powder.",
+          allergen: "100 plant-based & herbal. Free from Sulfates, Parabens, Silicones & Chemical Preservatives.",
+          storage: "Store in a cool, dry place away from direct sunlight. Close cap tightly after every use.",
+          nutrition: {
+            serving: "Per 100ml",
+            note: "100% Herbal Actives",
+            rows: [
+              ["Amla (Indian Gooseberry)", "Rich in Natural Vitamin C & Antioxidants", "Active Botanical"],
+              ["Ritha (Soapnut)", "Natural Saponins for Gentle Cleansing", "Active Botanical"],
+              ["Shikakai (Fruit for Hair)", "Low pH Scalp Clarifier & Cleanser", "Active Botanical"],
+              ["Hibiscus (Gudhal)", "Conditioning Mucilage & Amino Acids", "Active Botanical"],
+              ["Bhringraj (False Daisy)", "Root Strengthener & Scalp Tonic", "Active Botanical"]
+            ]
+          },
+          claims: [
+            "5 Traditional Ayurvedic Herbs",
+            "Specially Designed for Men's Hair",
+            "No-Foam Herbal Hair Mask Experience",
+            "Zero Sulfates, Parabens & Artificial Fragrance"
+          ],
+          ritualLabel: "How to Use — Herbal Hair Mask",
+          ritual: [
+            { title: "Measure Required Amount", detail: "Take 1–2 tablespoons of powder into a clean bowl." },
+            { title: "Mix with Water into Paste", detail: "Add plain or warm water and mix to create a smooth herbal paste." },
+            { title: "Apply & Rinse", detail: "Apply on damp hair & scalp, leave for 5–10 minutes, then rinse thoroughly." }
+          ],
+          heritageTitle: "Herbal Hair Wisdom",
+          heritageQuote: "Traditional botanical care formulated specifically for men's everyday scalp health.",
+          images: [{ src: "/shampoo_bottle.png", alt: "DUST Natural Powder Shampoo for Men" }],
+          storyImage: "/shampoo_bottle.png",
+          accent: "amber",
+          stock: 75,
+          sku: "DUST-SHAMPOO-100",
+          fssai: "In Process",
+          featured: true,
+          newArrival: true,
+          bestSeller: false
+        })
+      }
+    ];
+
+    for (const prod of defaultOfficialProducts) {
+      const existing = await query("SELECT id FROM products WHERE slug = ? OR name = ?", [prod.slug, prod.name]);
+      if (existing.length === 0) {
+        await query(
+          `INSERT INTO products (slug, name, sub_heading, category_id, price, compare_price, weight, servings, stock_qty, image_url, description, ingredients, is_best_seller, is_featured, data_json)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, ?)`,
+          [
+            prod.slug,
+            prod.name,
+            prod.sub_heading,
+            prod.category_id,
+            prod.price,
+            prod.compare_price,
+            prod.weight,
+            prod.servings,
+            prod.stock_qty,
+            prod.image_url,
+            prod.description,
+            prod.ingredients,
+            prod.data_json
+          ]
+        );
+        console.log(`✨ [DB SEED] Inserted official product into MySQL: ${prod.name}`);
+      }
+    }
+    console.log("✅ [DB INIT] database tables, columns and official products verified");
   } catch (err) {
     // Column already modified or table not yet created
   }
