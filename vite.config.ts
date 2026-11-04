@@ -13,6 +13,16 @@ export default defineConfig({
   server: {
     port: 8080,
     host: true,
+    proxy: {
+      "/api": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+      },
+      "/uploads": {
+        target: "http://localhost:5000",
+        changeOrigin: true,
+      },
+    },
     watch: {
       ignored: ["**/public/**", "**/.git/**", "**/node_modules/**"],
     },

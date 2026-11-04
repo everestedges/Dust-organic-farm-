@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import mysql from "mysql2/promise";
 import path from "path";
+import fs from "fs";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -13,7 +14,8 @@ dotenv.config({ path: path.join(__dirname, "../.env") });
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 // Configure Local MySQL Database Credentials
 const dbConfig = {
@@ -549,6 +551,59 @@ app.delete("/api/products/:id", async (req, res) => {
   }
 });
 
+// POST /api/upload-image - Upload device image (base64) and save to /uploads
+const uploadsDir = path.join(__dirname, "../public/uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+app.post("/api/upload-image", async (req, res) => {
+  try {
+    const { image, filename } = req.body;
+    if (!image) {
+      return res.status(400).json({ success: false, error: "No image data provided" });
+    }
+
+    const matches = image.match(/^data:([A-Za-z0-9\-+\/.]+);base64,(.+)$/);
+    let mimeType = "image/jpeg";
+    let buffer;
+
+    if (matches && matches.length === 3) {
+      mimeType = matches[1];
+      buffer = Buffer.from(matches[2], "base64");
+    } else {
+      buffer = Buffer.from(image, "base64");
+    }
+
+    let ext = "jpg";
+    if (mimeType.includes("png")) ext = "png";
+    else if (mimeType.includes("webp")) ext = "webp";
+    else if (mimeType.includes("gif")) ext = "gif";
+    else if (mimeType.includes("svg")) ext = "svg";
+
+    let safeBase = "product";
+    if (filename) {
+      safeBase = filename.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 30);
+    }
+
+    const uniqueName = `${safeBase}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+    const filePath = path.join(uploadsDir, uniqueName);
+
+    await fs.promises.writeFile(filePath, buffer);
+    console.log(`📸 [Upload] Saved device image: /uploads/${uniqueName} (${(buffer.length / 1024).toFixed(1)} KB)`);
+
+    return res.json({
+      success: true,
+      url: `/uploads/${uniqueName}`,
+      filename: uniqueName,
+      size: buffer.length,
+    });
+  } catch (err) {
+    console.error("❌ Image upload error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Health check endpoint
 app.get("/api/health", async (req, res) => {
   try {
@@ -565,6 +620,7 @@ app.get("/api/health", async (req, res) => {
 const distPath = path.join(__dirname, "../dist");
 const publicPath = path.join(__dirname, "../public");
 
+app.use("/uploads", express.static(uploadsDir));
 app.use(express.static(publicPath));
 app.use(express.static(distPath));
 

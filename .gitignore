@@ -33,6 +33,12 @@ dist/*.svg
 .wrangler/
 .dev.vars
 
+# Uploaded media from device
+public/uploads/*
+!public/uploads/.gitkeep
+dist/uploads/*
+!dist/uploads/.gitkeep
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

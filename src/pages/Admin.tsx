@@ -32,6 +32,8 @@ import {
   X,
   ThumbsUp,
   RefreshCw,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import { products as initialProducts, companyInfo, Product } from "@/lib/data";
 import { useAdminAuthStore } from "@/lib/admin-auth-store";
@@ -207,6 +209,8 @@ export const Admin: React.FC = () => {
   const [newProductGalleryUrls, setNewProductGalleryUrls] = useState("");
   const [newProductBadges, setNewProductBadges] = useState("100% NATURAL, SPRAY-DRIED, ZERO CHEMICALS");
   const [newProductAccent, setNewProductAccent] = useState<"rose" | "emerald" | "amber">("rose");
+  const [isUploadingMainImg, setIsUploadingMainImg] = useState(false);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
 
   // Tab 3: Description, Ingredients & Safety
   const [newProductDescription, setNewProductDescription] = useState("");
@@ -381,6 +385,72 @@ export const Admin: React.FC = () => {
   useEffect(() => {
     fetchLiveDatabaseData();
   }, []);
+
+  // Image Upload Helpers (Upload directly from laptop / mobile device)
+  const uploadImageFile = async (file: File): Promise<string | null> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64Data = reader.result as string;
+          const res = await fetch(`${API_BASE}/upload-image`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: base64Data, filename: file.name }),
+          });
+          const data = await res.json();
+          if (data.success && data.url) {
+            resolve(data.url);
+          } else {
+            alert(`Upload failed: ${data.error || "Unknown server error"}`);
+            resolve(null);
+          }
+        } catch (err: any) {
+          alert(`Image upload error: ${err.message}`);
+          resolve(null);
+        }
+      };
+      reader.onerror = () => {
+        alert("Failed to read image from device.");
+        resolve(null);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleMainImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingMainImg(true);
+    const uploadedUrl = await uploadImageFile(file);
+    setIsUploadingMainImg(false);
+    if (uploadedUrl) {
+      setNewProductImageUrl(uploadedUrl);
+    }
+    e.target.value = "";
+  };
+
+  const handleGalleryImagesUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setIsUploadingGallery(true);
+    const uploadedUrls: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file) {
+        const url = await uploadImageFile(file);
+        if (url) uploadedUrls.push(url);
+      }
+    }
+    setIsUploadingGallery(false);
+    if (uploadedUrls.length > 0) {
+      setNewProductGalleryUrls((prev) => {
+        const existing = prev.trim();
+        return existing ? `${existing}\n${uploadedUrls.join("\n")}` : uploadedUrls.join("\n");
+      });
+    }
+    e.target.value = "";
+  };
 
   // Actions
   const handleAddProduct = async (e: React.FormEvent) => {
@@ -1732,33 +1802,164 @@ export const Admin: React.FC = () => {
 
               {/* TAB 2: Visuals & Media */}
               {productModalTab === "media" && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block font-bold text-[#0E382E] uppercase mb-1">
-                      Main Product Image URL / Path *
-                    </label>
+                <div className="space-y-5">
+                  {/* Main Product Image */}
+                  <div className="bg-[#F6F5F0] border border-[#74B487]/40 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="block font-bold text-[#0E382E] uppercase text-xs">
+                        Main Product Image *
+                      </label>
+                      <span className="text-[11px] text-stone-500 font-medium">Device upload or URL</span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label className={`cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
+                        isUploadingMainImg
+                          ? "bg-stone-300 text-stone-600 cursor-not-allowed"
+                          : "bg-[#0E382E] text-white hover:bg-[#164d40]"
+                      }`}>
+                        {isUploadingMainImg ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin text-[#E67E22]" />
+                            <span>Uploading Photo...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 text-[#E67E22]" />
+                            <span>Upload from Computer / Phone</span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          disabled={isUploadingMainImg}
+                          onChange={handleMainImageUpload}
+                          className="hidden"
+                        />
+                      </label>
+                      <span className="text-xs text-stone-400 font-semibold">or enter URL below</span>
+                    </div>
+
                     <input
                       type="text"
                       required
                       value={newProductImageUrl}
                       onChange={(e) => setNewProductImageUrl(e.target.value)}
-                      placeholder="/paan_image_2.jpeg or full https:// image URL"
-                      className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                      placeholder="/paan_image_2.jpeg or uploaded image link"
+                      className="w-full bg-white border border-[#74B487]/30 rounded-xl p-3 text-[#0E382E] font-semibold text-xs"
                     />
+
+                    {newProductImageUrl && (
+                      <div className="flex items-center gap-3 p-2.5 bg-white rounded-xl border border-[#74B487]/30">
+                        <img
+                          src={newProductImageUrl}
+                          alt="Main preview"
+                          className="w-14 h-14 object-cover rounded-lg border border-stone-200 shadow-xs"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = "none";
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-[#0E382E] truncate">Main Image Selected</p>
+                          <p className="text-[10px] text-stone-500 font-mono truncate">{newProductImageUrl}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setNewProductImageUrl("")}
+                          className="px-2.5 py-1 text-[11px] font-bold text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  <div>
-                    <label className="block font-bold text-[#0E382E] uppercase mb-1">
-                      Additional Gallery Images (One URL per line or comma-separated)
-                    </label>
+                  {/* Gallery Images */}
+                  <div className="bg-[#F6F5F0] border border-[#74B487]/40 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <label className="block font-bold text-[#0E382E] uppercase text-xs">
+                        Additional Gallery Images
+                      </label>
+                      <span className="text-[11px] text-stone-500 font-medium">Multiple photos allowed</span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3">
+                      <label className={`cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm ${
+                        isUploadingGallery
+                          ? "bg-stone-300 text-stone-600 cursor-not-allowed"
+                          : "bg-[#0E382E] text-white hover:bg-[#164d40]"
+                      }`}>
+                        {isUploadingGallery ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin text-[#E67E22]" />
+                            <span>Uploading Photos...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="w-4 h-4 text-[#E67E22]" />
+                            <span>Upload Multiple Photos from Device</span>
+                          </>
+                        )}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          disabled={isUploadingGallery}
+                          onChange={handleGalleryImagesUpload}
+                          className="hidden"
+                        />
+                      </label>
+                      <span className="text-xs text-stone-400 font-semibold">Select 1 or more files</span>
+                    </div>
+
                     <textarea
                       value={newProductGalleryUrls}
                       onChange={(e) => setNewProductGalleryUrls(e.target.value)}
-                      placeholder="/paan_image_1.jpeg&#10;/paan_image_3.jpeg"
-                      className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold h-20"
+                      placeholder="/paan_image_1.jpeg&#10;/paan_image_3.jpeg&#10;or uploaded links"
+                      className="w-full bg-white border border-[#74B487]/30 rounded-xl p-3 text-[#0E382E] font-semibold text-xs h-20"
                     />
+
+                    {/* Gallery Thumbnails Preview */}
+                    {newProductGalleryUrls.trim() && (
+                      <div className="flex flex-wrap gap-2 pt-1">
+                        {newProductGalleryUrls
+                          .split(/[\n,]+/)
+                          .map((u) => u.trim())
+                          .filter((u) => u.length > 0)
+                          .map((imgUrl, idx) => (
+                            <div
+                              key={idx}
+                              className="relative group w-14 h-14 rounded-lg overflow-hidden border border-stone-300 bg-white shadow-xs"
+                            >
+                              <img
+                                src={imgUrl}
+                                alt={`Gallery ${idx + 1}`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLElement).style.display = "none";
+                                }}
+                              />
+                              <button
+                                type="button"
+                                title="Remove photo"
+                                onClick={() => {
+                                  const list = newProductGalleryUrls
+                                    .split(/[\n,]+/)
+                                    .map((u) => u.trim())
+                                    .filter((u) => u.length > 0 && u !== imgUrl);
+                                  setNewProductGalleryUrls(list.join("\n"));
+                                }}
+                                className="absolute inset-0 bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs font-bold"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                      </div>
+                    )}
                   </div>
 
+                  {/* Badges and Theme Color */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="block font-bold text-[#0E382E] uppercase mb-1">
