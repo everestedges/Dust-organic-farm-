@@ -1,13 +1,17 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Lock, Mail, User, Phone, ArrowRight, CheckCircle2, ShieldCheck } from "lucide-react";
 import { useAuthStore } from "@/lib/auth-store";
 import { companyInfo } from "@/lib/data";
 
 export const Login: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login, signup, isAuthenticated } = useAuthStore();
   const [isSignup, setIsSignup] = useState(false);
+
+  const queryParams = new URLSearchParams(location.search);
+  const redirectTarget = queryParams.get("redirect") || "/account";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,26 +19,37 @@ export const Login: React.FC = () => {
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
 
-  if (isAuthenticated) {
-    navigate("/account");
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(redirectTarget);
+    }
+  }, [isAuthenticated, redirectTarget, navigate]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
     if (isSignup) {
       if (!name || !email || !phone || !password) {
         setError("Please fill out all fields.");
         return;
       }
-      signup(name, email, phone, password);
-      navigate("/account");
+      const ok = await signup(name, email, phone, password);
+      if (ok) {
+        navigate(redirectTarget);
+      } else {
+        setError(useAuthStore.getState().authError || "Registration failed. Try again.");
+      }
     } else {
       if (!email || !password) {
         setError("Please enter your email and password.");
         return;
       }
-      login(email, password);
-      navigate("/account");
+      const ok = await login(email, password);
+      if (ok) {
+        navigate(redirectTarget);
+      } else {
+        setError(useAuthStore.getState().authError || "Invalid email or password.");
+      }
     }
   };
 

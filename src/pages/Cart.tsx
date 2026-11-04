@@ -1,11 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Clock } from "lucide-react";
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Clock, Lock } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
+import { useAuthStore } from "@/lib/auth-store";
 
 export const Cart: React.FC = () => {
   const { cart, removeFromCart, updateQuantity, getSubtotal, clearCart } =
     useCartStore();
+  const { isAuthenticated } = useAuthStore();
 
   const subtotal = getSubtotal();
   const isPrepaidFree = subtotal >= 799;
@@ -152,6 +154,12 @@ export const Cart: React.FC = () => {
             >
               Proceed to Checkout <ArrowRight className="w-4 h-4" />
             </Link>
+
+            {!isAuthenticated && (
+              <p className="text-[10.5px] text-center text-stone-500 font-semibold flex items-center justify-center gap-1">
+                <Lock className="w-3 h-3 text-[#E67E22]" /> Sign in or account creation required at checkout
+              </p>
+            )}
 
             <div className="flex items-center justify-center gap-2 text-[11px] text-[#1F684B] font-bold pt-2">
               <ShieldCheck className="w-4 h-4 text-[#E67E22]" />

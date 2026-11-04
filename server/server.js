@@ -565,6 +565,26 @@ app.post("/api/orders", async (req, res) => {
   } = req.body;
 
   try {
+    if (!customerEmail || !customerEmail.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Customer email is required to complete your purchase.",
+      });
+    }
+
+    // Validate that customer is an active registered user in MySQL database
+    const userCheck = await query(
+      "SELECT id, full_name, email FROM users WHERE LOWER(TRIM(email)) = LOWER(TRIM(?)) LIMIT 1",
+      [customerEmail.trim()]
+    );
+
+    if (userCheck.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: "Order blocked: You must create an account or sign in to complete your purchase.",
+      });
+    }
+
     const payment = (paymentMethod || "UPI").toUpperCase();
     const result = await query(
       `INSERT INTO orders (order_reference, customer_name, customer_email, customer_phone, shipping_address, city, state, pincode, subtotal_amount, total_amount, payment_method, payment_status, order_status)

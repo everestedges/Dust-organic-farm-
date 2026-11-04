@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShieldCheck, CheckCircle2, ArrowLeft, Clock } from "lucide-react";
+import { ShieldCheck, CheckCircle2, ArrowLeft, Clock, Lock, User, LogIn, UserPlus } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 import { useAuthStore } from "@/lib/auth-store";
 
 export const Checkout: React.FC = () => {
   const { cart, getSubtotal, clearCart } = useCartStore();
-  const { user } = useAuthStore();
+  const { user, isAuthenticated, openAuthModal } = useAuthStore();
 
   const [promoCode, setPromoCode] = useState("");
   const [discountPercent, setDiscountPercent] = useState(0);
@@ -16,9 +16,9 @@ export const Checkout: React.FC = () => {
     name: user?.name || "",
     email: user?.email || "",
     phone: user?.phone || "",
-    address: "",
-    city: "",
-    pincode: "",
+    address: user?.address || "",
+    city: user?.city || "",
+    pincode: user?.pincode || "",
     paymentMethod: "upi",
   });
 
@@ -26,9 +26,12 @@ export const Checkout: React.FC = () => {
     if (user) {
       setFormData((prev) => ({
         ...prev,
-        name: prev.name || user.name || "",
-        email: prev.email || user.email || "",
-        phone: prev.phone || user.phone || "",
+        name: user.name || prev.name,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+        address: user.address || prev.address,
+        city: user.city || prev.city,
+        pincode: user.pincode || prev.pincode,
       }));
     }
   }, [user]);
@@ -51,6 +54,13 @@ export const Checkout: React.FC = () => {
 
   const handleCompleteOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isAuthenticated || !user) {
+      openAuthModal("login");
+      alert("⚠️ Account Required: Please sign in to your existing account or create a new account to place your order.");
+      return;
+    }
+
     if (!formData.name || !formData.phone || !formData.address) {
       alert("Please fill in your name, phone, and shipping address.");
       return;
@@ -67,9 +77,9 @@ export const Checkout: React.FC = () => {
 
     const payload = {
       reference: generatedId,
-      customerName: formData.name.trim(),
-      customerEmail: (formData.email || user?.email || "customer@dustofficial.com").trim(),
-      customerPhone: formData.phone.trim(),
+      customerName: (formData.name || user.name).trim(),
+      customerEmail: user.email.trim(),
+      customerPhone: (formData.phone || user.phone).trim(),
       address: formData.address.trim(),
       city: (formData.city || "Pune").trim(),
       state: "Maharashtra",
@@ -195,38 +205,83 @@ export const Checkout: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
         {/* Form (7 cols) */}
         <form onSubmit={handleCompleteOrder} className="lg:col-span-7 space-y-8">
-          {/* Customer Details */}
-          <div className="bg-white p-6 rounded-3xl border border-[#74B487]/40 space-y-4 shadow-xs">
-            <h3 className="text-xs uppercase font-extrabold text-[#E67E22] tracking-wider">
-              1. Customer Information
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-              <input
-                type="text"
-                required
-                placeholder="Full Name *"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                className="bg-[#F6F5F0] p-3 rounded-xl border border-[#74B487]/40 text-[#0E382E] outline-none focus:border-[#E67E22] font-medium"
-              />
-              <input
-                type="email"
-                required
-                placeholder="Email Address *"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="bg-[#F6F5F0] p-3 rounded-xl border border-[#74B487]/40 text-[#0E382E] outline-none focus:border-[#E67E22] font-medium"
-              />
-              <input
-                type="tel"
-                required
-                placeholder="Mobile Number (for delivery SMS) *"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className="bg-[#F6F5F0] p-3 rounded-xl border border-[#74B487]/40 text-[#0E382E] outline-none focus:border-[#E67E22] font-medium sm:col-span-2"
-              />
+          {/* Account Authentication Gate or Verified Info */}
+          {!isAuthenticated || !user ? (
+            <div className="bg-[#0E382E] text-white p-6 sm:p-7 rounded-3xl border-2 border-[#E67E22] space-y-4 shadow-md">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#E67E22] text-white flex items-center justify-center shrink-0 shadow-md">
+                  <Lock className="w-6 h-6" />
+                </div>
+                <div className="space-y-1">
+                  <div className="inline-block px-2.5 py-0.5 rounded-full bg-[#E67E22]/20 border border-[#E67E22] text-[#E67E22] text-[10px] font-black uppercase tracking-wider">
+                    Sign In Required
+                  </div>
+                  <h3 className="text-xl font-extrabold text-white">
+                    Account Required to Place Order
+                  </h3>
+                  <p className="text-xs text-[#E8F1E9] leading-relaxed font-normal">
+                    You cannot place an order as a guest. Please sign in to your existing account or create a new account to proceed with checkout.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-[#74B487]/30">
+                <button
+                  type="button"
+                  onClick={() => openAuthModal("login")}
+                  className="w-full py-3.5 bg-[#E67E22] hover:bg-[#d67018] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                >
+                  <LogIn className="w-4 h-4" /> Sign In to Existing Account
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openAuthModal("signup")}
+                  className="w-full py-3.5 bg-white hover:bg-stone-100 text-[#0E382E] text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
+                >
+                  <UserPlus className="w-4 h-4 text-[#E67E22]" /> Create New Account
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="bg-white p-6 rounded-3xl border border-[#74B487]/40 space-y-4 shadow-xs">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <h3 className="text-xs uppercase font-extrabold text-[#E67E22] tracking-wider">
+                  1. Customer Account & Contact
+                </h3>
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E8F1E9] text-[#0E382E] text-[11px] font-bold">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#25D366]" />
+                  <span>Verified Account: {user.email}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <input
+                  type="text"
+                  required
+                  placeholder="Full Name *"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="bg-[#F6F5F0] p-3 rounded-xl border border-[#74B487]/40 text-[#0E382E] outline-none focus:border-[#E67E22] font-medium"
+                />
+                <input
+                  type="email"
+                  required
+                  disabled
+                  placeholder="Email Address *"
+                  value={user.email}
+                  className="bg-[#E8F1E9] p-3 rounded-xl border border-[#74B487]/40 text-[#0E382E] font-medium cursor-not-allowed opacity-90"
+                  title="Account email linked to your profile"
+                />
+                <input
+                  type="tel"
+                  required
+                  placeholder="Mobile Number (for delivery SMS) *"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  className="bg-[#F6F5F0] p-3 rounded-xl border border-[#74B487]/40 text-[#0E382E] outline-none focus:border-[#E67E22] font-medium sm:col-span-2"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Shipping Address */}
           <div className="bg-white p-6 rounded-3xl border border-[#74B487]/40 space-y-4 shadow-xs">
@@ -292,20 +347,31 @@ export const Checkout: React.FC = () => {
             </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full py-4 btn-dust-orange text-white font-extrabold text-sm uppercase tracking-widest rounded-2xl transition-all shadow-md disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-          >
-            {isSubmitting ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Saving Order to Live Database...
-              </>
-            ) : (
-              `Place Order (₹${grandTotal})`
-            )}
-          </button>
+          {!isAuthenticated || !user ? (
+            <button
+              type="button"
+              onClick={() => openAuthModal("login")}
+              className="w-full py-4.5 bg-[#0E382E] hover:bg-[#E67E22] text-white font-extrabold text-sm uppercase tracking-widest rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2 cursor-pointer group"
+            >
+              <Lock className="w-4 h-4 text-[#E67E22] group-hover:text-white transition-colors" />
+              Sign In or Create Account to Place Order (₹{grandTotal})
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full py-4 btn-dust-orange text-white font-extrabold text-sm uppercase tracking-widest rounded-2xl transition-all shadow-md disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Saving Order to Live Database...
+                </>
+              ) : (
+                `Place Order (₹${grandTotal})`
+              )}
+            </button>
+          )}
         </form>
 
         {/* Order Summary Sidebar (5 cols) */}
