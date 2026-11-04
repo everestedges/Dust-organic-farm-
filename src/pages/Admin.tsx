@@ -36,6 +36,7 @@ import {
 import { products as initialProducts, companyInfo, Product } from "@/lib/data";
 import { useAdminAuthStore } from "@/lib/admin-auth-store";
 import { useTestimonialsStore, Testimonial } from "@/lib/testimonials-store";
+import { useProductsStore } from "@/lib/products-store";
 
 export const Admin: React.FC = () => {
   const navigate = useNavigate();
@@ -177,20 +178,62 @@ export const Admin: React.FC = () => {
     setIsReviewModalOpen(false);
   };
 
-  // State 1: Products & Image Management (Add/Edit/Delete)
-  const [productsList, setProductsList] = useState<Product[]>(initialProducts);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  // State 1: Products & Image Management via Live Database Store
+  const {
+    products: productsList,
+    addProduct,
+    updateProductPrice,
+    updateProductStock,
+    deleteProduct,
+    fetchProducts: fetchStoreProducts,
+  } = useProductsStore();
 
-  // New Product Form State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [productModalTab, setProductModalTab] = useState<"basic" | "media" | "nutrition" | "ritual">("basic");
+
+  // Tab 1: Basic & Pricing
   const [newProductName, setNewProductName] = useState("");
-  const [newProductCategory, setNewProductCategory] = useState<"wholesome-millets" | "heritage-wellness">("wholesome-millets");
-  const [newProductPrice, setNewProductPrice] = useState(229);
-  const [newProductOriginalPrice, setNewProductOriginalPrice] = useState(259);
-  const [newProductWeight, setNewProductWeight] = useState("250g");
-  const [newProductServings, setNewProductServings] = useState("Makes 10-12 Laddoos");
-  const [newProductImageUrl, setNewProductImageUrl] = useState("/ragi_pouch.png");
+  const [newProductCategory, setNewProductCategory] = useState<"wholesome-millets" | "heritage-wellness" | "pure-fruit-powders" | "pure-nut-powders" | "herbal-haircare">("heritage-wellness");
+  const [newProductPrice, setNewProductPrice] = useState(299);
+  const [newProductOriginalPrice, setNewProductOriginalPrice] = useState(349);
+  const [newProductWeight, setNewProductWeight] = useState("200g");
+  const [newProductServings, setNewProductServings] = useState("Makes 20 Servings");
+  const [newProductStock, setNewProductStock] = useState(150);
+  const [newProductSubtitle, setNewProductSubtitle] = useState("");
+  const [newProductPitch, setNewProductPitch] = useState("");
+
+  // Tab 2: Visuals & Badges
+  const [newProductImageUrl, setNewProductImageUrl] = useState("");
+  const [newProductGalleryUrls, setNewProductGalleryUrls] = useState("");
+  const [newProductBadges, setNewProductBadges] = useState("100% NATURAL, SPRAY-DRIED, ZERO CHEMICALS");
+  const [newProductAccent, setNewProductAccent] = useState<"rose" | "emerald" | "amber">("rose");
+
+  // Tab 3: Description, Ingredients & Safety
   const [newProductDescription, setNewProductDescription] = useState("");
+  const [newProductClaims, setNewProductClaims] = useState("100% Pure & Natural, Zero Added Sugar, Fast Absorption");
+  const [newProductIngredients, setNewProductIngredients] = useState("");
+  const [newProductAllergen, setNewProductAllergen] = useState("Contains no common allergens. 100% vegetarian.");
+  const [newProductStorage, setNewProductStorage] = useState("Store in a cool dry place away from direct sunlight.");
+
+  // Tab 4: Nutritional Facts
+  const [newProductNutritionServing, setNewProductNutritionServing] = useState("Serving Size: 1 Sachet (5g)");
+  const [newProductNutritionNote, setNewProductNutritionNote] = useState("Approximate values based on 2000 kcal diet");
+  const [newProductEnergy, setNewProductEnergy] = useState("45 kcal");
+  const [newProductProtein, setNewProductProtein] = useState("1.2g");
+  const [newProductCarbs, setNewProductCarbs] = useState("9.4g");
+  const [newProductFiber, setNewProductFiber] = useState("1.8g");
+  const [newProductFat, setNewProductFat] = useState("0.2g");
+
+  // Tab 5: Preparation Ritual & Heritage Story
+  const [newProductRitualLabel, setNewProductRitualLabel] = useState("Preparation Ritual");
+  const [newProductStep1Title, setNewProductStep1Title] = useState("Pour & Measure");
+  const [newProductStep1Detail, setNewProductStep1Detail] = useState("Empty 1 sachet or 1 teaspoon into a glass or bowl.");
+  const [newProductStep2Title, setNewProductStep2Title] = useState("Blend Smoothly");
+  const [newProductStep2Detail, setNewProductStep2Detail] = useState("Add 60–100ml chilled water or milk and stir for 5 seconds.");
+  const [newProductStep3Title, setNewProductStep3Title] = useState("Savor Natural Nutrition");
+  const [newProductStep3Detail, setNewProductStep3Detail] = useState("Enjoy immediate digestive refreshment and natural energy.");
+  const [newProductHeritageTitle, setNewProductHeritageTitle] = useState("Indian Heritage Wisdom");
+  const [newProductHeritageQuote, setNewProductHeritageQuote] = useState("Inspired by time-tested Indian wellness traditions.");
 
   // State 2: Categories
   const [categories, setCategories] = useState([
@@ -325,6 +368,9 @@ export const Admin: React.FC = () => {
           );
         }
       }
+
+      // 4. Fetch live products from MySQL
+      fetchStoreProducts();
     } catch (err) {
       console.warn("Could not load live database records:", err);
     } finally {
@@ -337,61 +383,131 @@ export const Admin: React.FC = () => {
   }, []);
 
   // Actions
-  const handleAddProduct = (e: React.FormEvent) => {
+  const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newId = `dust-prod-${Date.now()}`;
+    if (!newProductName.trim()) {
+      alert("Please enter a product title.");
+      return;
+    }
+
+    const slug = newProductName
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+    const categoryLabels: Record<string, string> = {
+      "wholesome-millets": "Wholesome Laddoo Premix",
+      "heritage-wellness": "Heritage Wellness",
+      "pure-fruit-powders": "Pure Fruit Powders",
+      "pure-nut-powders": "Pure Nut Powders",
+      "herbal-haircare": "Herbal Haircare",
+    };
+
+    // Parse gallery URLs
+    const galleryList = newProductGalleryUrls
+      .split(/[\n,]+/)
+      .map((u) => u.trim())
+      .filter((u) => u.length > 0)
+      .map((u) => ({ src: u, alt: newProductName }));
+
+    const mainImg = newProductImageUrl.trim() || "/logo.png";
+    const allImages = [{ src: mainImg, alt: newProductName }, ...galleryList];
+
+    // Parse Badges
+    const badgesArray = newProductBadges
+      .split(",")
+      .map((b) => b.trim())
+      .filter((b) => b.length > 0);
+
+    // Parse Claims
+    const claimsArray = newProductClaims
+      .split(",")
+      .map((c) => c.trim())
+      .filter((c) => c.length > 0);
+
+    // Parse Description paragraphs
+    const descriptionParagraphs = newProductDescription
+      .split("\n\n")
+      .map((p) => p.trim())
+      .filter((p) => p.length > 0);
+
     const newProd: Product = {
-      id: newId,
-      slug: newProductName.toLowerCase().replace(/\s+/g, "-"),
-      name: newProductName,
-      shortName: newProductName,
-      subtitle: newProductServings,
-      pitch: newProductDescription,
+      id: `prod-${Date.now()}`,
+      slug,
+      name: newProductName.trim(),
+      shortName: newProductName.trim(),
+      subtitle: newProductSubtitle.trim() || newProductServings,
+      pitch: newProductPitch.trim() || newProductSubtitle.trim() || "100% Pure Natural Indian Formulation.",
       category: newProductCategory,
-      categoryLabel: newProductCategory === "wholesome-millets" ? "Wholesome Laddoo Premix" : "Heritage Wellness",
-      price: newProductPrice,
-      originalPrice: newProductOriginalPrice,
+      categoryLabel: categoryLabels[newProductCategory] || "Heritage Wellness",
+      price: Number(newProductPrice),
       priceDisplay: `₹${newProductPrice}`,
-      originalPriceDisplay: `₹${newProductOriginalPrice}`,
       unitDisplay: newProductServings,
       netWeight: newProductWeight,
-      badges: ["NEW LAUNCH"],
-      description: [newProductDescription || "Pure spray-dried natural ingredient formulation."],
-      ingredients: "Real Betel Leaf Solids, Gulkand, Fennel, Cardamom, Inulin Fiber",
-      storage: "Store in a cool dry place away from direct sunlight.",
-      nutrition: { serving: newProductWeight, note: "100% Natural", rows: [["Energy", "45 kcal", "2%"]] },
-      claims: ["100% Natural", "Zero Preservatives"],
-      ritual: [{ title: "Stir & Enjoy", detail: "Mix with 60ml chilled water." }],
-      ritualLabel: "Preparation Ritual",
-      heritageTitle: "Traditional Wellness",
-      heritageQuote: "Inspired by Banaras digestive recipes.",
-      images: [{ src: newProductImageUrl, alt: newProductName }],
-      storyImage: newProductImageUrl,
-      accent: "rose",
-      stock: 150,
-      sku: newId,
+      badges: badgesArray.length > 0 ? badgesArray : ["100% NATURAL"],
+      description:
+        descriptionParagraphs.length > 0
+          ? descriptionParagraphs
+          : [newProductDescription.trim() || "Handcrafted pure natural wellness formulation."],
+      ingredients: newProductIngredients.trim() || "100% Pure Natural Ingredients",
+      storage: newProductStorage.trim() || "Store in a cool dry place away from direct sunlight.",
+      nutrition: {
+        serving: newProductNutritionServing.trim(),
+        note: newProductNutritionNote.trim(),
+        rows: [
+          ["Energy", newProductEnergy, "19%"],
+          ["Protein", newProductProtein, "24%"],
+          ["Carbohydrates", newProductCarbs, "22%"],
+          ["Dietary Fiber", newProductFiber, "28%"],
+          ["Total Fat", newProductFat, "6%"],
+        ],
+      },
+      claims: claimsArray.length > 0 ? claimsArray : ["100% Natural", "Zero Preservatives", "Pure Heritage"],
+      ritual: [
+        { title: newProductStep1Title, detail: newProductStep1Detail },
+        { title: newProductStep2Title, detail: newProductStep2Detail },
+        { title: newProductStep3Title, detail: newProductStep3Detail },
+      ],
+      ritualLabel: newProductRitualLabel || "Preparation & Usage Ritual",
+      heritageTitle: newProductHeritageTitle || "Traditional Indian Wellness",
+      heritageQuote: newProductHeritageQuote || "Inspired by time-tested Indian wellness recipes.",
+      images: allImages,
+      storyImage: mainImg,
+      accent: newProductAccent,
+      stock: Number(newProductStock) || 100,
+      sku: `DUST-${slug.toUpperCase()}`,
       fssai: "FSSAI Lic. No. 11522036000722",
       featured: true,
       newArrival: true,
       bestSeller: false,
+      ...(newProductOriginalPrice
+        ? {
+            originalPrice: Number(newProductOriginalPrice),
+            originalPriceDisplay: `₹${newProductOriginalPrice}`,
+          }
+        : {}),
+      ...(newProductAllergen.trim()
+        ? { allergen: newProductAllergen.trim() }
+        : {}),
     };
 
-    setProductsList((prev) => [newProd, ...prev]);
+    await addProduct(newProd);
     setIsAddModalOpen(false);
     setNewProductName("");
-    alert("✅ New product added successfully!");
+    setNewProductImageUrl("");
+    setNewProductDescription("");
+    alert(`✅ Product "${newProductName}" created successfully!\n\nLive Details Page is now available at /product/${slug}`);
   };
 
-  const handleDeleteProduct = (id: string) => {
-    if (confirm("Are you sure you want to delete this product SKU?")) {
-      setProductsList((prev) => prev.filter((p) => p.id !== id));
+  const handleDeleteProduct = async (id: string) => {
+    if (confirm("Are you sure you want to delete this product SKU? This will remove it from the store and database.")) {
+      await deleteProduct(id);
     }
   };
 
-  const handleUpdatePrice = (id: string, newPrice: number) => {
-    setProductsList((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, price: newPrice } : p))
-    );
+  const handleUpdatePrice = async (id: string, newPrice: number) => {
+    await updateProductPrice(id, newPrice);
   };
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
@@ -682,7 +798,16 @@ export const Admin: React.FC = () => {
                         {product.netWeight} ({product.unitDisplay})
                       </td>
                       <td className="p-4 font-extrabold text-[#0E382E]">{product.stock} units</td>
-                      <td className="p-4 text-right space-x-2">
+                      <td className="p-4 text-right space-x-2 whitespace-nowrap">
+                        <Link
+                          to={`/product/${product.slug}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2.5 py-1.5 bg-[#E8F1E9] text-[#0E382E] border border-[#74B487]/50 rounded-lg text-[10px] font-bold hover:bg-[#74B487]/30 inline-flex items-center gap-1 transition-colors"
+                        >
+                          View Live <ArrowUpRight className="w-3 h-3 text-[#E67E22]" />
+                        </Link>
+
                         <button
                           onClick={() => {
                             const newPrice = prompt(`Enter new price for ${product.name}:`, product.price.toString());
@@ -801,9 +926,7 @@ export const Admin: React.FC = () => {
                           onClick={() => {
                             const addQty = prompt(`Add stock quantity for ${prod.name}:`, "50");
                             if (addQty && !isNaN(Number(addQty))) {
-                              setProductsList((prev) =>
-                                prev.map((p) => (p.id === prod.id ? { ...p, stock: p.stock + Number(addQty) } : p))
-                              );
+                              updateProductStock(prod.id, prod.stock + Number(addQty));
                             }
                           }}
                           className="px-3 py-1.5 bg-[#0E382E] text-white rounded-lg text-[10px] font-bold hover:bg-[#E67E22]"
@@ -1413,111 +1536,507 @@ export const Admin: React.FC = () => {
         )}
       </div>
 
-      {/* Add New Product Modal */}
+      {/* Add New Product Modal with Full Details Page Sync */}
       {isAddModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/65 backdrop-blur-xs">
-          <div className="relative w-full max-w-lg bg-white rounded-3xl p-8 space-y-5 border border-[#74B487]/50 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-2xl font-extrabold text-[#0E382E]">Add New Product SKU</h3>
+          <div className="relative w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-8 space-y-5 border border-[#74B487]/50 shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#74B487]/30 pb-4">
+              <div>
+                <span className="text-[10px] uppercase tracking-widest text-[#E67E22] font-black">
+                  DYNAMIC PRODUCT CMS
+                </span>
+                <h3 className="text-2xl font-extrabold text-[#0E382E]">
+                  Create New Product SKU & Live Page
+                </h3>
+                <p className="text-xs text-[#1F684B]">
+                  Fills out all sections of your dedicated <code>/product/:slug</code> page.
+                </p>
+              </div>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Sub-Tabs */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[#F6F5F0] p-1.5 rounded-2xl border border-[#74B487]/30 text-xs">
+              <button
+                type="button"
+                onClick={() => setProductModalTab("basic")}
+                className={`py-2 px-3 rounded-xl font-bold transition-all ${
+                  productModalTab === "basic"
+                    ? "bg-[#0E382E] text-white shadow-xs"
+                    : "text-[#0E382E] hover:bg-[#E8F1E9]"
+                }`}
+              >
+                1. Basic & Pricing
+              </button>
+              <button
+                type="button"
+                onClick={() => setProductModalTab("media")}
+                className={`py-2 px-3 rounded-xl font-bold transition-all ${
+                  productModalTab === "media"
+                    ? "bg-[#0E382E] text-white shadow-xs"
+                    : "text-[#0E382E] hover:bg-[#E8F1E9]"
+                }`}
+              >
+                2. Visuals & Media
+              </button>
+              <button
+                type="button"
+                onClick={() => setProductModalTab("nutrition")}
+                className={`py-2 px-3 rounded-xl font-bold transition-all ${
+                  productModalTab === "nutrition"
+                    ? "bg-[#0E382E] text-white shadow-xs"
+                    : "text-[#0E382E] hover:bg-[#E8F1E9]"
+                }`}
+              >
+                3. Ingredients & Nutrition
+              </button>
+              <button
+                type="button"
+                onClick={() => setProductModalTab("ritual")}
+                className={`py-2 px-3 rounded-xl font-bold transition-all ${
+                  productModalTab === "ritual"
+                    ? "bg-[#0E382E] text-white shadow-xs"
+                    : "text-[#0E382E] hover:bg-[#E8F1E9]"
+                }`}
+              >
+                4. Ritual & Story
+              </button>
+            </div>
 
             <form onSubmit={handleAddProduct} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-[#0E382E] uppercase mb-1">Product Title *</label>
-                <input
-                  type="text"
-                  required
-                  value={newProductName}
-                  onChange={(e) => setNewProductName(e.target.value)}
-                  placeholder="e.g. Paan Digestive Shot Box"
-                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
-                />
-              </div>
+              {/* TAB 1: Basic & Pricing */}
+              {productModalTab === "basic" && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                      Product Title *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newProductName}
+                      onChange={(e) => setNewProductName(e.target.value)}
+                      placeholder="e.g. Royal Banarasi Paan Digestive Shots"
+                      className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                    />
+                  </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-[#0E382E] uppercase mb-1">Category *</label>
-                  <select
-                    value={newProductCategory}
-                    onChange={(e) => setNewProductCategory(e.target.value as any)}
-                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
-                  >
-                    <option value="wholesome-millets">Wholesome Laddoo Premix</option>
-                    <option value="heritage-wellness">Heritage Wellness</option>
-                  </select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                        Category *
+                      </label>
+                      <select
+                        value={newProductCategory}
+                        onChange={(e) => setNewProductCategory(e.target.value as any)}
+                        className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                      >
+                        <option value="heritage-wellness">Heritage Wellness (Digestion, Herbal)</option>
+                        <option value="wholesome-millets">Wholesome Laddoo Premix (Millets, Nuts)</option>
+                        <option value="pure-fruit-powders">Pure Fruit Powders</option>
+                        <option value="pure-nut-powders">Pure Nut Powders (Almond, Cashew)</option>
+                        <option value="herbal-haircare">Herbal Haircare</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                        Stock Quantity (Units) *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        value={newProductStock}
+                        onChange={(e) => setNewProductStock(Number(e.target.value))}
+                        className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                        Selling Price (₹) *
+                      </label>
+                      <input
+                        type="number"
+                        required
+                        value={newProductPrice}
+                        onChange={(e) => setNewProductPrice(Number(e.target.value))}
+                        className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                        Compare Price / MRP (₹)
+                      </label>
+                      <input
+                        type="number"
+                        value={newProductOriginalPrice}
+                        onChange={(e) => setNewProductOriginalPrice(Number(e.target.value))}
+                        className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                        Net Weight *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={newProductWeight}
+                        onChange={(e) => setNewProductWeight(e.target.value)}
+                        placeholder="e.g. 200g or Box of 10 Sachets"
+                        className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                        Servings / Pack Info *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={newProductServings}
+                        onChange={(e) => setNewProductServings(e.target.value)}
+                        placeholder="e.g. Makes 20 Shots / Yields 12 Laddoos"
+                        className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                      Header Subtitle
+                    </label>
+                    <input
+                      type="text"
+                      value={newProductSubtitle}
+                      onChange={(e) => setNewProductSubtitle(e.target.value)}
+                      placeholder="e.g. Royal Betel Leaf & Gulkand After-Meal Digestive"
+                      className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                    />
+                  </div>
                 </div>
+              )}
 
-                <div>
-                  <label className="block font-bold text-[#0E382E] uppercase mb-1">Price (₹) *</label>
-                  <input
-                    type="number"
-                    required
-                    value={newProductPrice}
-                    onChange={(e) => setNewProductPrice(Number(e.target.value))}
-                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
-                  />
+              {/* TAB 2: Visuals & Media */}
+              {productModalTab === "media" && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                      Main Product Image URL / Path *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newProductImageUrl}
+                      onChange={(e) => setNewProductImageUrl(e.target.value)}
+                      placeholder="/paan_image_2.jpeg or full https:// image URL"
+                      className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                      Additional Gallery Images (One URL per line or comma-separated)
+                    </label>
+                    <textarea
+                      value={newProductGalleryUrls}
+                      onChange={(e) => setNewProductGalleryUrls(e.target.value)}
+                      placeholder="/paan_image_1.jpeg&#10;/paan_image_3.jpeg"
+                      className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold h-20"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                        Promotional Badges (Comma-separated)
+                      </label>
+                      <input
+                        type="text"
+                        value={newProductBadges}
+                        onChange={(e) => setNewProductBadges(e.target.value)}
+                        placeholder="100% NATURAL, SPRAY-DRIED, NO PRESERVATIVES"
+                        className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                        Theme Accent Color
+                      </label>
+                      <select
+                        value={newProductAccent}
+                        onChange={(e) => setNewProductAccent(e.target.value as any)}
+                        className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                      >
+                        <option value="rose">Rose (Deep Green & Royal Amber)</option>
+                        <option value="emerald">Emerald (Fresh Herbal Green)</option>
+                        <option value="amber">Amber (Golden Grain Warmth)</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-[#0E382E] uppercase mb-1">Weight *</label>
-                  <input
-                    type="text"
-                    required
-                    value={newProductWeight}
-                    onChange={(e) => setNewProductWeight(e.target.value)}
-                    placeholder="e.g. 20g"
-                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
-                  />
+              {/* TAB 3: Ingredients & Nutrition */}
+              {productModalTab === "nutrition" && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                      Detailed Description (Double enter for multiple paragraphs)
+                    </label>
+                    <textarea
+                      value={newProductDescription}
+                      onChange={(e) => setNewProductDescription(e.target.value)}
+                      placeholder="Crafted with authentic ingredients...&#10;&#10;Our spray-drying process retains 98% of natural micronutrients without artificial chemicals."
+                      className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold h-24"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                      Key Health Claims / Benefits (Comma-separated)
+                    </label>
+                    <input
+                      type="text"
+                      value={newProductClaims}
+                      onChange={(e) => setNewProductClaims(e.target.value)}
+                      placeholder="Instant Digestive Relief, 98% Nutrient Retention, Zero Synthetic Chemicals"
+                      className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                      Full Ingredients List *
+                    </label>
+                    <textarea
+                      required
+                      value={newProductIngredients}
+                      onChange={(e) => setNewProductIngredients(e.target.value)}
+                      placeholder="Real Betel Leaf Solids, Gulkand, Fennel, Cardamom, Inulin Fiber"
+                      className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold h-16"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                        Allergen / Safety Info
+                      </label>
+                      <input
+                        type="text"
+                        value={newProductAllergen}
+                        onChange={(e) => setNewProductAllergen(e.target.value)}
+                        placeholder="Contains no common allergens. 100% vegetarian."
+                        className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                        Storage Instructions
+                      </label>
+                      <input
+                        type="text"
+                        value={newProductStorage}
+                        onChange={(e) => setNewProductStorage(e.target.value)}
+                        placeholder="Store in a cool dry place away from direct sunlight."
+                        className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Nutrition Breakdown Sub-Grid */}
+                  <div className="p-4 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/40 space-y-3">
+                    <h4 className="font-extrabold text-[#0E382E] uppercase text-[11px]">
+                      Nutritional Values Table (Per Serving)
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold text-stone-600">Energy (kcal)</label>
+                        <input
+                          type="text"
+                          value={newProductEnergy}
+                          onChange={(e) => setNewProductEnergy(e.target.value)}
+                          className="w-full bg-white border border-[#74B487]/30 rounded-lg p-2 font-mono font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-stone-600">Protein (g)</label>
+                        <input
+                          type="text"
+                          value={newProductProtein}
+                          onChange={(e) => setNewProductProtein(e.target.value)}
+                          className="w-full bg-white border border-[#74B487]/30 rounded-lg p-2 font-mono font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-stone-600">Carbohydrates (g)</label>
+                        <input
+                          type="text"
+                          value={newProductCarbs}
+                          onChange={(e) => setNewProductCarbs(e.target.value)}
+                          className="w-full bg-white border border-[#74B487]/30 rounded-lg p-2 font-mono font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-stone-600">Dietary Fiber (g)</label>
+                        <input
+                          type="text"
+                          value={newProductFiber}
+                          onChange={(e) => setNewProductFiber(e.target.value)}
+                          className="w-full bg-white border border-[#74B487]/30 rounded-lg p-2 font-mono font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-stone-600">Total Fat (g)</label>
+                        <input
+                          type="text"
+                          value={newProductFat}
+                          onChange={(e) => setNewProductFat(e.target.value)}
+                          className="w-full bg-white border border-[#74B487]/30 rounded-lg p-2 font-mono font-bold"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              )}
 
-                <div>
-                  <label className="block font-bold text-[#0E382E] uppercase mb-1">Servings *</label>
-                  <input
-                    type="text"
-                    required
-                    value={newProductServings}
-                    onChange={(e) => setNewProductServings(e.target.value)}
-                    placeholder="e.g. Makes 4 Shots"
-                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
-                  />
+              {/* TAB 4: Ritual & Story */}
+              {productModalTab === "ritual" && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                      Ritual Section Heading
+                    </label>
+                    <input
+                      type="text"
+                      value={newProductRitualLabel}
+                      onChange={(e) => setNewProductRitualLabel(e.target.value)}
+                      placeholder="e.g. Preparation Ritual or How to Use"
+                      className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                    />
+                  </div>
+
+                  <div className="space-y-3 p-4 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/40">
+                    <h4 className="font-extrabold text-[#0E382E] uppercase text-[11px]">
+                      Step-by-Step Usage Instructions
+                    </h4>
+
+                    {/* Step 1 */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <input
+                        type="text"
+                        value={newProductStep1Title}
+                        onChange={(e) => setNewProductStep1Title(e.target.value)}
+                        placeholder="Step 1 Title (e.g. Pour)"
+                        className="bg-white border border-[#74B487]/30 rounded-lg p-2 font-bold text-[#0E382E]"
+                      />
+                      <input
+                        type="text"
+                        value={newProductStep1Detail}
+                        onChange={(e) => setNewProductStep1Detail(e.target.value)}
+                        placeholder="Step 1 Instruction detail"
+                        className="sm:col-span-2 bg-white border border-[#74B487]/30 rounded-lg p-2 font-medium"
+                      />
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <input
+                        type="text"
+                        value={newProductStep2Title}
+                        onChange={(e) => setNewProductStep2Title(e.target.value)}
+                        placeholder="Step 2 Title (e.g. Stir)"
+                        className="bg-white border border-[#74B487]/30 rounded-lg p-2 font-bold text-[#0E382E]"
+                      />
+                      <input
+                        type="text"
+                        value={newProductStep2Detail}
+                        onChange={(e) => setNewProductStep2Detail(e.target.value)}
+                        placeholder="Step 2 Instruction detail"
+                        className="sm:col-span-2 bg-white border border-[#74B487]/30 rounded-lg p-2 font-medium"
+                      />
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <input
+                        type="text"
+                        value={newProductStep3Title}
+                        onChange={(e) => setNewProductStep3Title(e.target.value)}
+                        placeholder="Step 3 Title (e.g. Savor)"
+                        className="bg-white border border-[#74B487]/30 rounded-lg p-2 font-bold text-[#0E382E]"
+                      />
+                      <input
+                        type="text"
+                        value={newProductStep3Detail}
+                        onChange={(e) => setNewProductStep3Detail(e.target.value)}
+                        placeholder="Step 3 Instruction detail"
+                        className="sm:col-span-2 bg-white border border-[#74B487]/30 rounded-lg p-2 font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                        Heritage Story Title
+                      </label>
+                      <input
+                        type="text"
+                        value={newProductHeritageTitle}
+                        onChange={(e) => setNewProductHeritageTitle(e.target.value)}
+                        placeholder="e.g. Inspired by Banaras Traditions"
+                        className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                        Heritage Quote / Sourcing Note
+                      </label>
+                      <input
+                        type="text"
+                        value={newProductHeritageQuote}
+                        onChange={(e) => setNewProductHeritageQuote(e.target.value)}
+                        placeholder="e.g. Handcrafted from farmers' surplus harvests."
+                        className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div>
-                <label className="block font-bold text-[#0E382E] uppercase mb-1">Image URL / Asset Path *</label>
-                <input
-                  type="text"
-                  required
-                  value={newProductImageUrl}
-                  onChange={(e) => setNewProductImageUrl(e.target.value)}
-                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-[#0E382E] uppercase mb-1">Description</label>
-                <textarea
-                  value={newProductDescription}
-                  onChange={(e) => setNewProductDescription(e.target.value)}
-                  placeholder="Product wellness pitch..."
-                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold h-20"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-2">
+              {/* Form Navigation & Submit Button */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-[#74B487]/30">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="w-1/2 bg-stone-200 text-stone-700 py-3 rounded-xl font-bold uppercase"
+                  className="sm:w-1/3 bg-stone-200 text-stone-700 py-3 rounded-xl font-bold uppercase transition-colors hover:bg-stone-300"
                 >
                   Cancel
                 </button>
 
                 <button
                   type="submit"
-                  className="w-1/2 btn-dust-orange text-white py-3 rounded-xl font-bold uppercase shadow-md"
+                  className="sm:w-2/3 btn-dust-orange text-white py-3.5 rounded-xl font-extrabold uppercase shadow-md flex items-center justify-center gap-2 hover:scale-[1.01] transition-all"
                 >
-                  Save Product SKU
+                  Publish Product SKU & Live Page 🚀
                 </button>
               </div>
             </form>

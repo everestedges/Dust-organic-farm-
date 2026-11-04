@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   ShoppingBag,
@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { products, Product } from "@/lib/data";
 import { useCartStore } from "@/lib/cart-store";
+import { useProductsStore } from "@/lib/products-store";
 import laddooMix from "@/assets/laddooMix.png";
 import ragiPouch from "@/assets/ragi-pouch.png";
 import paanPouchStick from "@/assets/paan-pouch-stick.png";
@@ -26,10 +27,14 @@ import { CustomerTestimonials } from "@/components/cinematic/CustomerTestimonial
 
 export const ProductDetail: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
+  const { getProduct, fetchProducts } = useProductsStore();
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
   const defaultProduct = products[0] as Product;
-  const product: Product =
-    products.find((p) => p.slug === slug || p.id === slug || (slug?.includes("paan") && p.slug.includes("paan"))) ??
-    defaultProduct;
+  const product: Product = getProduct(slug) ?? defaultProduct;
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -39,11 +44,11 @@ export const ProductDetail: React.FC = () => {
   const { addToCart, toggleWishlist, isInWishlist } = useCartStore();
   const inWishlist = isInWishlist(product.id);
 
-  const images = product.images.length > 0
+  const images = product.images && product.images.length > 0
     ? product.images
-    : [{ src: product.storyImage, alt: product.name }];
+    : [{ src: product.storyImage || "/logo.png", alt: product.name }];
 
-  const activeImage = images[activeImageIndex] ?? images[0] ?? { src: product.storyImage, alt: product.name };
+  const activeImage = images[activeImageIndex] ?? images[0] ?? { src: product.storyImage || "/logo.png", alt: product.name };
 
   const handleAddToCart = () => {
     addToCart(product, quantity);
@@ -413,7 +418,10 @@ export const ProductDetail: React.FC = () => {
 
           {/* Description Paragraphs */}
           <div className="space-y-3 text-xs text-stone-700 leading-relaxed font-normal">
-            {product.description.map((desc, idx) => (
+            {(Array.isArray(product.description)
+              ? product.description
+              : [product.description || ""]
+            ).map((desc, idx) => (
               <p key={idx}>{desc}</p>
             ))}
           </div>
@@ -635,7 +643,7 @@ export const ProductDetail: React.FC = () => {
           </h2>
 
           <div className="space-y-6">
-            {product.ritual.map((step, idx) => (
+            {(product.ritual || []).map((step, idx) => (
               <div
                 key={idx}
                 className="flex gap-4 p-5 bg-white rounded-2xl border border-[#74B487]/40 shadow-xs"
@@ -783,8 +791,8 @@ export const ProductDetail: React.FC = () => {
 
           <div className="bg-white p-6 rounded-3xl border border-[#74B487]/40 space-y-4 shadow-xs">
             <div className="text-xs text-[#0E382E] border-b border-[#74B487]/30 pb-3 flex justify-between font-extrabold">
-              <span>{product.nutrition.serving}</span>
-              <span className="text-[#E67E22]">{product.nutrition.note}</span>
+              <span>{product.nutrition?.serving || product.netWeight || "Per 100g"}</span>
+              <span className="text-[#E67E22]">{product.nutrition?.note || "100% Natural Formulation"}</span>
             </div>
 
             <table className="w-full text-xs text-stone-700">
@@ -802,7 +810,13 @@ export const ProductDetail: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#E8F1E9] font-medium">
-                {product.nutrition.rows.map((row, idx) => (
+                {(product.nutrition?.rows || [
+                  ["Energy", "380 kcal", "19%"],
+                  ["Protein", "12g", "24%"],
+                  ["Carbohydrates", "68g", "22%"],
+                  ["Dietary Fiber", "8g", "28%"],
+                  ["Total Fat", "4g", "6%"],
+                ]).map((row, idx) => (
                   <tr key={idx}>
                     <td className="py-2.5 font-extrabold text-[#0E382E]">{row[0]}</td>
                     <td className="py-2.5 text-right text-stone-700">{row[1]}</td>

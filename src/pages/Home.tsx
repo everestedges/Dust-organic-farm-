@@ -24,8 +24,9 @@ import {
   FlaskConical,
   Truck,
 } from "lucide-react";
-import { products, collections, Product, companyInfo } from "@/lib/data";
+import { products as defaultProducts, collections, Product, companyInfo } from "@/lib/data";
 import { useCartStore } from "@/lib/cart-store";
+import { useProductsStore } from "@/lib/products-store";
 import dustStandeeImg from "@/assets/dust-brand-usp-standee.jpg";
 import ragiPoster from "@/assets/ragi-poster.png";
 import ragiInfographic from "@/assets/ragi-infographic.png";
@@ -86,6 +87,7 @@ const homeHeroBanners = [
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
+  const { products } = useProductsStore();
   const [introFinished, setIntroFinished] = useState(false);
   const [activeHeroBannerIdx, setActiveHeroBannerIdx] = useState(0);
   const { addToCart, toggleWishlist, isInWishlist, setQuickViewProduct } =

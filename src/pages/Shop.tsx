@@ -1,11 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingBag, Eye, Heart, Search, ArrowUpRight, Zap } from "lucide-react";
-import { products, Product } from "@/lib/data";
+import { Product } from "@/lib/data";
 import { useCartStore } from "@/lib/cart-store";
+import { useProductsStore } from "@/lib/products-store";
 
 export const Shop: React.FC = () => {
   const navigate = useNavigate();
+  const { products, fetchProducts } = useProductsStore();
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("featured");
   const [searchQuery, setSearchQuery] = useState<string>("");

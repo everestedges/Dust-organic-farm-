@@ -44,13 +44,15 @@ async function query(sql, params) {
   }
 }
 
-// Auto-migration: ensure orders columns accept standard e-commerce lifecycle statuses
+// Auto-migration: ensure orders columns accept standard e-commerce lifecycle statuses and products support full rich CMS data
 async function initDatabaseTables() {
   try {
-    await query("ALTER TABLE orders MODIFY COLUMN order_status VARCHAR(50) DEFAULT 'Pending'");
-    await query("ALTER TABLE orders MODIFY COLUMN payment_status VARCHAR(50) DEFAULT 'PAID'");
-    await query("ALTER TABLE orders MODIFY COLUMN payment_method VARCHAR(50) DEFAULT 'UPI'");
-    console.log("✅ [DB INIT] orders table columns verified (order_status VARCHAR(50))");
+    await query("ALTER TABLE orders MODIFY COLUMN order_status VARCHAR(50) DEFAULT 'Pending'").catch(() => {});
+    await query("ALTER TABLE orders MODIFY COLUMN payment_status VARCHAR(50) DEFAULT 'PAID'").catch(() => {});
+    await query("ALTER TABLE orders MODIFY COLUMN payment_method VARCHAR(50) DEFAULT 'UPI'").catch(() => {});
+    await query("ALTER TABLE products ADD COLUMN data_json LONGTEXT NULL").catch(() => {});
+    await query("ALTER TABLE products MODIFY COLUMN category_id INT UNSIGNED NULL").catch(() => {});
+    console.log("✅ [DB INIT] database tables and columns verified");
   } catch (err) {
     // Column already modified or table not yet created
   }
@@ -349,6 +351,200 @@ app.delete("/api/orders/:id", async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Delete Order Error:", err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------
+// 4. PRODUCTS CMS ENDPOINTS (Create, Read, Update, Delete Products)
+// ---------------------------------------------------------------------
+
+// GET /api/products - Fetch all products
+app.get("/api/products", async (req, res) => {
+  try {
+    const rows = await query("SELECT * FROM products ORDER BY id DESC");
+    const products = rows.map((r) => {
+      let richData = {};
+      if (r.data_json) {
+        try {
+          richData = JSON.parse(r.data_json);
+        } catch (e) {}
+      }
+
+      // Return clean unified Product object matching frontend interface
+      return {
+        id: richData.id || String(r.id),
+        slug: r.slug,
+        name: r.name,
+        shortName: richData.shortName || r.name,
+        subtitle: richData.subtitle || r.sub_heading || "",
+        pitch: richData.pitch || r.sub_heading || "",
+        category: richData.category || "heritage-wellness",
+        categoryLabel: richData.categoryLabel || "Heritage Wellness",
+        price: Number(r.price) || 0,
+        originalPrice: r.compare_price ? Number(r.compare_price) : undefined,
+        priceDisplay: `₹${Number(r.price) || 0}`,
+        originalPriceDisplay: r.compare_price ? `₹${Number(r.compare_price)}` : undefined,
+        unitDisplay: richData.unitDisplay || r.servings || "",
+        netWeight: r.weight || richData.netWeight || "200g",
+        badges: richData.badges || ["100% NATURAL"],
+        description: Array.isArray(richData.description)
+          ? richData.description
+          : [r.description || "Handcrafted pure formulation."],
+        caution: richData.caution,
+        ingredients: r.ingredients || richData.ingredients || "100% Pure Natural Ingredients",
+        allergen: richData.allergen,
+        storage: richData.storage || "Store in a cool, dry place away from direct sunlight.",
+        disclaimer: richData.disclaimer,
+        preparation: richData.preparation,
+        nutrition: richData.nutrition || {
+          serving: r.weight || "100g",
+          note: "100% Natural Formulation",
+          rows: [
+            ["Energy", "380 kcal", "19%"],
+            ["Protein", "12g", "24%"],
+            ["Carbohydrates", "68g", "22%"],
+            ["Dietary Fiber", "8g", "28%"],
+            ["Total Fat", "4g", "6%"],
+          ],
+        },
+        claims: richData.claims || ["100% Pure & Natural", "Zero Synthetic Chemicals", "Heritage Formulation"],
+        ritual: richData.ritual || [
+          { title: "Measure", detail: "Take 1-2 teaspoons or 1 sachet." },
+          { title: "Blend or Mix", detail: "Mix smoothly with water, milk, or recipe." },
+          { title: "Experience Wellness", detail: "Consume fresh to enjoy active natural nutrition." },
+        ],
+        ritualLabel: richData.ritualLabel || "Preparation & Usage Ritual",
+        heritageTitle: richData.heritageTitle || "Pure Motherland Heritage",
+        heritageQuote: richData.heritageQuote || "Crafted with reverence for authentic Indian ingredients.",
+        images: richData.images && richData.images.length > 0
+          ? richData.images
+          : [{ src: r.image_url || "/logo.png", alt: r.name }],
+        storyImage: richData.storyImage || r.image_url || "/logo.png",
+        posterImage: richData.posterImage,
+        infographicImage: richData.infographicImage,
+        accent: richData.accent || "rose",
+        stock: Number(r.stock_qty) || 100,
+        sku: richData.sku || `SKU-${r.slug}`,
+        fssai: richData.fssai || "FSSAI Lic. No. 11522036000722",
+        featured: Boolean(r.is_featured),
+        newArrival: true,
+        bestSeller: Boolean(r.is_best_seller),
+      };
+    });
+
+    return res.json({ success: true, count: products.length, products });
+  } catch (err) {
+    console.error("❌ Fetch Products Error:", err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/products - Create a new product SKU with complete details
+app.post("/api/products", async (req, res) => {
+  const p = req.body;
+  if (!p.name || !p.price) {
+    return res.status(400).json({ success: false, message: "Product name and price are required." });
+  }
+
+  const slug = (p.slug || p.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")) || `prod-${Date.now()}`;
+  const subHeading = p.subtitle || p.pitch || "";
+  const categoryId = 1; // Default category
+  const price = Number(p.price) || 0;
+  const comparePrice = p.originalPrice ? Number(p.originalPrice) : null;
+  const weight = p.netWeight || "200g";
+  const servings = p.unitDisplay || "Multi-serve";
+  const stock = Number(p.stock) || 100;
+  const imageUrl = p.images && p.images[0] ? p.images[0].src : (p.storyImage || "/logo.png");
+  const descriptionText = Array.isArray(p.description) ? p.description.join("\n\n") : (p.description || "");
+  const ingredientsText = p.ingredients || "";
+  const isBestSeller = p.bestSeller ? 1 : 0;
+  const isFeatured = p.featured ? 1 : 1;
+
+  const dataJson = JSON.stringify({
+    ...p,
+    slug,
+    price,
+    originalPrice: comparePrice,
+    stock,
+  });
+
+  try {
+    const result = await query(
+      `INSERT INTO products (slug, name, sub_heading, category_id, price, compare_price, weight, servings, stock_qty, image_url, description, ingredients, is_best_seller, is_featured, data_json)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         name = VALUES(name),
+         sub_heading = VALUES(sub_heading),
+         price = VALUES(price),
+         compare_price = VALUES(compare_price),
+         weight = VALUES(weight),
+         servings = VALUES(servings),
+         stock_qty = VALUES(stock_qty),
+         image_url = VALUES(image_url),
+         description = VALUES(description),
+         ingredients = VALUES(ingredients),
+         data_json = VALUES(data_json)`,
+      [
+        slug,
+        p.name,
+        subHeading,
+        categoryId,
+        price,
+        comparePrice,
+        weight,
+        servings,
+        stock,
+        imageUrl,
+        descriptionText,
+        ingredientsText,
+        isBestSeller,
+        isFeatured,
+        dataJson,
+      ]
+    );
+
+    console.log(`✅ [MySQL] Saved Product: ${p.name} (/product/${slug})`);
+    return res.json({
+      success: true,
+      message: "Product created successfully",
+      productId: result.insertId,
+      slug,
+    });
+  } catch (err) {
+    console.error("❌ Save Product Error:", err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// PUT /api/products/:id - Update product price, stock, or details
+app.put("/api/products/:id", async (req, res) => {
+  const { id } = req.params;
+  const { price, stock, data } = req.body;
+  try {
+    if (price !== undefined) {
+      await query("UPDATE products SET price = ? WHERE id = ? OR slug = ?", [Number(price), id, id]);
+    }
+    if (stock !== undefined) {
+      await query("UPDATE products SET stock_qty = ? WHERE id = ? OR slug = ?", [Number(stock), id, id]);
+    }
+    if (data) {
+      await query("UPDATE products SET data_json = ? WHERE id = ? OR slug = ?", [JSON.stringify(data), id, id]);
+    }
+    return res.json({ success: true, message: `Product ${id} updated successfully` });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// DELETE /api/products/:id - Delete product
+app.delete("/api/products/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await query("DELETE FROM products WHERE id = ? OR slug = ?", [id, id]);
+    console.log(`🗑️ [MySQL] Deleted product: ${id}`);
+    return res.json({ success: true, message: `Product ${id} deleted successfully`, affectedRows: result.affectedRows });
+  } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
   }
 });
