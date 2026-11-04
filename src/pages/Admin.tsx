@@ -504,8 +504,9 @@ export const Admin: React.FC = () => {
     setNewProductWeight(prod.netWeight || "200g");
     setNewProductServings(prod.unitDisplay || "");
     setNewProductStock(prod.stock || 100);
-    setNewProductSubtitle(prod.subtitle || "");
-    setNewProductPitch(prod.pitch || "");
+    const initialSubtitle = prod.subtitle || prod.pitch || "";
+    setNewProductSubtitle(initialSubtitle);
+    setNewProductPitch(initialSubtitle);
     setNewProductImageUrl(prod.images?.[0]?.src || prod.storyImage || "");
     setNewProductGalleryUrls(
       prod.images && prod.images.length > 1
@@ -599,13 +600,15 @@ export const Admin: React.FC = () => {
       .map((p) => p.trim())
       .filter((p) => p.length > 0);
 
+    const cleanSubtitle = newProductSubtitle.trim() || newProductPitch.trim() || newProductServings;
+
     const newProd: Product = {
       id: `prod-${Date.now()}`,
       slug,
       name: newProductName.trim(),
       shortName: newProductName.trim(),
-      subtitle: newProductSubtitle.trim() || newProductServings,
-      pitch: newProductPitch.trim() || newProductSubtitle.trim() || "100% Pure Natural Indian Formulation.",
+      subtitle: cleanSubtitle,
+      pitch: cleanSubtitle || "100% Pure Natural Indian Formulation.",
       category: newProductCategory,
       categoryLabel: categoryLabels[newProductCategory] || "Heritage Wellness",
       price: Number(newProductPrice),
@@ -1904,7 +1907,10 @@ export const Admin: React.FC = () => {
                     <input
                       type="text"
                       value={newProductSubtitle}
-                      onChange={(e) => setNewProductSubtitle(e.target.value)}
+                      onChange={(e) => {
+                        setNewProductSubtitle(e.target.value);
+                        setNewProductPitch(e.target.value);
+                      }}
                       placeholder="e.g. Royal Betel Leaf & Gulkand After-Meal Digestive"
                       className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
                     />

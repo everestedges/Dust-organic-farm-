@@ -394,7 +394,7 @@ export const ProductDetail: React.FC = () => {
               {product.name}
             </h1>
             <p className="text-sm text-[#E67E22] italic mt-1 font-semibold">
-              "{product.pitch}"
+              "{product.subtitle || product.pitch}"
             </p>
 
             {/* Brand Quote Authenticity Seal */}

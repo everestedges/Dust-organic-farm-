@@ -33,7 +33,7 @@ export const Shop: React.FC = () => {
       if (
         searchQuery &&
         !p.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !p.pitch.toLowerCase().includes(searchQuery.toLowerCase())
+        !(p.subtitle || p.pitch || "").toLowerCase().includes(searchQuery.toLowerCase())
       ) {
         return false;
       }
@@ -198,7 +198,7 @@ export const Shop: React.FC = () => {
                     </h3>
                   </Link>
                   <p className="text-xs text-[#1F684B] italic mt-0.5 font-semibold">
-                    "{product.pitch}"
+                    "{product.subtitle || product.pitch}"
                   </p>
                 </div>
 

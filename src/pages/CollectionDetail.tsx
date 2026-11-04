@@ -124,7 +124,7 @@ export const CollectionDetail: React.FC = () => {
                       </h3>
                     </Link>
                     <p className="text-xs text-[#1F684B] italic mt-0.5 font-semibold">
-                      "{product.pitch}"
+                      "{product.subtitle || product.pitch}"
                     </p>
                   </div>
 

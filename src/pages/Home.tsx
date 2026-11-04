@@ -456,7 +456,7 @@ export const Home: React.FC = () => {
                     </Link>
 
                     <p className="text-xs italic text-[#E67E22] mt-1 font-semibold">
-                      "{product.pitch}"
+                      "{product.subtitle || product.pitch}"
                     </p>
                   </div>
 

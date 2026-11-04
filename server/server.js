@@ -701,14 +701,15 @@ app.get("/api/products", async (req, res) => {
         } catch (e) {}
       }
 
+      const effectiveSubtitle = r.sub_heading || richData.subtitle || richData.pitch || "";
       // Return clean unified Product object matching frontend interface
       return {
         id: richData.id || String(r.id),
         slug: r.slug,
         name: r.name,
         shortName: richData.shortName || r.name,
-        subtitle: richData.subtitle || r.sub_heading || "",
-        pitch: richData.pitch || r.sub_heading || "",
+        subtitle: effectiveSubtitle,
+        pitch: effectiveSubtitle,
         category: richData.category || "heritage-wellness",
         categoryLabel: richData.categoryLabel || "Heritage Wellness",
         price: Number(r.price) || 0,
@@ -889,6 +890,8 @@ app.put("/api/products/:id", async (req, res) => {
         ...p,
         id: p.id || String(rowId || id),
         slug: targetSlug,
+        subtitle: subHeading,
+        pitch: subHeading,
         price,
         originalPrice: comparePrice,
         stock,
