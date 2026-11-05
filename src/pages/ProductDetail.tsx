@@ -19,10 +19,10 @@ import {
 import { products, Product } from "@/lib/data";
 import { useCartStore } from "@/lib/cart-store";
 import { useProductsStore } from "@/lib/products-store";
-import laddooMix from "@/assets/laddooMix.png";
-import ragiPouch from "@/assets/ragi-pouch.png";
-import paanPouchStick from "@/assets/paan-pouch-stick.png";
-import paanPouchBack from "@/assets/paan-pouch-back.png";
+import laddooMix from "@/assets/laddooMix.webp";
+import ragiPouch from "@/assets/ragi-pouch.webp";
+import paanPouchStick from "@/assets/paan-pouch-stick.webp";
+import paanPouchBack from "@/assets/paan-pouch-back.webp";
 import { CustomerTestimonials } from "@/components/cinematic/CustomerTestimonials";
 
 export const ProductDetail: React.FC = () => {

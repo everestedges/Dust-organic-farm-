@@ -29,14 +29,14 @@ import {
   Quote,
 } from "lucide-react";
 import { companyInfo } from "@/lib/data";
-import farmerWastedHarvest from "@/assets/farmer-wasted-harvest.png";
-import farmersHarvestLost from "@/assets/farmers-harvest-lost.png";
-import farmSurplusWaste from "@/assets/farm-surplus-waste.png";
-import aboutBannerFarmWaste from "@/assets/about-banner-farm-waste.png";
-import aboutBannerLaddoo from "@/assets/about-banner-laddoo.png";
-import startupIndiaCertificateImg from "@/assets/startup-india-certificate.png";
-import chetanShelarImg from "@/assets/chetan-shelar.png";
-import mrunalPhotoImg from "@/assets/mrunal-photo.png";
+import farmerWastedHarvest from "@/assets/farmer-wasted-harvest.webp";
+import farmersHarvestLost from "@/assets/farmers-harvest-lost.webp";
+import farmSurplusWaste from "@/assets/farm-surplus-waste.webp";
+import aboutBannerFarmWaste from "@/assets/about-banner-farm-waste.webp";
+import aboutBannerLaddoo from "@/assets/about-banner-laddoo.webp";
+import startupIndiaCertificateImg from "@/assets/startup-india-certificate.webp";
+import chetanShelarImg from "@/assets/chetan-shelar.webp";
+import mrunalPhotoImg from "@/assets/mrunal-photo.webp";
 
 const heroBanners = [
   {

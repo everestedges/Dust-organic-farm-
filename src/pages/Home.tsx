@@ -27,14 +27,14 @@ import {
 import { products as defaultProducts, collections, Product, companyInfo } from "@/lib/data";
 import { useCartStore } from "@/lib/cart-store";
 import { useProductsStore } from "@/lib/products-store";
-import dustStandeeImg from "@/assets/dust-brand-usp-standee.jpg";
-import ragiPoster from "@/assets/ragi-poster.png";
-import ragiInfographic from "@/assets/ragi-infographic.png";
-import aboutBannerFarmWaste from "@/assets/about-banner-farm-waste.png";
-import aboutBannerLaddoo from "@/assets/about-banner-laddoo.png";
-import almondCollage from "@/assets/almond-powder-collage.png";
-import cashewCollage from "@/assets/cashew-powder-collage.png";
-import shampooInfographic from "@/assets/shampoo-infographic.png";
+import dustStandeeImg from "@/assets/dust-brand-usp-standee.webp";
+import ragiPoster from "@/assets/ragi-poster.webp";
+import ragiInfographic from "@/assets/ragi-infographic.webp";
+import aboutBannerFarmWaste from "@/assets/about-banner-farm-waste.webp";
+import aboutBannerLaddoo from "@/assets/about-banner-laddoo.webp";
+import almondCollage from "@/assets/almond-powder-collage.webp";
+import cashewCollage from "@/assets/cashew-powder-collage.webp";
+import shampooInfographic from "@/assets/shampoo-infographic.webp";
 import { CustomerTestimonials } from "@/components/cinematic/CustomerTestimonials";
 
 const homeHeroBanners = [
@@ -235,6 +235,9 @@ export const Home: React.FC = () => {
                   <img
                     src={banner.image}
                     alt={banner.alt}
+                    fetchPriority={idx === 0 ? "high" : "low"}
+                    loading={idx === 0 ? "eager" : "lazy"}
+                    decoding="async"
                     className="w-full h-full object-contain object-center bg-white"
                   />
                 </div>
@@ -394,11 +397,15 @@ export const Home: React.FC = () => {
                   <img
                     src={mainImg}
                     alt={product.name}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-contain transition-all duration-700 group-hover:scale-105 group-hover:opacity-0"
                   />
                   <img
                     src={secondaryImg}
                     alt={`${product.name} detail`}
+                    loading="lazy"
+                    decoding="async"
                     className="absolute inset-0 w-full h-full object-contain p-8 transition-all duration-700 opacity-0 group-hover:opacity-100 group-hover:scale-105"
                   />
 
@@ -533,6 +540,8 @@ export const Home: React.FC = () => {
                 <img
                   src={ragiPoster}
                   alt="DUST Shahi Ragi & Dry Fruit Laddoo Mix Poster"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-auto object-cover rounded-2xl border border-[#74B487]/30 shadow-md group-hover:scale-102 transition-transform duration-500"
                 />
                 <div className="pt-4 text-center flex items-center justify-between">
@@ -661,6 +670,8 @@ export const Home: React.FC = () => {
                 <img
                   src={dustStandeeImg}
                   alt="DUST Brand USP & Usage Standee"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-auto object-cover rounded-2xl border border-[#74B487]/30 shadow-lg group-hover:scale-102 transition-transform duration-500"
                 />
                 <div className="pt-4 text-center">
@@ -787,11 +798,15 @@ export const Home: React.FC = () => {
             <img
               src={storyRagiProduct.storyImage}
               alt="DUST Shahi Ragi Laddoo Mix"
+              loading="lazy"
+              decoding="async"
               className="rounded-2xl border-2 border-[#74B487]/50 object-cover w-full h-80 shadow-md"
             />
             <img
               src={storyPaanProduct.storyImage}
               alt="DUST Paan Digestive Shot"
+              loading="lazy"
+              decoding="async"
               className="rounded-2xl border-2 border-[#74B487]/50 object-cover w-full h-80 shadow-md"
             />
           </div>
@@ -978,6 +993,8 @@ export const Home: React.FC = () => {
               <img
                 src={col.heroImage}
                 alt={col.name}
+                loading="lazy"
+                decoding="async"
                 className="absolute inset-0 w-full h-full object-cover opacity-100 group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent" />

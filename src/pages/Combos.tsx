@@ -2,11 +2,11 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowUpRight, Sparkles, Tag, ShoppingBag, CheckCircle2, Building2, BadgePercent, Truck, Store, Send } from "lucide-react";
 import { products, companyInfo } from "@/lib/data";
-import laddooMix from "@/assets/laddooMix.png";
-import ragiPouch from "@/assets/ragi-pouch.png";
-import paanPouchStick from "@/assets/paan-pouch-stick.png";
-import paanPouchBack from "@/assets/paan-pouch-back.png";
-import comboAdBanner from "@/assets/dust-wellness-combo-advertisement.png";
+import laddooMix from "@/assets/laddooMix.webp";
+import ragiPouch from "@/assets/ragi-pouch.webp";
+import paanPouchStick from "@/assets/paan-pouch-stick.webp";
+import paanPouchBack from "@/assets/paan-pouch-back.webp";
+import comboAdBanner from "@/assets/dust-wellness-combo-advertisement.webp";
 
 export const Combos: React.FC = () => {
   return (

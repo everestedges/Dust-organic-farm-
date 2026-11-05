@@ -10,6 +10,20 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    target: "esnext",
+    minify: "esbuild",
+    cssMinify: true,
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ["react", "react-dom", "react-router-dom"],
+          icons: ["lucide-react"],
+        },
+      },
+    },
+  },
   server: {
     port: 8080,
     host: true,

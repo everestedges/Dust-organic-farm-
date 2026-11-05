@@ -7,44 +7,56 @@ export const CustomCursor: React.FC = () => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia("(pointer: coarse)").matches) {
+    if (typeof window === "undefined" || window.matchMedia("(pointer: coarse)").matches) {
       return;
     }
 
-    const onMouseMove = (e: MouseEvent) => {
-      setPosition({ x: e.clientX, y: e.clientY });
-      if (!isVisible) setIsVisible(true);
+    let rafId = 0;
+    let latestEvent: MouseEvent | null = null;
 
-      const target = e.target as HTMLElement | null;
-      if (target) {
-        const clickable = target.closest("[data-cursor]");
-        if (clickable) {
-          const text = clickable.getAttribute("data-cursor") || "VIEW";
-          setCursorText(text);
-          setIsHovered(true);
-        } else if (target.closest("button, a, input, select")) {
-          setCursorText("");
-          setIsHovered(true);
-        } else {
-          setCursorText("");
-          setIsHovered(false);
-        }
+    const onMouseMove = (e: MouseEvent) => {
+      latestEvent = e;
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          if (latestEvent) {
+            setPosition({ x: latestEvent.clientX, y: latestEvent.clientY });
+            setIsVisible(true);
+
+            const target = latestEvent.target as HTMLElement | null;
+            if (target) {
+              const clickable = target.closest("[data-cursor]");
+              if (clickable) {
+                const text = clickable.getAttribute("data-cursor") || "VIEW";
+                setCursorText(text);
+                setIsHovered(true);
+              } else if (target.closest("button, a, input, select")) {
+                setCursorText("");
+                setIsHovered(true);
+              } else {
+                setCursorText("");
+                setIsHovered(false);
+              }
+            }
+          }
+          rafId = 0;
+        });
       }
     };
 
     const onMouseLeave = () => setIsVisible(false);
     const onMouseEnter = () => setIsVisible(true);
 
-    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mousemove", onMouseMove, { passive: true });
     document.body.addEventListener("mouseleave", onMouseLeave);
     document.body.addEventListener("mouseenter", onMouseEnter);
 
     return () => {
+      if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener("mousemove", onMouseMove);
       document.body.removeEventListener("mouseleave", onMouseLeave);
       document.body.removeEventListener("mouseenter", onMouseEnter);
     };
-  }, [isVisible]);
+  }, []);
 
   if (!isVisible) return null;
 
