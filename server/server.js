@@ -1085,6 +1085,66 @@ app.get("/api/health", async (req, res) => {
 const distPath = path.join(__dirname, "../dist");
 const publicPath = path.join(__dirname, "../public");
 
+// GET /sitemap.xml - Dynamic SEO Sitemap including all live products
+app.get("/sitemap.xml", async (req, res) => {
+  try {
+    let dbProducts = [];
+    try {
+      dbProducts = await query("SELECT slug, name, image_url, updated_at FROM products WHERE is_active = 1 OR is_active IS NULL");
+    } catch (e) {
+      dbProducts = await query("SELECT slug, name, image_url FROM products").catch(() => []);
+    }
+
+    const today = new Date().toISOString().split("T")[0];
+    const baseUrl = "https://dustofficial.com";
+
+    let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+    xml += `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n`;
+
+    const staticRoutes = [
+      { path: "", changefreq: "daily", priority: "1.0" },
+      { path: "shop", changefreq: "daily", priority: "0.9" },
+      { path: "combos", changefreq: "weekly", priority: "0.8" },
+      { path: "about", changefreq: "monthly", priority: "0.8" },
+      { path: "contact", changefreq: "monthly", priority: "0.7" },
+      { path: "faq", changefreq: "monthly", priority: "0.6" },
+      { path: "order-tracking", changefreq: "monthly", priority: "0.5" },
+      { path: "collections/wholesome-millets", changefreq: "weekly", priority: "0.8" },
+      { path: "collections/heritage-wellness", changefreq: "weekly", priority: "0.8" },
+      { path: "collections/pure-nut-powders", changefreq: "weekly", priority: "0.8" },
+      { path: "collections/herbal-haircare", changefreq: "weekly", priority: "0.8" },
+      { path: "shipping-policy", changefreq: "yearly", priority: "0.4" },
+      { path: "return-refund-policy", changefreq: "yearly", priority: "0.4" },
+      { path: "cancellation-policy", changefreq: "yearly", priority: "0.4" },
+      { path: "privacy-policy", changefreq: "yearly", priority: "0.4" },
+      { path: "terms-conditions", changefreq: "yearly", priority: "0.4" },
+    ];
+
+    for (const r of staticRoutes) {
+      const fullUrl = r.path ? `${baseUrl}/${r.path}` : baseUrl;
+      xml += `  <url>\n    <loc>${fullUrl}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${r.changefreq}</changefreq>\n    <priority>${r.priority}</priority>\n  </url>\n`;
+    }
+
+    const seenSlugs = new Set();
+    for (const p of dbProducts) {
+      if (p.slug && !seenSlugs.has(p.slug)) {
+        seenSlugs.add(p.slug);
+        const lastMod = p.updated_at ? new Date(p.updated_at).toISOString().split("T")[0] : today;
+        const imgTag = p.image_url ? `\n    <image:image>\n      <image:loc>${p.image_url.startsWith("http") ? p.image_url : baseUrl + p.image_url}</image:loc>\n      <image:title>${(p.name || "").replace(/&/g, "&amp;")}</image:title>\n    </image:image>` : "";
+        xml += `  <url>\n    <loc>${baseUrl}/product/${p.slug}</loc>\n    <lastmod>${lastMod}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>${imgTag}\n  </url>\n`;
+      }
+    }
+
+    xml += `</urlset>`;
+
+    res.header("Content-Type", "application/xml; charset=utf-8");
+    return res.send(xml);
+  } catch (err) {
+    console.error("Error generating dynamic sitemap:", err);
+    res.sendFile(path.join(publicPath, "sitemap.xml"));
+  }
+});
+
 app.use("/uploads", express.static(uploadsDir));
 app.use(express.static(publicPath));
 app.use(express.static(distPath));
