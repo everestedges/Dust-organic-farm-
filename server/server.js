@@ -790,7 +790,12 @@ app.get("/api/products", async (req, res) => {
         posterImage: richData.posterImage,
         infographicImage: richData.infographicImage,
         accent: richData.accent || "rose",
-        stock: Number(r.stock_qty) || 100,
+        stock:
+          r.stock_qty !== null && r.stock_qty !== undefined
+            ? Number(r.stock_qty)
+            : richData.stock !== undefined
+            ? Number(richData.stock)
+            : 100,
         sku: richData.sku || `SKU-${r.slug}`,
         fssai: richData.fssai || "FSSAI Lic. No. 11522036000722",
         featured: Boolean(r.is_featured),
@@ -907,6 +912,21 @@ app.put("/api/products/:id", async (req, res) => {
       rows = await query("SELECT id FROM products WHERE name = ? LIMIT 1", [targetName]);
     }
 
+    if (rows.length === 0) {
+      const lower = String(id).toLowerCase();
+      if (lower.includes("ragi") || lower.includes("laddoo")) {
+        rows = await query("SELECT id FROM products WHERE slug LIKE '%ragi%' OR name LIKE '%Ragi%' LIMIT 1");
+      } else if (lower.includes("paan")) {
+        rows = await query("SELECT id FROM products WHERE slug LIKE '%paan%' OR name LIKE '%Paan%' LIMIT 1");
+      } else if (lower.includes("almond")) {
+        rows = await query("SELECT id FROM products WHERE slug LIKE '%almond%' OR name LIKE '%Almond%' LIMIT 1");
+      } else if (lower.includes("cashew")) {
+        rows = await query("SELECT id FROM products WHERE slug LIKE '%cashew%' OR name LIKE '%Cashew%' LIMIT 1");
+      } else if (lower.includes("shampoo")) {
+        rows = await query("SELECT id FROM products WHERE slug LIKE '%shampoo%' OR name LIKE '%Shampoo%' LIMIT 1");
+      }
+    }
+
     const rowId = rows.length > 0 ? rows[0].id : (isNumId ? Number(id) : null);
 
     // If full product payload is provided
@@ -991,10 +1011,30 @@ app.put("/api/products/:id", async (req, res) => {
       // Partial updates (price or stock only)
       if (rowId) {
         if (p.price !== undefined) {
-          await query("UPDATE products SET price = ? WHERE id = ?", [Number(p.price), rowId]);
+          const newPrice = Number(p.price);
+          await query("UPDATE products SET price = ? WHERE id = ?", [newPrice, rowId]);
+          const currentRows = await query("SELECT data_json FROM products WHERE id = ?", [rowId]);
+          if (currentRows.length > 0 && currentRows[0].data_json) {
+            try {
+              const parsed = JSON.parse(currentRows[0].data_json);
+              parsed.price = newPrice;
+              await query("UPDATE products SET data_json = ? WHERE id = ?", [JSON.stringify(parsed), rowId]);
+            } catch (e) {}
+          }
+          console.log(`💰 [MySQL] Updated price for product id=${rowId} to ₹${newPrice}`);
         }
         if (p.stock !== undefined) {
-          await query("UPDATE products SET stock_qty = ? WHERE id = ?", [Number(p.stock), rowId]);
+          const newStock = Math.max(0, Number(p.stock));
+          await query("UPDATE products SET stock_qty = ? WHERE id = ?", [newStock, rowId]);
+          const currentRows = await query("SELECT data_json FROM products WHERE id = ?", [rowId]);
+          if (currentRows.length > 0 && currentRows[0].data_json) {
+            try {
+              const parsed = JSON.parse(currentRows[0].data_json);
+              parsed.stock = newStock;
+              await query("UPDATE products SET data_json = ? WHERE id = ?", [JSON.stringify(parsed), rowId]);
+            } catch (e) {}
+          }
+          console.log(`📦 [MySQL] Updated stock for product id=${rowId} to ${newStock} units`);
         }
         if (p.data) {
           await query("UPDATE products SET data_json = ? WHERE id = ?", [JSON.stringify(p.data), rowId]);

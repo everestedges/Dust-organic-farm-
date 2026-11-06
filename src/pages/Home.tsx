@@ -422,10 +422,16 @@ export const Home: React.FC = () => {
                   </button>
 
                   {/* Offer / Category Pill */}
-                  <div className="absolute bottom-4 left-4 flex gap-2">
-                    <span className="badge-orange text-[10px] uppercase font-extrabold tracking-widest px-3 py-1 rounded-full shadow-xs">
-                      {product.categoryLabel}
-                    </span>
+                  <div className="absolute bottom-4 left-4 flex gap-2 flex-wrap">
+                    {product.stock !== undefined && product.stock <= 0 ? (
+                      <span className="bg-red-600 text-white text-[10px] uppercase font-black tracking-widest px-3 py-1 rounded-full shadow-xs">
+                        SOLD OUT
+                      </span>
+                    ) : (
+                      <span className="badge-orange text-[10px] uppercase font-extrabold tracking-widest px-3 py-1 rounded-full shadow-xs">
+                        {product.categoryLabel}
+                      </span>
+                    )}
                     {product.bestSeller && (
                       <span className="bg-[#0E382E] text-white text-[10px] uppercase font-extrabold tracking-widest px-3 py-1 rounded-full shadow-xs">
                         BEST SELLER
@@ -485,27 +491,44 @@ export const Home: React.FC = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="pt-4 flex items-center gap-3">
-                    <button
-                      onClick={() => addToCart(product)}
-                      className="flex-1 py-3.5 btn-dust-orange text-white font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 shadow-sm"
-                    >
-                      <ShoppingBag className="w-4 h-4" /> Add to Cart
-                    </button>
-                    <button
-                      onClick={() => handleBuyNow(product)}
-                      data-cursor="BUY"
-                      className="px-4 py-3.5 bg-[#E8F1E9] hover:bg-[#74B487]/30 text-[#0E382E] font-extrabold text-xs uppercase tracking-wider rounded-xl transition-colors border border-[#74B487]/40 flex items-center gap-1"
-                    >
-                      <Zap className="w-3.5 h-3.5 text-[#E67E22]" /> Buy Now
-                    </button>
-                    <Link
-                      to={`/product/${product.slug}`}
-                      className="p-3.5 bg-[#F6F5F0] border border-[#74B487]/40 text-[#0E382E] hover:text-[#E67E22] hover:border-[#E67E22] rounded-xl transition-colors"
-                    >
-                      <ArrowUpRight className="w-4 h-4" />
-                    </Link>
-                  </div>
+                  {product.stock !== undefined && product.stock <= 0 ? (
+                    <div className="pt-4 flex items-center gap-3">
+                      <button
+                        disabled
+                        className="flex-1 py-3.5 bg-stone-200 text-stone-500 font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 cursor-not-allowed border border-stone-300 shadow-xs"
+                      >
+                        Out of Stock
+                      </button>
+                      <Link
+                        to={`/product/${product.slug}`}
+                        className="p-3.5 bg-[#F6F5F0] border border-[#74B487]/40 text-[#0E382E] hover:text-[#E67E22] hover:border-[#E67E22] rounded-xl transition-colors"
+                      >
+                        <ArrowUpRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="pt-4 flex items-center gap-3">
+                      <button
+                        onClick={() => addToCart(product)}
+                        className="flex-1 py-3.5 btn-dust-orange text-white font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 shadow-sm"
+                      >
+                        <ShoppingBag className="w-4 h-4" /> Add to Cart
+                      </button>
+                      <button
+                        onClick={() => handleBuyNow(product)}
+                        data-cursor="BUY"
+                        className="px-4 py-3.5 bg-[#E8F1E9] hover:bg-[#74B487]/30 text-[#0E382E] font-extrabold text-xs uppercase tracking-wider rounded-xl transition-colors border border-[#74B487]/40 flex items-center gap-1"
+                      >
+                        <Zap className="w-3.5 h-3.5 text-[#E67E22]" /> Buy Now
+                      </button>
+                      <Link
+                        to={`/product/${product.slug}`}
+                        className="p-3.5 bg-[#F6F5F0] border border-[#74B487]/40 text-[#0E382E] hover:text-[#E67E22] hover:border-[#E67E22] rounded-xl transition-colors"
+                      >
+                        <ArrowUpRight className="w-4 h-4" />
+                      </Link>
+                    </div>
+                  )}
                 </div>
               </div>
             );

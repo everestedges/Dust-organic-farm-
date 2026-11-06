@@ -62,6 +62,10 @@ export const useCartStore = create<CartStore>()(
       setHasHydrated: (hasHydrated: boolean) => set({ hasHydrated }),
 
       addToCart: (product, quantity = 1, selectedVariant) => {
+        if (product.stock !== undefined && product.stock <= 0) {
+          alert("Sorry, this item is currently out of stock.");
+          return;
+        }
         set((state) => {
           const existingIndex = state.cart.findIndex(
             (item) => item.product.id === product.id
@@ -97,9 +101,14 @@ export const useCartStore = create<CartStore>()(
           return;
         }
         set((state) => ({
-          cart: state.cart.map((item) =>
-            item.product.id === productId ? { ...item, quantity } : item
-          ),
+          cart: state.cart.map((item) => {
+            if (item.product.id === productId) {
+              const maxStock =
+                item.product.stock !== undefined ? item.product.stock : 999;
+              return { ...item, quantity: Math.min(quantity, maxStock) };
+            }
+            return item;
+          }),
         }));
       },
 

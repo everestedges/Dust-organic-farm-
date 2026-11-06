@@ -162,6 +162,7 @@ export const useProductsStore = create<ProductsState>()(
       },
 
       updateProductStock: async (id: string, newStock: number) => {
+        const prod = get().products.find((p) => p.id === id || p.slug === id);
         set((state) => ({
           products: state.products.map((p) =>
             p.id === id || p.slug === id ? { ...p, stock: newStock } : p
@@ -169,12 +170,19 @@ export const useProductsStore = create<ProductsState>()(
         }));
 
         try {
-          await fetch(`${API_BASE}/products/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ stock: newStock }),
-          });
-          return true;
+          const res = await fetch(
+            `${API_BASE}/products/${encodeURIComponent(prod?.slug || id)}`,
+            {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                stock: newStock,
+                slug: prod?.slug,
+                name: prod?.name,
+              }),
+            }
+          );
+          return res.ok;
         } catch (err) {
           console.warn("Could not update stock in DB:", err);
           return false;

@@ -15,6 +15,7 @@ import {
   Zap,
   Clock,
   Truck,
+  AlertCircle,
 } from "lucide-react";
 import { products, Product } from "@/lib/data";
 import { useCartStore } from "@/lib/cart-store";
@@ -435,88 +436,132 @@ export const ProductDetail: React.FC = () => {
           </div>
 
           {/* Quantity and Purchase CTA */}
-          <div className="space-y-4 pt-4 border-t border-[#74B487]/30">
-            <div className="flex items-center gap-4">
-              <span className="text-xs uppercase text-[#0E382E] font-extrabold">
-                Quantity
-              </span>
-              <div className="flex items-center border border-[#74B487]/40 rounded-xl bg-[#E8F1E9]">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="px-4 py-2.5 text-[#0E382E] hover:text-[#E67E22] font-bold"
-                >
-                  -
-                </button>
-                <span className="px-4 text-sm font-extrabold text-[#0E382E]">
-                  {quantity}
-                </span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="px-4 py-2.5 text-[#0E382E] hover:text-[#E67E22] font-bold"
-                >
-                  +
-                </button>
-              </div>
+          {(() => {
+            const isOutOfStock = product.stock !== undefined && product.stock <= 0;
+            const isLowStock = product.stock !== undefined && product.stock > 0 && product.stock <= 15;
 
-              <button
-                onClick={() => toggleWishlist(product.id)}
-                className={`p-3 rounded-xl border transition-colors ${
-                  inWishlist
-                    ? "bg-red-50 border-red-200 text-red-500"
-                    : "border-[#74B487]/40 text-[#0E382E] hover:bg-[#E8F1E9]"
-                }`}
-                aria-label="Wishlist"
-              >
-                <Heart className="w-5 h-5 fill-current" />
-              </button>
-            </div>
+            return (
+              <div className="space-y-4 pt-4 border-t border-[#74B487]/30">
+                <div className="flex items-center gap-4">
+                  <span className="text-xs uppercase text-[#0E382E] font-extrabold">
+                    Quantity
+                  </span>
+                  <div
+                    className={`flex items-center border border-[#74B487]/40 rounded-xl bg-[#E8F1E9] ${
+                      isOutOfStock ? "opacity-40 pointer-events-none" : ""
+                    }`}
+                  >
+                    <button
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      disabled={isOutOfStock}
+                      className="px-4 py-2.5 text-[#0E382E] hover:text-[#E67E22] font-bold disabled:cursor-not-allowed"
+                    >
+                      -
+                    </button>
+                    <span className="px-4 text-sm font-extrabold text-[#0E382E]">
+                      {isOutOfStock ? 0 : quantity}
+                    </span>
+                    <button
+                      onClick={() => {
+                        const maxAllowed = product.stock || 99;
+                        setQuantity(Math.min(maxAllowed, quantity + 1));
+                      }}
+                      disabled={isOutOfStock || (product.stock !== undefined && quantity >= product.stock)}
+                      className="px-4 py-2.5 text-[#0E382E] hover:text-[#E67E22] font-bold disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      +
+                    </button>
+                  </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                onClick={handleAddToCart}
-                className={`w-full py-4 px-6 rounded-xl font-extrabold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-md ${
-                  added
-                    ? "bg-[#0E382E] text-white"
-                    : "btn-dust-orange text-white"
-                }`}
-              >
-                {added ? (
-                  <>
-                    <Check className="w-4 h-4" /> Added to Cart
-                  </>
+                  <button
+                    onClick={() => toggleWishlist(product.id)}
+                    className={`p-3 rounded-xl border transition-colors ${
+                      inWishlist
+                        ? "bg-red-50 border-red-200 text-red-500"
+                        : "border-[#74B487]/40 text-[#0E382E] hover:bg-[#E8F1E9]"
+                    }`}
+                    aria-label="Wishlist"
+                  >
+                    <Heart className="w-5 h-5 fill-current" />
+                  </button>
+                </div>
+
+                {isOutOfStock ? (
+                  <div>
+                    <button
+                      disabled
+                      className="w-full py-4 px-6 rounded-xl font-extrabold text-xs uppercase tracking-widest bg-stone-200 text-stone-500 cursor-not-allowed flex items-center justify-center gap-2 border border-stone-300 shadow-xs"
+                    >
+                      <AlertCircle className="w-4 h-4 text-red-500" /> Out of Stock / Sold Out
+                    </button>
+                    <p className="text-[11px] text-stone-500 text-center font-medium mt-2">
+                      This item is currently sold out. Check back soon or contact us for restock alerts.
+                    </p>
+                  </div>
                 ) : (
-                  <>
-                    <ShoppingBag className="w-4 h-4" /> Add to Cart (₹
-                    {product.price * quantity})
-                  </>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <button
+                      onClick={handleAddToCart}
+                      className={`w-full py-4 px-6 rounded-xl font-extrabold text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-md ${
+                        added
+                          ? "bg-[#0E382E] text-white"
+                          : "btn-dust-orange text-white"
+                      }`}
+                    >
+                      {added ? (
+                        <>
+                          <Check className="w-4 h-4" /> Added to Cart
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingBag className="w-4 h-4" /> Add to Cart (₹
+                          {product.price * quantity})
+                        </>
+                      )}
+                    </button>
+
+                    <Link
+                      to="/checkout"
+                      onClick={() => addToCart(product, quantity)}
+                      className="w-full py-4 px-6 bg-[#0E382E] hover:bg-[#1F684B] text-[#F6F5F0] font-extrabold text-xs uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm"
+                    >
+                      Buy Now <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
                 )}
-              </button>
 
-              <Link
-                to="/checkout"
-                onClick={() => addToCart(product, quantity)}
-                className="w-full py-4 px-6 bg-[#0E382E] hover:bg-[#1F684B] text-[#F6F5F0] font-extrabold text-xs uppercase tracking-widest rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm"
-              >
-                Buy Now <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
+                {/* Fresh Packing & Delivery Guarantee */}
+                <div className="p-3 bg-[#E8F1E9]/80 border border-[#74B487]/40 rounded-2xl flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-xl bg-[#0E382E] text-white flex items-center justify-center shrink-0 shadow-xs">
+                    <Clock className="w-4 h-4 text-[#E67E22]" />
+                  </div>
+                  <div className="text-[11px] leading-tight">
+                    <span className="font-extrabold text-[#0E382E] block">Fresh Batch Guarantee</span>
+                    <span className="text-stone-700 font-medium">Order packing time: 24 to 48 hrs of fresh packing and delivery</span>
+                  </div>
+                </div>
 
-            {/* Fresh Packing & Delivery Guarantee */}
-            <div className="p-3 bg-[#E8F1E9]/80 border border-[#74B487]/40 rounded-2xl flex items-center gap-3">
-              <div className="w-8 h-8 rounded-xl bg-[#0E382E] text-white flex items-center justify-center shrink-0 shadow-xs">
-                <Clock className="w-4 h-4 text-[#E67E22]" />
+                <div className="text-[11px] text-[#1F684B] text-center pt-1 flex items-center justify-center gap-2 font-bold flex-wrap">
+                  {isOutOfStock ? (
+                    <span className="text-red-700 bg-red-50 px-3.5 py-1.5 rounded-full border border-red-200 inline-flex items-center gap-1.5 font-extrabold">
+                      <AlertCircle className="w-4 h-4 text-red-500" />
+                      Currently Out of Stock • Fresh batch in production
+                    </span>
+                  ) : isLowStock ? (
+                    <span className="text-[#E67E22] bg-[#E67E22]/15 px-3.5 py-1.5 rounded-full border border-[#E67E22]/30 inline-flex items-center gap-1.5 font-extrabold">
+                      <Clock className="w-4 h-4 text-[#E67E22]" />
+                      Only {product.stock} units left in stock! Order soon
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5">
+                      <ShieldCheck className="w-4 h-4 text-[#E67E22]" />
+                      In Stock • 24 to 48 hrs of fresh packing and delivery • FSSAI Certified
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="text-[11px] leading-tight">
-                <span className="font-extrabold text-[#0E382E] block">Fresh Batch Guarantee</span>
-                <span className="text-stone-700 font-medium">Order packing time: 24 to 48 hrs of fresh packing and delivery</span>
-              </div>
-            </div>
-
-            <div className="text-[11px] text-[#1F684B] text-center pt-1 flex items-center justify-center gap-2 font-bold flex-wrap">
-              <ShieldCheck className="w-4 h-4 text-[#E67E22]" />
-              <span>In Stock • 24 to 48 hrs of fresh packing and delivery • FSSAI Certified</span>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Claims & Highlights (Bold Premium Card) */}
           <div className="bg-gradient-to-br from-[#E8F1E9] via-[#F6F5F0] to-[#E8F1E9]/80 p-5 sm:p-6 rounded-3xl border-2 border-[#74B487]/50 shadow-sm space-y-4">

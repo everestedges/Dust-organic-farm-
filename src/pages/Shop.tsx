@@ -170,6 +170,12 @@ export const Shop: React.FC = () => {
                   }}
                 />
 
+                {product.stock !== undefined && product.stock <= 0 && (
+                  <span className="absolute top-4 left-4 bg-red-600 text-white font-black text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider shadow-md">
+                    Sold Out
+                  </span>
+                )}
+
                 <button
                   onClick={() => toggleWishlist(product.id)}
                   className={`absolute top-4 right-4 p-2.5 rounded-full backdrop-blur border transition-colors shadow-xs ${
@@ -211,27 +217,44 @@ export const Shop: React.FC = () => {
                   </span>
                 </div>
 
-                <div className="pt-2 flex items-center gap-2">
-                  <button
-                    onClick={() => addToCart(product)}
-                    className="flex-1 py-2.5 btn-dust-orange text-white font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 shadow-xs"
-                  >
-                    <ShoppingBag className="w-3.5 h-3.5" /> Add
-                  </button>
-                  <button
-                    onClick={() => handleBuyNow(product)}
-                    data-cursor="BUY"
-                    className="px-3.5 py-2.5 bg-[#0E382E] hover:bg-[#1F684B] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-xs flex items-center gap-1"
-                  >
-                    <Zap className="w-3.5 h-3.5 text-[#E67E22]" /> Buy Now
-                  </button>
-                  <Link
-                    to={`/product/${product.slug}`}
-                    className="p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 text-[#0E382E] hover:text-[#E67E22] hover:border-[#E67E22] rounded-xl transition-colors"
-                  >
-                    <ArrowUpRight className="w-4 h-4" />
-                  </Link>
-                </div>
+                {product.stock !== undefined && product.stock <= 0 ? (
+                  <div className="pt-2 flex items-center gap-2">
+                    <button
+                      disabled
+                      className="flex-1 py-2.5 bg-stone-200 text-stone-500 font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 cursor-not-allowed border border-stone-300"
+                    >
+                      Out of Stock
+                    </button>
+                    <Link
+                      to={`/product/${product.slug}`}
+                      className="p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 text-[#0E382E] hover:text-[#E67E22] hover:border-[#E67E22] rounded-xl transition-colors"
+                    >
+                      <ArrowUpRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="pt-2 flex items-center gap-2">
+                    <button
+                      onClick={() => addToCart(product)}
+                      className="flex-1 py-2.5 btn-dust-orange text-white font-extrabold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-1.5 shadow-xs"
+                    >
+                      <ShoppingBag className="w-3.5 h-3.5" /> Add
+                    </button>
+                    <button
+                      onClick={() => handleBuyNow(product)}
+                      data-cursor="BUY"
+                      className="px-3.5 py-2.5 bg-[#0E382E] hover:bg-[#1F684B] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-colors shadow-xs flex items-center gap-1"
+                    >
+                      <Zap className="w-3.5 h-3.5 text-[#E67E22]" /> Buy Now
+                    </button>
+                    <Link
+                      to={`/product/${product.slug}`}
+                      className="p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 text-[#0E382E] hover:text-[#E67E22] hover:border-[#E67E22] rounded-xl transition-colors"
+                    >
+                      <ArrowUpRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                )}
               </div>
             </div>
           );

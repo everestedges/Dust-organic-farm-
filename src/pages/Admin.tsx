@@ -34,6 +34,7 @@ import {
   RefreshCw,
   Upload,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { products as initialProducts, companyInfo, Product } from "@/lib/data";
 import { useAdminAuthStore } from "@/lib/admin-auth-store";
@@ -194,6 +195,22 @@ export const Admin: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productModalTab, setProductModalTab] = useState<"basic" | "media" | "nutrition" | "ritual">("basic");
+
+  // Inline Stock Management States
+  const [stockInputs, setStockInputs] = useState<{ [id: string]: number }>({});
+  const [savingStockId, setSavingStockId] = useState<string | null>(null);
+  const [savedStockId, setSavedStockId] = useState<string | null>(null);
+
+  const handleStockUpdate = async (productId: string, newStock: number) => {
+    setSavingStockId(productId);
+    const sanitized = Math.max(0, Number(newStock) || 0);
+    const success = await updateProductStock(productId, sanitized);
+    setSavingStockId(null);
+    if (success) {
+      setSavedStockId(productId);
+      setTimeout(() => setSavedStockId(null), 2000);
+    }
+  };
 
   // Tab 1: Basic & Pricing
   const [newProductName, setNewProductName] = useState("");
@@ -1140,9 +1157,19 @@ export const Admin: React.FC = () => {
         {/* Tab 4: Price & Stock Control (#4, #5) */}
         {activeTab === "inventory" && (
           <div className="bg-white p-8 rounded-3xl border border-[#74B487]/40 shadow-sm space-y-6">
-            <div>
-              <h3 className="text-xl font-extrabold text-[#0E382E]">Price & Inventory Control</h3>
-              <p className="text-xs text-[#1F684B]">Monitor stock levels and change unit pricing instantly.</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="text-xl font-extrabold text-[#0E382E]">Price & Inventory Control</h3>
+                <p className="text-xs text-[#1F684B]">
+                  Directly adjust stock counts and reflect real-time availability on the website instantly.
+                </p>
+              </div>
+              <button
+                onClick={() => fetchStoreProducts()}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#74B487]/40 text-xs font-bold text-[#0E382E] hover:bg-[#E8F1E9] transition-colors self-start sm:self-auto cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> Refresh Inventory
+              </button>
             </div>
 
             <div className="border border-[#74B487]/30 rounded-2xl overflow-hidden text-xs">
@@ -1153,41 +1180,159 @@ export const Admin: React.FC = () => {
                     <th className="p-4">Current Price</th>
                     <th className="p-4">Stock Quantity</th>
                     <th className="p-4">Inventory Status</th>
-                    <th className="p-4 text-right">Replenish Stock</th>
+                    <th className="p-4 text-right">Stock Controls & Quick Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#74B487]/20 text-[#1F684B]">
-                  {productsList.map((prod) => (
-                    <tr key={prod.id}>
-                      <td className="p-4 font-extrabold text-[#0E382E]">{prod.name}</td>
-                      <td className="p-4 font-bold text-[#0E382E]">₹{prod.price}</td>
-                      <td className="p-4 font-bold text-[#0E382E]">{prod.stock} units</td>
-                      <td className="p-4">
-                        {prod.stock > 50 ? (
-                          <span className="bg-[#25D366]/20 text-[#0E382E] px-2.5 py-1 rounded-full text-[10px] font-extrabold">
-                            In Stock
+                  {productsList.map((prod) => {
+                    const currentInput: number =
+                      typeof stockInputs[prod.id] === "number"
+                        ? (stockInputs[prod.id] as number)
+                        : Number(prod.stock ?? 100);
+                    const isSaving = savingStockId === prod.id;
+                    const isSaved = savedStockId === prod.id;
+                    const isOutOfStock = (prod.stock ?? 0) <= 0;
+                    const isLowStock = (prod.stock ?? 0) > 0 && (prod.stock ?? 0) <= 15;
+
+                    return (
+                      <tr
+                        key={prod.id}
+                        className="hover:bg-[#F6F5F0]/60 transition-colors"
+                      >
+                        <td className="p-4 font-extrabold text-[#0E382E]">
+                          <p className="text-sm font-black">{prod.name}</p>
+                          <span className="text-[10px] font-bold text-stone-500 uppercase">
+                            {prod.categoryLabel || prod.category} • {prod.sku || `SKU-${prod.slug}`}
                           </span>
-                        ) : (
-                          <span className="bg-[#E67E22]/20 text-[#E67E22] px-2.5 py-1 rounded-full text-[10px] font-extrabold">
-                            Low Stock
+                        </td>
+                        <td className="p-4 font-bold text-[#0E382E]">
+                          <span className="text-sm font-extrabold">
+                            ₹{prod.price}
                           </span>
-                        )}
-                      </td>
-                      <td className="p-4 text-right">
-                        <button
-                          onClick={() => {
-                            const addQty = prompt(`Add stock quantity for ${prod.name}:`, "50");
-                            if (addQty && !isNaN(Number(addQty))) {
-                              updateProductStock(prod.id, prod.stock + Number(addQty));
-                            }
-                          }}
-                          className="px-3 py-1.5 bg-[#0E382E] text-white rounded-lg text-[10px] font-bold hover:bg-[#E67E22]"
-                        >
-                          + Add Stock
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                          {prod.originalPrice && (
+                            <span className="text-[11px] text-stone-400 line-through ml-1.5 font-medium">
+                              ₹{prod.originalPrice}
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-4 font-bold text-[#0E382E]">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              min="0"
+                              value={currentInput}
+                              onChange={(e) => {
+                                const val = Math.max(
+                                  0,
+                                  parseInt(e.target.value) || 0
+                                );
+                                setStockInputs((prev) => ({
+                                  ...prev,
+                                  [prod.id]: val,
+                                }));
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  handleStockUpdate(prod.id, currentInput);
+                                }
+                              }}
+                              className="w-20 px-3 py-1.5 bg-[#F6F5F0] border border-[#74B487]/50 rounded-xl text-center font-black text-sm text-[#0E382E] outline-none focus:border-[#E67E22] focus:ring-1 focus:ring-[#E67E22]"
+                            />
+                            <span className="text-[11px] font-bold text-stone-500">
+                              units
+                            </span>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          {isOutOfStock ? (
+                            <span className="bg-red-100 text-red-700 border border-red-200 px-3 py-1 rounded-full text-[10px] font-black uppercase inline-flex items-center gap-1.5 shadow-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse" />{" "}
+                              Out of Stock
+                            </span>
+                          ) : isLowStock ? (
+                            <span className="bg-[#E67E22]/15 text-[#E67E22] border border-[#E67E22]/30 px-3 py-1 rounded-full text-[10px] font-black uppercase inline-flex items-center gap-1.5 shadow-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#E67E22]" />{" "}
+                              Low Stock ({prod.stock})
+                            </span>
+                          ) : (
+                            <span className="bg-[#25D366]/20 text-[#0E382E] border border-[#25D366]/30 px-3 py-1 rounded-full text-[10px] font-black uppercase inline-flex items-center gap-1.5 shadow-xs">
+                              <span className="w-1.5 h-1.5 rounded-full bg-[#25D366]" />{" "}
+                              In Stock ({prod.stock})
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-4 text-right">
+                          <div className="flex items-center justify-end gap-2 flex-wrap">
+                            <button
+                              onClick={() =>
+                                handleStockUpdate(prod.id, currentInput)
+                              }
+                              disabled={isSaving}
+                              className={`px-3 py-1.5 rounded-xl text-[11px] font-extrabold uppercase tracking-wider inline-flex items-center gap-1.5 transition-all shadow-xs cursor-pointer ${
+                                isSaved
+                                  ? "bg-[#25D366] text-white"
+                                  : "bg-[#0E382E] text-white hover:bg-[#1F684B]"
+                              }`}
+                            >
+                              {isSaving ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : isSaved ? (
+                                <>
+                                  <CheckCircle2 className="w-3.5 h-3.5" /> Saved
+                                </>
+                              ) : (
+                                <>
+                                  <Save className="w-3.5 h-3.5" /> Update
+                                </>
+                              )}
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                setStockInputs((prev) => ({
+                                  ...prev,
+                                  [prod.id]: 0,
+                                }));
+                                handleStockUpdate(prod.id, 0);
+                              }}
+                              className="px-2.5 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 rounded-xl text-[10px] font-extrabold uppercase transition-colors cursor-pointer"
+                              title="Set Stock to 0 (Mark Out of Stock)"
+                            >
+                              Set 0 (Out)
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                const nextVal = (prod.stock || 0) + 25;
+                                setStockInputs((prev) => ({
+                                  ...prev,
+                                  [prod.id]: nextVal,
+                                }));
+                                handleStockUpdate(prod.id, nextVal);
+                              }}
+                              className="px-2.5 py-1.5 bg-[#E8F1E9] text-[#0E382E] hover:bg-[#74B487]/30 border border-[#74B487]/40 rounded-xl text-[10px] font-extrabold transition-colors cursor-pointer"
+                            >
+                              +25
+                            </button>
+
+                            <button
+                              onClick={() => {
+                                const nextVal = (prod.stock || 0) + 50;
+                                setStockInputs((prev) => ({
+                                  ...prev,
+                                  [prod.id]: nextVal,
+                                }));
+                                handleStockUpdate(prod.id, nextVal);
+                              }}
+                              className="px-2.5 py-1.5 bg-[#E8F1E9] text-[#0E382E] hover:bg-[#74B487]/30 border border-[#74B487]/40 rounded-xl text-[10px] font-extrabold transition-colors cursor-pointer"
+                            >
+                              +50
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
