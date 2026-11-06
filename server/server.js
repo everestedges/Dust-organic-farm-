@@ -1119,42 +1119,8 @@ app.put("/api/products/:id", async (req, res) => {
         );
         console.log(`✨ [MySQL] Inserted edited product: ${name}`);
       }
-    } else {
-      // Partial updates (price or stock only)
-      if (rowId) {
-        if (p.price !== undefined) {
-          const newPrice = Number(p.price);
-          await query("UPDATE products SET price = ? WHERE id = ?", [newPrice, rowId]);
-          const currentRows = await query("SELECT data_json FROM products WHERE id = ?", [rowId]);
-          if (currentRows.length > 0 && currentRows[0].data_json) {
-            try {
-              const parsed = JSON.parse(currentRows[0].data_json);
-              parsed.price = newPrice;
-              await query("UPDATE products SET data_json = ? WHERE id = ?", [JSON.stringify(parsed), rowId]);
-            } catch (e) {}
-          }
-          console.log(`💰 [MySQL] Updated price for product id=${rowId} to ₹${newPrice}`);
-        }
-        if (p.stock !== undefined) {
-          const newStock = Math.max(0, Number(p.stock));
-          await query("UPDATE products SET stock_qty = ? WHERE id = ?", [newStock, rowId]);
-          const currentRows = await query("SELECT data_json FROM products WHERE id = ?", [rowId]);
-          if (currentRows.length > 0 && currentRows[0].data_json) {
-            try {
-              const parsed = JSON.parse(currentRows[0].data_json);
-              parsed.stock = newStock;
-              await query("UPDATE products SET data_json = ? WHERE id = ?", [JSON.stringify(parsed), rowId]);
-            } catch (e) {}
-          }
-          console.log(`📦 [MySQL] Updated stock for product id=${rowId} to ${newStock} units`);
-        }
-        if (p.data) {
-          await query("UPDATE products SET data_json = ? WHERE id = ?", [JSON.stringify(p.data), rowId]);
-        }
-      }
-    }
 
-    return res.json({ success: true, message: `Product updated successfully` });
+      return res.json({ success: true, message: `Product updated successfully` });
   } catch (err) {
     console.error("❌ Product update error:", err);
     return res.status(500).json({ success: false, error: err.message });
