@@ -74,14 +74,25 @@ export const useProductsStore = create<ProductsState>()(
                     (p.images?.[0]?.src && (p.images[0].src.startsWith("/uploads/") || p.images[0].src.startsWith("http"))) ||
                     (p.storyImage && (p.storyImage.startsWith("/uploads/") || p.storyImage.startsWith("http")));
 
+                  const validPrice = p.price && p.price > 0 ? p.price : defaultItem.price;
+                  const validPriceDisplay = p.price && p.price > 0 ? p.priceDisplay : defaultItem.priceDisplay;
+
                   mergedMap.set(key, {
                     ...defaultItem,
                     ...p,
+                    price: validPrice,
+                    priceDisplay: validPriceDisplay,
                     images: hasCustomUpload ? p.images : defaultItem.images,
                     storyImage: hasCustomUpload ? p.storyImage : defaultItem.storyImage,
                   });
                 } else {
-                  mergedMap.set(key, p);
+                  const fallback = p.slug.includes("paan") ? 299 : p.slug.includes("ragi") ? 229 : p.slug.includes("almond") ? 749 : p.slug.includes("cashew") ? 649 : p.slug.includes("shampoo") ? 246 : 299;
+                  const validPrice = p.price && p.price > 0 ? p.price : fallback;
+                  mergedMap.set(key, {
+                    ...p,
+                    price: validPrice,
+                    priceDisplay: p.price && p.price > 0 ? p.priceDisplay : `₹${validPrice}`,
+                  });
                 }
               });
 
@@ -163,9 +174,31 @@ export const useProductsStore = create<ProductsState>()(
 
       updateProductStock: async (id: string, newStock: number) => {
         const prod = get().products.find((p) => p.id === id || p.slug === id);
+        const fallbackPrice = (prod?.slug || id).includes("paan")
+          ? 299
+          : (prod?.slug || id).includes("ragi")
+          ? 229
+          : (prod?.slug || id).includes("almond")
+          ? 749
+          : (prod?.slug || id).includes("cashew")
+          ? 649
+          : (prod?.slug || id).includes("shampoo")
+          ? 246
+          : 299;
+        const currentPrice =
+          prod?.price && prod.price > 0 ? prod.price : fallbackPrice;
+
         set((state) => ({
           products: state.products.map((p) =>
-            p.id === id || p.slug === id ? { ...p, stock: newStock } : p
+            p.id === id || p.slug === id
+              ? {
+                  ...p,
+                  stock: newStock,
+                  price: p.price > 0 ? p.price : currentPrice,
+                  priceDisplay:
+                    p.price > 0 ? p.priceDisplay : `₹${currentPrice}`,
+                }
+              : p
           ),
         }));
 
@@ -177,6 +210,8 @@ export const useProductsStore = create<ProductsState>()(
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 stock: newStock,
+                isStockOnly: true,
+                price: currentPrice,
                 slug: prod?.slug,
                 name: prod?.name,
               }),

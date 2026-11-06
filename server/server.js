@@ -72,6 +72,26 @@ async function initDatabaseTables() {
     // Purge legacy test duplicate products with numeric slugs (2, 3, 4, 5) and deleted test SKU Hairoil
     await query("DELETE FROM products WHERE slug IN ('2', '3', '4', '5') OR name IN ('DUST Almond Powder (500g)', 'DUST Premium Cashew Powder (500g)', 'DUST Natural Powder Shampoo for Men (100ml)', 'Kacha Aam Instant Powder')").catch(() => {});
     await query("DELETE FROM products WHERE name = 'Hairoil' OR slug = 'hairoil' OR slug LIKE '%1793768267280%'").catch(() => {});
+
+    // Auto-repair any products whose price accidentally became 0
+    await query("UPDATE products SET price = 299, compare_price = 350 WHERE price <= 0 AND (slug LIKE '%paan%' OR name LIKE '%Paan%')").catch(() => {});
+    await query("UPDATE products SET price = 229, compare_price = 259 WHERE price <= 0 AND (slug LIKE '%ragi%' OR name LIKE '%Ragi%')").catch(() => {});
+    await query("UPDATE products SET price = 749, compare_price = 849 WHERE price <= 0 AND (slug LIKE '%almond%' OR name LIKE '%Almond%')").catch(() => {});
+    await query("UPDATE products SET price = 649, compare_price = 749 WHERE price <= 0 AND (slug LIKE '%cashew%' OR name LIKE '%Cashew%')").catch(() => {});
+    await query("UPDATE products SET price = 246, compare_price = 299 WHERE price <= 0 AND (slug LIKE '%shampoo%' OR name LIKE '%Shampoo%')").catch(() => {});
+
+    // Also repair data_json if it had price: 0
+    const zeroJsonRows = await query("SELECT id, slug, name, price, data_json FROM products WHERE data_json LIKE '%\"price\":0%'").catch(() => []);
+    if (Array.isArray(zeroJsonRows)) {
+      for (const row of zeroJsonRows) {
+        try {
+          const parsed = JSON.parse(row.data_json);
+          const fallbackPrice = row.slug.includes("paan") ? 299 : row.slug.includes("ragi") ? 229 : row.slug.includes("almond") ? 749 : row.slug.includes("cashew") ? 649 : row.slug.includes("shampoo") ? 246 : 299;
+          parsed.price = Number(row.price) > 0 ? Number(row.price) : fallbackPrice;
+          await query("UPDATE products SET data_json = ? WHERE id = ?", [JSON.stringify(parsed), row.id]);
+        } catch(e) {}
+      }
+    }
     
     // Seed standard official products into MySQL if they are not already in the table
     const defaultOfficialProducts = [
@@ -737,6 +757,32 @@ app.get("/api/products", async (req, res) => {
       }
 
       const effectiveSubtitle = r.sub_heading || richData.subtitle || richData.pitch || "";
+      const fallbackPrice = r.slug.includes("paan")
+        ? 299
+        : r.slug.includes("ragi")
+        ? 229
+        : r.slug.includes("almond")
+        ? 749
+        : r.slug.includes("cashew")
+        ? 649
+        : r.slug.includes("shampoo")
+        ? 246
+        : 299;
+      const effectivePrice =
+        Number(r.price) > 0
+          ? Number(r.price)
+          : Number(richData.price) > 0
+          ? Number(richData.price)
+          : fallbackPrice;
+      const effectiveComparePrice =
+        r.compare_price && Number(r.compare_price) > 0
+          ? Number(r.compare_price)
+          : richData.originalPrice && Number(richData.originalPrice) > 0
+          ? Number(richData.originalPrice)
+          : r.slug.includes("paan")
+          ? 350
+          : undefined;
+
       // Return clean unified Product object matching frontend interface
       return {
         id: richData.id || String(r.id),
@@ -747,10 +793,10 @@ app.get("/api/products", async (req, res) => {
         pitch: effectiveSubtitle,
         category: richData.category || "heritage-wellness",
         categoryLabel: richData.categoryLabel || "Heritage Wellness",
-        price: Number(r.price) || 0,
-        originalPrice: r.compare_price ? Number(r.compare_price) : undefined,
-        priceDisplay: `₹${Number(r.price) || 0}`,
-        originalPriceDisplay: r.compare_price ? `₹${Number(r.compare_price)}` : undefined,
+        price: effectivePrice,
+        originalPrice: effectiveComparePrice,
+        priceDisplay: `₹${effectivePrice}`,
+        originalPriceDisplay: effectiveComparePrice ? `₹${effectiveComparePrice}` : undefined,
         unitDisplay: richData.unitDisplay || r.servings || "",
         netWeight: r.weight || richData.netWeight || "200g",
         badges: richData.badges || ["100% NATURAL"],
@@ -900,39 +946,105 @@ app.put("/api/products/:id", async (req, res) => {
     // 1. First find which product row exists in MySQL:
     let rows = [];
     if (isNumId) {
-      rows = await query("SELECT id FROM products WHERE id = ? OR slug = ? LIMIT 1", [Number(id), targetSlug]);
+      rows = await query("SELECT * FROM products WHERE id = ? OR slug = ? LIMIT 1", [Number(id), targetSlug]);
     } else {
       rows = await query(
-        "SELECT id FROM products WHERE slug = ? OR slug = ? OR name = ? OR data_json LIKE ? LIMIT 1",
+        "SELECT * FROM products WHERE slug = ? OR slug = ? OR name = ? OR data_json LIKE ? LIMIT 1",
         [id, targetSlug, targetName, `%"id":"${id}"%`]
       );
     }
 
     if (rows.length === 0 && targetName) {
-      rows = await query("SELECT id FROM products WHERE name = ? LIMIT 1", [targetName]);
+      rows = await query("SELECT * FROM products WHERE name = ? LIMIT 1", [targetName]);
     }
 
     if (rows.length === 0) {
       const lower = String(id).toLowerCase();
       if (lower.includes("ragi") || lower.includes("laddoo")) {
-        rows = await query("SELECT id FROM products WHERE slug LIKE '%ragi%' OR name LIKE '%Ragi%' LIMIT 1");
+        rows = await query("SELECT * FROM products WHERE slug LIKE '%ragi%' OR name LIKE '%Ragi%' LIMIT 1");
       } else if (lower.includes("paan")) {
-        rows = await query("SELECT id FROM products WHERE slug LIKE '%paan%' OR name LIKE '%Paan%' LIMIT 1");
+        rows = await query("SELECT * FROM products WHERE slug LIKE '%paan%' OR name LIKE '%Paan%' LIMIT 1");
       } else if (lower.includes("almond")) {
-        rows = await query("SELECT id FROM products WHERE slug LIKE '%almond%' OR name LIKE '%Almond%' LIMIT 1");
+        rows = await query("SELECT * FROM products WHERE slug LIKE '%almond%' OR name LIKE '%Almond%' LIMIT 1");
       } else if (lower.includes("cashew")) {
-        rows = await query("SELECT id FROM products WHERE slug LIKE '%cashew%' OR name LIKE '%Cashew%' LIMIT 1");
+        rows = await query("SELECT * FROM products WHERE slug LIKE '%cashew%' OR name LIKE '%Cashew%' LIMIT 1");
       } else if (lower.includes("shampoo")) {
-        rows = await query("SELECT id FROM products WHERE slug LIKE '%shampoo%' OR name LIKE '%Shampoo%' LIMIT 1");
+        rows = await query("SELECT * FROM products WHERE slug LIKE '%shampoo%' OR name LIKE '%Shampoo%' LIMIT 1");
       }
     }
 
-    const rowId = rows.length > 0 ? rows[0].id : (isNumId ? Number(id) : null);
+    const existingRow = rows.length > 0 ? rows[0] : null;
+    const rowId = existingRow ? existingRow.id : (isNumId ? Number(id) : null);
 
-    // If full product payload is provided
-    if (p.name || p.slug || (p.price !== undefined && p.subtitle !== undefined)) {
-      const name = p.name || "Product";
-      const price = p.price !== undefined ? Number(p.price) : 0;
+    // 2. CHECK FOR STOCK-ONLY UPDATE:
+    if (
+      p.isStockOnly ||
+      (p.stock !== undefined &&
+        p.description === undefined &&
+        p.ingredients === undefined &&
+        p.subtitle === undefined)
+    ) {
+      if (rowId) {
+        const newStock = Math.max(0, Number(p.stock));
+        await query("UPDATE products SET stock_qty = ? WHERE id = ?", [newStock, rowId]);
+        if (existingRow && existingRow.data_json) {
+          try {
+            const parsed = JSON.parse(existingRow.data_json);
+            parsed.stock = newStock;
+            if (!parsed.price || Number(parsed.price) <= 0) {
+              parsed.price = Number(existingRow.price) > 0 ? Number(existingRow.price) : 299;
+            }
+            await query("UPDATE products SET data_json = ? WHERE id = ?", [JSON.stringify(parsed), rowId]);
+          } catch (e) {}
+        }
+        console.log(`📦 [MySQL] Stock-only update for product id=${rowId} to ${newStock} units`);
+      }
+      return res.json({ success: true, message: "Product stock updated successfully" });
+    }
+
+    // 3. CHECK FOR PRICE-ONLY UPDATE:
+    if (
+      p.isPriceOnly ||
+      (p.price !== undefined &&
+        p.stock === undefined &&
+        p.description === undefined &&
+        p.ingredients === undefined &&
+        p.subtitle === undefined)
+    ) {
+      if (rowId) {
+        const newPrice = Math.max(1, Number(p.price));
+        await query("UPDATE products SET price = ? WHERE id = ?", [newPrice, rowId]);
+        if (existingRow && existingRow.data_json) {
+          try {
+            const parsed = JSON.parse(existingRow.data_json);
+            parsed.price = newPrice;
+            await query("UPDATE products SET data_json = ? WHERE id = ?", [JSON.stringify(parsed), rowId]);
+          } catch (e) {}
+        }
+        console.log(`💰 [MySQL] Price-only update for product id=${rowId} to ₹${newPrice}`);
+      }
+      return res.json({ success: true, message: "Product price updated successfully" });
+    }
+
+    // 4. FULL PRODUCT PAYLOAD:
+    const fallbackPrice = targetSlug.includes("paan")
+      ? 299
+      : targetSlug.includes("ragi")
+      ? 229
+      : targetSlug.includes("almond")
+      ? 749
+      : targetSlug.includes("cashew")
+      ? 649
+      : targetSlug.includes("shampoo")
+      ? 246
+      : 299;
+    const name = p.name || (existingRow ? existingRow.name : "Product");
+    const price =
+      p.price !== undefined && Number(p.price) > 0
+        ? Number(p.price)
+        : existingRow && Number(existingRow.price) > 0
+        ? Number(existingRow.price)
+        : fallbackPrice;
       const comparePrice = p.originalPrice ? Number(p.originalPrice) : null;
       const subHeading = p.subtitle || p.pitch || "";
       const weight = p.netWeight || "200g";
