@@ -830,7 +830,7 @@ export const ProductDetail: React.FC = () => {
                     <td className="py-2.5 text-right text-stone-700">{row[1]}</td>
                     <td className="py-2.5 text-right text-[#E67E22] font-extrabold">{row[2]}</td>
                   </tr>
-                ))}
+                   ))}
               </tbody>
             </table>
 

@@ -362,6 +362,7 @@ export const Admin: React.FC = () => {
               location: l.city_state,
               channel: l.channel,
               investment: l.investment_capacity,
+              message: l.message || "",
               status: "New",
               date: l.created_at
                 ? new Date(l.created_at).toLocaleDateString("en-IN", {
@@ -921,6 +922,11 @@ export const Admin: React.FC = () => {
               }`}
           >
             <MessageSquare className="w-4 h-4 text-[#E67E22]" /> Inquiries & B2B Leads
+            {distributorLeads.length > 0 && (
+              <span className="ml-1 px-2 py-0.5 text-[10px] font-black rounded-full bg-[#E67E22] text-white">
+                {distributorLeads.length}
+              </span>
+            )}
           </button>
         </div>
 
@@ -1742,8 +1748,9 @@ export const Admin: React.FC = () => {
                     <th className="p-4">Contact Info</th>
                     <th className="p-4">Target Location</th>
                     <th className="p-4">Channel</th>
-                    <th className="p-4">Investment</th>
-                    <th className="p-4">Status</th>
+                    <th className="p-4">Investment / Type</th>
+                    <th className="p-4">Message / Notes</th>
+                    <th className="p-4">Status & Date</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#74B487]/20 text-[#1F684B]">
@@ -1755,24 +1762,34 @@ export const Admin: React.FC = () => {
                     </tr>
                   ) : (
                     distributorLeads.map((lead) => (
-                      <tr key={lead.id}>
-                      <td className="p-4">
-                        <p className="font-extrabold text-[#0E382E]">{lead.name}</p>
-                        <p className="text-[11px] font-bold text-[#E67E22]">{lead.company}</p>
-                      </td>
-                      <td className="p-4">
-                        <p>{lead.email}</p>
-                        <p className="font-bold text-[#0E382E]">{lead.phone}</p>
-                      </td>
-                      <td className="p-4 font-bold text-[#0E382E]">{lead.location}</td>
-                      <td className="p-4 font-semibold">{lead.channel}</td>
-                      <td className="p-4 font-extrabold text-[#0E382E]">{lead.investment}</td>
-                      <td className="p-4">
-                        <span className="bg-[#E67E22] text-white px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase">
-                          {lead.status}
-                        </span>
-                      </td>
-                    </tr>
+                      <tr key={lead.id} className="hover:bg-[#F6F5F0]/60 transition-colors">
+                        <td className="p-4">
+                          <p className="font-extrabold text-[#0E382E]">{lead.name}</p>
+                          <p className="text-[11px] font-bold text-[#E67E22]">{lead.company}</p>
+                        </td>
+                        <td className="p-4">
+                          <p className="font-medium text-[#0E382E]">{lead.email}</p>
+                          <p className="font-bold text-[#0E382E]">{lead.phone}</p>
+                        </td>
+                        <td className="p-4 font-bold text-[#0E382E]">{lead.location}</td>
+                        <td className="p-4 font-semibold">{lead.channel}</td>
+                        <td className="p-4 font-extrabold text-[#0E382E]">{lead.investment}</td>
+                        <td className="p-4 max-w-xs">
+                          {lead.message ? (
+                            <div className="bg-[#F6F5F0] border border-[#74B487]/30 p-2.5 rounded-xl text-[11px] text-[#0E382E] font-medium whitespace-pre-wrap max-h-24 overflow-y-auto">
+                              {lead.message}
+                            </div>
+                          ) : (
+                            <span className="text-stone-400 italic">None</span>
+                          )}
+                        </td>
+                        <td className="p-4 whitespace-nowrap">
+                          <span className="bg-[#E67E22] text-white px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase">
+                            {lead.status}
+                          </span>
+                          <p className="text-[10px] text-stone-400 mt-1 font-medium">{lead.date}</p>
+                        </td>
+                      </tr>
                     ))
                   )}
                 </tbody>

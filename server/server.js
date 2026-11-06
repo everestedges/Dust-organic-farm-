@@ -49,6 +49,21 @@ async function query(sql, params) {
 // Auto-migration: ensure orders columns accept standard e-commerce lifecycle statuses and products support full rich CMS data
 async function initDatabaseTables() {
   try {
+    await query(`
+      CREATE TABLE IF NOT EXISTS distributor_leads (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        contact_name VARCHAR(255) NOT NULL,
+        company_name VARCHAR(255) NOT NULL,
+        phone VARCHAR(50) NOT NULL,
+        email VARCHAR(255) NOT NULL,
+        city_state VARCHAR(255) NOT NULL,
+        channel VARCHAR(100) DEFAULT 'Regional Distributor',
+        investment_capacity VARCHAR(100) DEFAULT '₹20,000 – ₹50,000',
+        message TEXT NULL,
+        status VARCHAR(50) DEFAULT 'New',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `).catch(() => {});
     await query("ALTER TABLE orders MODIFY COLUMN order_status VARCHAR(50) DEFAULT 'Pending'").catch(() => {});
     await query("ALTER TABLE orders MODIFY COLUMN payment_status VARCHAR(50) DEFAULT 'PAID'").catch(() => {});
     await query("ALTER TABLE orders MODIFY COLUMN payment_method VARCHAR(50) DEFAULT 'UPI'").catch(() => {});

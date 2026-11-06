@@ -370,6 +370,8 @@ export const Combos: React.FC = () => {
 
 const DistributorForm: React.FC = () => {
   const [submitted, setSubmitted] = React.useState(false);
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [errorMessage, setErrorMessage] = React.useState("");
   const [formData, setFormData] = React.useState({
     name: "",
     company: "",
@@ -381,9 +383,49 @@ const DistributorForm: React.FC = () => {
     message: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    if (!formData.name.trim() || !formData.company.trim() || !formData.phone.trim() || !formData.email.trim() || !formData.cityState.trim()) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage("");
+
+    const API_BASE =
+      typeof window !== "undefined" && window.location.hostname !== "localhost"
+        ? "/api"
+        : "http://localhost:5000/api";
+
+    try {
+      const res = await fetch(`${API_BASE}/distributor-leads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          company: formData.company.trim(),
+          phone: formData.phone.trim(),
+          email: formData.email.trim(),
+          cityState: formData.cityState.trim(),
+          channel: formData.channel,
+          investment: formData.investment,
+          message: formData.message.trim(),
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success) {
+        setSubmitted(true);
+      } else {
+        setErrorMessage(data.message || "Failed to submit application. Please try again.");
+      }
+    } catch (err: any) {
+      setErrorMessage("Network error connecting to database: " + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (submitted) {
@@ -534,11 +576,27 @@ const DistributorForm: React.FC = () => {
         />
       </div>
 
+      {errorMessage && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl text-center font-semibold">
+          {errorMessage}
+        </div>
+      )}
+
       <button
         type="submit"
-        className="w-full btn-dust-orange py-4 text-white font-extrabold text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg"
+        disabled={isSubmitting}
+        className="w-full btn-dust-orange py-4 text-white font-extrabold text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
       >
-        Submit Distributor Lead <Send className="w-4 h-4" />
+        {isSubmitting ? (
+          <>
+            <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+            Saving Inquiry to Database...
+          </>
+        ) : (
+          <>
+            Submit Distributor Lead <Send className="w-4 h-4" />
+          </>
+        )}
       </button>
     </form>
   );

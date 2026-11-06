@@ -4,6 +4,8 @@ import { companyInfo } from "@/lib/data";
 
 export const Contact: React.FC = () => {
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -12,9 +14,49 @@ export const Contact: React.FC = () => {
     message: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMessage("");
+
+    const API_BASE =
+      typeof window !== "undefined" && window.location.hostname !== "localhost"
+        ? "/api"
+        : "http://localhost:5000/api";
+
+    try {
+      const res = await fetch(`${API_BASE}/distributor-leads`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          company: `Website Contact Inquiry (${formData.inquiryType})`,
+          phone: formData.phone.trim() || "Not provided",
+          email: formData.email.trim(),
+          cityState: "Online Direct Support",
+          channel: formData.inquiryType,
+          investment: "Customer Support / Inquiry",
+          message: formData.message.trim(),
+        }),
+      });
+
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && data.success) {
+        setSubmitted(true);
+      } else {
+        setErrorMessage(data.message || "Failed to submit message. Please try again.");
+      }
+    } catch (err: any) {
+      setErrorMessage("Network error connecting to database: " + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -231,11 +273,27 @@ export const Contact: React.FC = () => {
                   />
                 </div>
 
+                {errorMessage && (
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl text-center font-semibold">
+                    {errorMessage}
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full btn-dust-orange py-4 text-white font-extrabold text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 shadow-md"
+                  disabled={isSubmitting}
+                  className="w-full btn-dust-orange py-4 text-white font-extrabold text-xs uppercase tracking-widest rounded-xl transition-all flex items-center justify-center gap-2 shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  Send Message <Send className="w-4 h-4" />
+                  {isSubmitting ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      Sending Message...
+                    </>
+                  ) : (
+                    <>
+                      Send Message <Send className="w-4 h-4" />
+                    </>
+                  )}
                 </button>
               </form>
             )}
