@@ -44,3 +44,4 @@ export const InstagramFloatingWidget: React.FC = () => {
     </div>
   );
 };
+

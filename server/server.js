@@ -64,6 +64,44 @@ async function initDatabaseTables() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `).catch(() => {});
+    await query(`
+      CREATE TABLE IF NOT EXISTS upcoming_banners (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        subtitle VARCHAR(255) NULL,
+        tagline VARCHAR(100) DEFAULT 'COMING SOON',
+        launch_date VARCHAR(100) DEFAULT 'Launching Soon',
+        image_url TEXT NOT NULL,
+        description TEXT NULL,
+        cta_text VARCHAR(100) DEFAULT 'Pre-Order Inquiry',
+        cta_link VARCHAR(255) DEFAULT '/combos',
+        display_order INT DEFAULT 0,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `).catch(() => {});
+
+    // Seed default upcoming banner if empty
+    const existingBanners = await query("SELECT id FROM upcoming_banners LIMIT 1").catch(() => []);
+    if (Array.isArray(existingBanners) && existingBanners.length === 0) {
+      await query(
+        `INSERT INTO upcoming_banners (title, subtitle, tagline, launch_date, image_url, description, cta_text, cta_link, display_order, is_active)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          "Ayurvedic Herbal Haircare & Pure Fruit Powders",
+          "Next Generation Heritage Formulations Inspired by Nature",
+          "COMING SOON • IN THE PIPELINE",
+          "Expected Launch: Q1 2027",
+          "/dust-wellness-combo-advertisement.webp",
+          "Handcrafted with 100% natural herbs, zero synthetic preservatives, and authentic farm-fresh ingredients.",
+          "Pre-Order Inquiry",
+          "/combos",
+          1,
+          1
+        ]
+      ).catch(() => {});
+    }
+
     await query("ALTER TABLE orders MODIFY COLUMN order_status VARCHAR(50) DEFAULT 'Pending'").catch(() => {});
     await query("ALTER TABLE orders MODIFY COLUMN payment_status VARCHAR(50) DEFAULT 'PAID'").catch(() => {});
     await query("ALTER TABLE orders MODIFY COLUMN payment_method VARCHAR(50) DEFAULT 'UPI'").catch(() => {});
@@ -1198,6 +1236,135 @@ app.post("/api/upload-image", async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Image upload error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------
+// UPCOMING PRODUCT BANNERS ENDPOINTS
+// ---------------------------------------------------------------------
+app.get("/api/upcoming-banners", async (req, res) => {
+  try {
+    const showAll = req.query.all === "true";
+    const sql = showAll
+      ? "SELECT * FROM upcoming_banners ORDER BY display_order ASC, id DESC"
+      : "SELECT * FROM upcoming_banners WHERE is_active = 1 OR is_active IS NULL ORDER BY display_order ASC, id DESC";
+    const banners = await query(sql);
+    return res.json({ success: true, count: banners.length, banners });
+  } catch (err) {
+    console.error("❌ Fetch upcoming banners error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post("/api/upcoming-banners", async (req, res) => {
+  const {
+    title,
+    subtitle,
+    tagline,
+    launch_date,
+    image_url,
+    description,
+    cta_text,
+    cta_link,
+    display_order,
+    is_active,
+  } = req.body;
+
+  if (!title || !image_url) {
+    return res.status(400).json({ success: false, message: "Title and Image URL are required" });
+  }
+
+  try {
+    const result = await query(
+      `INSERT INTO upcoming_banners (title, subtitle, tagline, launch_date, image_url, description, cta_text, cta_link, display_order, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        title,
+        subtitle || "",
+        tagline || "COMING SOON",
+        launch_date || "Launching Soon",
+        image_url,
+        description || "",
+        cta_text || "Pre-Order Inquiry",
+        cta_link || "/combos",
+        Number(display_order) || 0,
+        is_active !== undefined ? (is_active ? 1 : 0) : 1,
+      ]
+    );
+
+    console.log(`✨ [MySQL] Created upcoming banner id=${result.insertId} (${title})`);
+    return res.json({
+      success: true,
+      message: "Upcoming banner created successfully",
+      bannerId: result.insertId,
+    });
+  } catch (err) {
+    console.error("❌ Create upcoming banner error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put("/api/upcoming-banners/:id", async (req, res) => {
+  const { id } = req.params;
+  const {
+    title,
+    subtitle,
+    tagline,
+    launch_date,
+    image_url,
+    description,
+    cta_text,
+    cta_link,
+    display_order,
+    is_active,
+  } = req.body;
+
+  try {
+    await query(
+      `UPDATE upcoming_banners 
+       SET title = ?,
+           subtitle = ?,
+           tagline = ?,
+           launch_date = ?,
+           image_url = ?,
+           description = ?,
+           cta_text = ?,
+           cta_link = ?,
+           display_order = ?,
+           is_active = ?
+       WHERE id = ?`,
+      [
+        title,
+        subtitle || "",
+        tagline || "COMING SOON",
+        launch_date || "Launching Soon",
+        image_url,
+        description || "",
+        cta_text || "Pre-Order Inquiry",
+        cta_link || "/combos",
+        Number(display_order) || 0,
+        is_active !== undefined ? (is_active ? 1 : 0) : 1,
+        Number(id),
+      ]
+    );
+
+    console.log(`✏️ [MySQL] Updated upcoming banner id=${id} (${title})`);
+    return res.json({ success: true, message: "Upcoming banner updated successfully" });
+  } catch (err) {
+    console.error("❌ Update upcoming banner error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete("/api/upcoming-banners/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await query("DELETE FROM upcoming_banners WHERE id = ?", [Number(id)]);
+    console.log(`🗑️ [MySQL] Deleted upcoming banner id=${id}`);
+    return res.json({ success: true, message: "Upcoming banner deleted successfully" });
+  } catch (err) {
+    console.error("❌ Delete upcoming banner error:", err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });

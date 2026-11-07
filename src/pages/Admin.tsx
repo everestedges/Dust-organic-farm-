@@ -35,11 +35,13 @@ import {
   Upload,
   Loader2,
   AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import { products as initialProducts, companyInfo, Product } from "@/lib/data";
 import { useAdminAuthStore } from "@/lib/admin-auth-store";
 import { useTestimonialsStore, Testimonial } from "@/lib/testimonials-store";
 import { useProductsStore } from "@/lib/products-store";
+import { useUpcomingBannersStore, UpcomingBanner } from "@/lib/upcoming-banners-store";
 
 export const Admin: React.FC = () => {
   const navigate = useNavigate();
@@ -49,7 +51,7 @@ export const Admin: React.FC = () => {
     return <Navigate to="/admin-login" replace />;
   }
 
-  // Active Tab State (16 Client Requirements organized in 11 Control Tabs)
+  // Active Tab State (16 Client Requirements organized in 12 Control Tabs)
   const [activeTab, setActiveTab] = useState<
     | "reports"
     | "products"
@@ -59,10 +61,37 @@ export const Admin: React.FC = () => {
     | "customers"
     | "coupons"
     | "banners"
+    | "upcoming-banners"
     | "reviews"
     | "content"
     | "leads"
   >("reports");
+
+  // State: Upcoming Product Banners Store
+  const {
+    banners: upcomingBanners,
+    fetchBanners: fetchUpcomingBanners,
+    createBanner: createUpcomingBanner,
+    updateBanner: updateUpcomingBanner,
+    deleteBanner: deleteUpcomingBanner,
+    isLoading: isLoadingUpcomingBanners,
+  } = useUpcomingBannersStore();
+
+  const [isUpcomingModalOpen, setIsUpcomingModalOpen] = useState(false);
+  const [editingUpcomingBanner, setEditingUpcomingBanner] = useState<UpcomingBanner | null>(null);
+  const [upcomingForm, setUpcomingForm] = useState({
+    title: "",
+    subtitle: "",
+    tagline: "COMING SOON",
+    launch_date: "Expected Launch: Q1 2027",
+    image_url: "",
+    description: "",
+    cta_text: "Pre-Order Inquiry",
+    cta_link: "/combos",
+    display_order: 0,
+  });
+  const [isUploadingUpcomingImg, setIsUploadingUpcomingImg] = useState(false);
+  const [isSavingUpcomingBanner, setIsSavingUpcomingBanner] = useState(false);
 
   // State: Testimonials & Video Stories Store
   const {
@@ -395,6 +424,9 @@ export const Admin: React.FC = () => {
 
       // 4. Fetch live products from MySQL
       fetchStoreProducts();
+
+      // 5. Fetch upcoming banners from MySQL
+      fetchUpcomingBanners(true);
     } catch (err) {
       console.warn("Could not load live database records:", err);
     } finally {
@@ -446,6 +478,92 @@ export const Admin: React.FC = () => {
     setIsUploadingMainImg(false);
     if (uploadedUrl) {
       setNewProductImageUrl(uploadedUrl);
+    }
+    e.target.value = "";
+  };
+
+  // Upcoming Product Banners Modal & CRUD handlers
+  const openNewUpcomingBannerModal = () => {
+    setEditingUpcomingBanner(null);
+    setUpcomingForm({
+      title: "",
+      subtitle: "",
+      tagline: "COMING SOON • IN THE PIPELINE",
+      launch_date: "Expected Launch: Q1 2027",
+      image_url: "",
+      description: "",
+      cta_text: "Pre-Order Inquiry",
+      cta_link: "/combos",
+      display_order: upcomingBanners.length + 1,
+    });
+    setIsUpcomingModalOpen(true);
+  };
+
+  const openEditUpcomingBannerModal = (banner: UpcomingBanner) => {
+    setEditingUpcomingBanner(banner);
+    setUpcomingForm({
+      title: banner.title || "",
+      subtitle: banner.subtitle || "",
+      tagline: banner.tagline || "COMING SOON • IN THE PIPELINE",
+      launch_date: banner.launch_date || "",
+      image_url: banner.image_url || "",
+      description: banner.description || "",
+      cta_text: banner.cta_text || "Pre-Order Inquiry",
+      cta_link: banner.cta_link || "/combos",
+      display_order: banner.display_order ?? 0,
+    });
+    setIsUpcomingModalOpen(true);
+  };
+
+  const handleSaveUpcomingBanner = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!upcomingForm.title.trim()) {
+      alert("Please enter a title for the upcoming product banner.");
+      return;
+    }
+    if (!upcomingForm.image_url.trim()) {
+      alert("Please upload or provide an image for the banner.");
+      return;
+    }
+    setIsSavingUpcomingBanner(true);
+    try {
+      if (editingUpcomingBanner) {
+        const ok = await updateUpcomingBanner(editingUpcomingBanner.id, upcomingForm);
+        if (ok) {
+          setIsUpcomingModalOpen(false);
+        } else {
+          alert("Failed to update banner. Please check the server connection.");
+        }
+      } else {
+        const ok = await createUpcomingBanner({
+          ...upcomingForm,
+          is_active: 1,
+        });
+        if (ok) {
+          setIsUpcomingModalOpen(false);
+        } else {
+          alert("Failed to create banner. Please check the server connection.");
+        }
+      }
+    } finally {
+      setIsSavingUpcomingBanner(false);
+    }
+  };
+
+  const handleDeleteUpcomingBanner = async (id: number) => {
+    if (window.confirm("Are you sure you want to delete this upcoming product banner?")) {
+      await deleteUpcomingBanner(id);
+    }
+  };
+
+  const handleUpcomingImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingUpcomingImg(true);
+    const uploadedUrl = await uploadImageFile(file);
+    setIsUploadingUpcomingImg(false);
+    if (uploadedUrl) {
+      setUpcomingForm((prev) => ({ ...prev, image_url: uploadedUrl }));
     }
     e.target.value = "";
   };
@@ -909,6 +1027,21 @@ export const Admin: React.FC = () => {
               }`}
           >
             <ImageIcon className="w-4 h-4 text-[#E67E22]" /> Homepage Banners
+          </button>
+
+          <button
+            onClick={() => setActiveTab("upcoming-banners")}
+            className={`px-5 py-2.5 rounded-full font-extrabold text-xs uppercase tracking-wider inline-flex items-center gap-2 transition-all ${activeTab === "upcoming-banners"
+              ? "bg-[#0E382E] text-white shadow-md"
+              : "bg-white text-[#0E382E] hover:bg-[#E8F1E9]"
+              }`}
+          >
+            <Sparkles className="w-4 h-4 text-[#E67E22]" /> Upcoming Banners
+            {upcomingBanners.length > 0 && (
+              <span className="ml-1 px-2 py-0.5 text-[10px] font-black rounded-full bg-[#E67E22] text-white">
+                {upcomingBanners.length}
+              </span>
+            )}
           </button>
 
           <button
@@ -1563,6 +1696,160 @@ export const Admin: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Tab 8.1: Upcoming Product Launches & Banners Management */}
+        {activeTab === "upcoming-banners" && (
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#74B487]/40 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#74B487]/20 pb-5">
+              <div>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E67E22]/15 text-[#E67E22] text-[11px] font-black uppercase tracking-wider mb-2">
+                  <Sparkles className="w-3.5 h-3.5" /> Homepage Pipeline Showcase
+                </span>
+                <h3 className="text-xl font-extrabold text-[#0E382E]">
+                  Upcoming Product Launches & Banners
+                </h3>
+                <p className="text-xs text-[#1F684B] mt-0.5">
+                  These banners are displayed in a rich wide banner carousel on the Home page, directly above the "Featured Product Stories" section.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => fetchUpcomingBanners(true)}
+                  className="px-3.5 py-2.5 border border-[#74B487]/40 text-[#0E382E] hover:bg-[#E8F1E9] text-xs font-bold rounded-xl transition-colors inline-flex items-center gap-1.5"
+                  title="Reload banners from database"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-[#1F684B]" /> Refresh
+                </button>
+                <button
+                  type="button"
+                  onClick={openNewUpcomingBannerModal}
+                  className="px-5 py-2.5 bg-[#0E382E] hover:bg-[#E67E22] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md inline-flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" /> Add Upcoming Banner
+                </button>
+              </div>
+            </div>
+
+            {isLoadingUpcomingBanners ? (
+              <div className="py-16 text-center text-[#1F684B] flex flex-col items-center justify-center gap-2">
+                <Loader2 className="w-6 h-6 animate-spin text-[#E67E22]" />
+                <span className="text-xs font-semibold">Loading upcoming banners from server...</span>
+              </div>
+            ) : upcomingBanners.length === 0 ? (
+              <div className="p-12 text-center bg-[#F6F5F0] rounded-2xl border-2 border-dashed border-[#74B487]/40 space-y-4">
+                <div className="w-14 h-14 rounded-full bg-[#E8F1E9] flex items-center justify-center mx-auto text-[#0E382E]">
+                  <Sparkles className="w-7 h-7 text-[#E67E22]" />
+                </div>
+                <div>
+                  <h4 className="text-base font-extrabold text-[#0E382E]">No Upcoming Product Banners</h4>
+                  <p className="text-xs text-[#1F684B] max-w-md mx-auto mt-1">
+                    Add upcoming banners with teasers, photos, and launch dates to create hype for products currently in your pipeline.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={openNewUpcomingBannerModal}
+                  className="px-5 py-2.5 bg-[#0E382E] hover:bg-[#E67E22] text-white text-xs font-extrabold rounded-xl transition-all inline-flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" /> Create First Banner
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-5">
+                {upcomingBanners.map((banner, idx) => (
+                  <div
+                    key={banner.id}
+                    className="p-5 sm:p-6 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/30 hover:border-[#74B487] transition-all flex flex-col lg:flex-row gap-5 items-start lg:items-center justify-between shadow-xs"
+                  >
+                    {/* Thumbnail Image */}
+                    <div className="relative w-full lg:w-56 h-36 rounded-xl overflow-hidden bg-stone-200 shrink-0 border border-[#74B487]/30 shadow-xs">
+                      {banner.image_url ? (
+                        <img
+                          src={banner.image_url}
+                          alt={banner.title}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = "/dust-wellness-combo-advertisement.webp";
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-stone-400 font-bold">
+                          No Image
+                        </div>
+                      )}
+                      <span className="absolute top-2 left-2 bg-[#0E382E]/90 text-[#F6F5F0] text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-xs">
+                        Slide #{idx + 1}
+                      </span>
+                    </div>
+
+                    {/* Banner Content Details */}
+                    <div className="flex-1 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="bg-[#E67E22] text-white text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                          {banner.tagline || "COMING SOON"}
+                        </span>
+                        {banner.launch_date && (
+                          <span className="bg-[#0E382E] text-[#74B487] text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                            {banner.launch_date}
+                          </span>
+                        )}
+                        <span className="text-[11px] text-stone-500 font-medium">
+                          Order: {banner.display_order ?? idx + 1}
+                        </span>
+                      </div>
+
+                      <h4 className="text-base sm:text-lg font-black text-[#0E382E] leading-snug">
+                        {banner.title}
+                      </h4>
+
+                      {banner.subtitle && (
+                        <p className="text-xs font-semibold text-[#1F684B] leading-relaxed">
+                          {banner.subtitle}
+                        </p>
+                      )}
+
+                      {banner.description && (
+                        <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
+                          {banner.description}
+                        </p>
+                      )}
+
+                      <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px]">
+                        <span className="font-bold text-[#0E382E]">
+                          CTA: <span className="text-[#E67E22] underline">{banner.cta_text || "Pre-Order Inquiry"}</span>
+                        </span>
+                        <span className="text-stone-400">•</span>
+                        <span className="text-stone-500 font-medium">
+                          Link: <code className="bg-white px-1.5 py-0.5 rounded text-[10px]">{banner.cta_link || "/combos"}</code>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-2 w-full lg:w-auto justify-end shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-[#74B487]/20">
+                      <button
+                        type="button"
+                        onClick={() => openEditUpcomingBannerModal(banner)}
+                        className="px-4 py-2 bg-[#0E382E] hover:bg-[#1F684B] text-white text-xs font-extrabold rounded-xl transition-colors inline-flex items-center gap-1.5 shadow-xs"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" /> Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteUpcomingBanner(banner.id)}
+                        className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-extrabold rounded-xl transition-colors inline-flex items-center gap-1.5 border border-rose-200"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -2876,6 +3163,228 @@ export const Admin: React.FC = () => {
                 Close Preview
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add / Edit Upcoming Product Banner Modal */}
+      {isUpcomingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs overflow-y-auto animate-fade-in">
+          <div className="relative w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-8 border border-[#74B487]/40 shadow-2xl space-y-6 my-8 max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="flex justify-between items-center border-b border-[#74B487]/20 pb-4">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#E67E22] bg-[#E67E22]/15 px-2.5 py-0.5 rounded-full">
+                  {editingUpcomingBanner ? "Edit Existing Banner" : "Create New Banner"}
+                </span>
+                <h3 className="text-xl font-extrabold text-[#0E382E] mt-1">
+                  {editingUpcomingBanner ? "Edit Upcoming Product Banner" : "Add Upcoming Product Banner"}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsUpcomingModalOpen(false)}
+                className="w-9 h-9 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveUpcomingBanner} className="space-y-5 text-xs">
+              {/* Title & Subtitle */}
+              <div>
+                <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                  Banner Title / Product Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Ayurvedic Herbal Haircare & Pure Fruit Powders"
+                  value={upcomingForm.title}
+                  onChange={(e) => setUpcomingForm({ ...upcomingForm, title: e.target.value })}
+                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                  Subtitle / High-Concept Hook
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Next-Generation Heritage Wellness Formulations Inspired by Nature"
+                  value={upcomingForm.subtitle}
+                  onChange={(e) => setUpcomingForm({ ...upcomingForm, subtitle: e.target.value })}
+                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
+                />
+              </div>
+
+              {/* Tagline & Launch Date */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                    Tagline Badge
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. COMING SOON • IN THE PIPELINE"
+                    value={upcomingForm.tagline}
+                    onChange={(e) => setUpcomingForm({ ...upcomingForm, tagline: e.target.value })}
+                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                    Expected Launch Date
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Expected Launch: Q1 2027"
+                    value={upcomingForm.launch_date}
+                    onChange={(e) => setUpcomingForm({ ...upcomingForm, launch_date: e.target.value })}
+                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
+                  />
+                </div>
+              </div>
+
+              {/* Banner Image Upload & URL */}
+              <div className="space-y-3 p-4 bg-[#E8F1E9]/40 rounded-2xl border border-[#74B487]/40">
+                <label className="block font-bold text-[#0E382E] uppercase">
+                  Showcase Banner Image *
+                </label>
+
+                {/* Upload from device */}
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <label className="flex-1 cursor-pointer bg-white border border-[#74B487]/60 hover:bg-[#E8F1E9] text-[#0E382E] px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-2xs">
+                    <Upload className="w-4 h-4 text-[#E67E22]" />
+                    <span>{isUploadingUpcomingImg ? "Uploading Image..." : "Upload Photo from Laptop / Mobile"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleUpcomingImageUpload}
+                      disabled={isUploadingUpcomingImg}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+
+                {/* Fallback image URL input */}
+                <div>
+                  <label className="block text-[11px] font-bold text-[#1F684B] uppercase mb-1">
+                    Or Enter Image URL / Public Path
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="/dust-wellness-combo-advertisement.webp or https://..."
+                    value={upcomingForm.image_url}
+                    onChange={(e) => setUpcomingForm({ ...upcomingForm, image_url: e.target.value })}
+                    className="w-full bg-white border border-[#74B487]/40 rounded-xl p-2.5 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
+                  />
+                </div>
+
+                {/* Preview Box */}
+                {upcomingForm.image_url && (
+                  <div className="pt-2">
+                    <p className="text-[10px] font-bold text-[#1F684B] uppercase mb-1">Live Image Preview:</p>
+                    <div className="relative w-full h-40 rounded-xl overflow-hidden bg-stone-900 border border-[#74B487]/50 shadow-inner">
+                      <img
+                        src={upcomingForm.image_url}
+                        alt="Upcoming Banner Preview"
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).src = "/dust-wellness-combo-advertisement.webp";
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                  Teaser Description
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Share a teaser of the ingredients, formulation process, or health benefits..."
+                  value={upcomingForm.description}
+                  onChange={(e) => setUpcomingForm({ ...upcomingForm, description: e.target.value })}
+                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
+                />
+              </div>
+
+              {/* CTA Details & Display Order */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                    CTA Button Text
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Pre-Order Inquiry"
+                    value={upcomingForm.cta_text}
+                    onChange={(e) => setUpcomingForm({ ...upcomingForm, cta_text: e.target.value })}
+                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                    CTA Button Link
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. /combos or /contact"
+                    value={upcomingForm.cta_link}
+                    onChange={(e) => setUpcomingForm({ ...upcomingForm, cta_link: e.target.value })}
+                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-[#0E382E] uppercase mb-1">
+                    Display Order
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={upcomingForm.display_order}
+                    onChange={(e) => setUpcomingForm({ ...upcomingForm, display_order: parseInt(e.target.value) || 0 })}
+                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4 border-t border-[#74B487]/20">
+                <button
+                  type="button"
+                  onClick={() => setIsUpcomingModalOpen(false)}
+                  className="w-1/2 bg-stone-100 hover:bg-stone-200 text-stone-700 py-3 rounded-xl font-bold uppercase transition-colors"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isSavingUpcomingBanner}
+                  className="w-1/2 bg-[#0E382E] hover:bg-[#E67E22] text-white py-3 rounded-xl font-bold uppercase transition-colors shadow-md inline-flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isSavingUpcomingBanner ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Saving...
+                    </>
+                  ) : editingUpcomingBanner ? (
+                    "Save Changes"
+                  ) : (
+                    "Create Banner"
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

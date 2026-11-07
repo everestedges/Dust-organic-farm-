@@ -36,6 +36,7 @@ import almondCollage from "@/assets/almond-powder-collage.webp";
 import cashewCollage from "@/assets/cashew-powder-collage.webp";
 import shampooInfographic from "@/assets/shampoo-infographic.webp";
 import { CustomerTestimonials } from "@/components/cinematic/CustomerTestimonials";
+import { UpcomingProductBanner } from "@/components/cinematic/UpcomingProductBanner";
 
 const homeHeroBanners = [
   {
@@ -363,6 +364,9 @@ export const Home: React.FC = () => {
           <span>•</span>
         </div>
       </section>
+
+      {/* Upcoming Products Showcase Banner */}
+      <UpcomingProductBanner />
 
       {/* 3. Featured Editorial Product Showcase */}
       <section id="catalogue" className="py-20 px-4 sm:px-8 md:px-12 lg:px-16 w-full">
