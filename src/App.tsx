@@ -7,6 +7,7 @@ import { CartDrawer } from "@/components/cinematic/CartDrawer";
 import { QuickViewModal } from "@/components/cinematic/QuickViewModal";
 import { SearchOverlay } from "@/components/cinematic/SearchOverlay";
 import { WhatsAppWidget } from "@/components/cinematic/WhatsAppWidget";
+import { InstagramFloatingWidget } from "@/components/cinematic/InstagramFloatingWidget";
 import { Footer } from "@/components/cinematic/Footer";
 import { AuthModal } from "@/components/cinematic/AuthModal";
 
@@ -95,6 +96,7 @@ export default function App() {
         <QuickViewModal />
         <SearchOverlay />
         <WhatsAppWidget />
+        <InstagramFloatingWidget />
         <AuthModal />
       </div>
     </BrowserRouter>

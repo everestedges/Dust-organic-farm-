@@ -27,6 +27,8 @@ import {
   Download,
   ExternalLink,
   Quote,
+  Instagram,
+  Facebook,
 } from "lucide-react";
 import { companyInfo } from "@/lib/data";
 import farmerWastedHarvest from "@/assets/farmer-wasted-harvest.webp";
@@ -678,6 +680,30 @@ export const About: React.FC = () => {
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Founder & Authorized Signatory</span>
               </div>
+
+              {/* Founder Social Links */}
+              <div className="mt-4 flex items-center gap-2.5">
+                <a
+                  href="https://www.instagram.com/dust_india/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white text-xs font-bold shadow-sm hover:opacity-95 hover:scale-105 transition-all"
+                  aria-label="Follow Chetan Shelar on Instagram"
+                >
+                  <Instagram className="w-3.5 h-3.5" />
+                  <span>Instagram</span>
+                </a>
+                <a
+                  href="https://www.facebook.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#1877F2] text-white text-xs font-bold shadow-sm hover:bg-[#166fe5] hover:scale-105 transition-all"
+                  aria-label="Follow Chetan Shelar on Facebook"
+                >
+                  <Facebook className="w-3.5 h-3.5" />
+                  <span>Facebook</span>
+                </a>
+              </div>
             </div>
 
             {/* Right Column: Founder Narrative & Vision */}
@@ -732,6 +758,36 @@ export const About: React.FC = () => {
                 <p className="italic font-medium text-[#0E382E]">
                   His vision is to build DUST™ into a trusted Indian brand, proudly inspired by nature and created for everyday living.
                 </p>
+              </div>
+
+              {/* Connect with Founder */}
+              <div className="p-4 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/40 flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#E67E22]" />
+                  <span className="text-xs font-black uppercase tracking-wider text-[#0E382E]">
+                    Follow Chetan Shelar & DUST:
+                  </span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <a
+                    href="https://www.instagram.com/dust_india/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] text-white text-xs font-bold shadow-xs hover:opacity-95 hover:scale-105 transition-all"
+                  >
+                    <Instagram className="w-3.5 h-3.5" />
+                    <span>Instagram</span>
+                  </a>
+                  <a
+                    href="https://www.facebook.com/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#1877F2] text-white text-xs font-bold shadow-xs hover:bg-[#166fe5] hover:scale-105 transition-all"
+                  >
+                    <Facebook className="w-3.5 h-3.5" />
+                    <span>Facebook</span>
+                  </a>
+                </div>
               </div>
 
               {/* Tagline Motto Footer */}
