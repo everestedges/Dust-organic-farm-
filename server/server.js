@@ -81,6 +81,15 @@ async function initDatabaseTables() {
       )
     `).catch(() => {});
 
+    // Site settings table (for editable ticker bar, store announcements, etc.)
+    await query(`
+      CREATE TABLE IF NOT EXISTS site_settings (
+        setting_key VARCHAR(100) PRIMARY KEY,
+        setting_value LONGTEXT NOT NULL,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `).catch(() => {});
+
     // Clean up demo banner so section is hidden by default until admin posts a real upcoming product
     await query("DELETE FROM upcoming_banners WHERE title = 'Ayurvedic Herbal Haircare & Pure Fruit Powders'").catch(() => {});
 
@@ -1351,6 +1360,58 @@ app.delete("/api/upcoming-banners/:id", async (req, res) => {
     return res.json({ success: true, message: "Upcoming banner deleted successfully" });
   } catch (err) {
     console.error("❌ Delete upcoming banner error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /api/ticker - Get marquee ticker content
+app.get("/api/ticker", async (req, res) => {
+  try {
+    const rows = await query("SELECT setting_value FROM site_settings WHERE setting_key = 'marquee_ticker' LIMIT 1").catch(() => []);
+    if (Array.isArray(rows) && rows.length > 0 && rows[0].setting_value) {
+      try {
+        const parsed = JSON.parse(rows[0].setting_value);
+        return res.json({ success: true, items: parsed });
+      } catch (e) {
+        return res.json({ success: true, items: [rows[0].setting_value] });
+      }
+    }
+    // Default fallback items
+    return res.json({
+      success: true,
+      items: [
+        "DUST — CHOICE OF MOTHERLAND",
+        "NOT MADE FOR EVERYONE • MADE FOR THOSE WHO CHOOSE BETTER",
+        "WHOLESOME LADDOO PREMIX & DRY FRUITS",
+        "PAAN DIGESTIVE SHOTS",
+        "ZERO ADDED SUGAR",
+        "100% NATURAL NUTRITION"
+      ]
+    });
+  } catch (err) {
+    console.error("❌ Get ticker error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/ticker - Update marquee ticker content from admin panel
+app.post("/api/ticker", async (req, res) => {
+  try {
+    const { items } = req.body;
+    if (!items) {
+      return res.status(400).json({ success: false, error: "Items are required" });
+    }
+    const valueToStore = typeof items === "string" ? items : JSON.stringify(items);
+    await query(
+      `INSERT INTO site_settings (setting_key, setting_value)
+       VALUES ('marquee_ticker', ?)
+       ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)`,
+      [valueToStore]
+    );
+    console.log("📢 [MySQL] Updated marquee ticker content");
+    return res.json({ success: true, message: "Ticker content updated successfully" });
+  } catch (err) {
+    console.error("❌ Update ticker error:", err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });

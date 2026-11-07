@@ -42,6 +42,7 @@ import { useAdminAuthStore } from "@/lib/admin-auth-store";
 import { useTestimonialsStore, Testimonial } from "@/lib/testimonials-store";
 import { useProductsStore } from "@/lib/products-store";
 import { useUpcomingBannersStore, UpcomingBanner } from "@/lib/upcoming-banners-store";
+import { useTickerStore, DEFAULT_TICKER_ITEMS } from "@/lib/ticker-store";
 
 export const Admin: React.FC = () => {
   const navigate = useNavigate();
@@ -92,6 +93,45 @@ export const Admin: React.FC = () => {
   });
   const [isUploadingUpcomingImg, setIsUploadingUpcomingImg] = useState(false);
   const [isSavingUpcomingBanner, setIsSavingUpcomingBanner] = useState(false);
+
+  // State: Multicolor Marquee Ticker Bar Store
+  const {
+    items: tickerItems,
+    fetchTicker,
+    updateTicker,
+    isLoading: isTickerLoading,
+  } = useTickerStore();
+  const [tickerInput, setTickerInput] = useState("");
+  const [isSavingTicker, setIsSavingTicker] = useState(false);
+  const [tickerSaveSuccess, setTickerSaveSuccess] = useState(false);
+
+  useEffect(() => {
+    fetchTicker();
+  }, [fetchTicker]);
+
+  useEffect(() => {
+    if (tickerItems && tickerItems.length > 0) {
+      setTickerInput(tickerItems.join("\n"));
+    }
+  }, [tickerItems]);
+
+  const handleSaveTicker = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingTicker(true);
+    setTickerSaveSuccess(false);
+    const cleaned = tickerInput
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const ok = await updateTicker(cleaned.length > 0 ? cleaned : DEFAULT_TICKER_ITEMS);
+    setIsSavingTicker(false);
+    if (ok) {
+      setTickerSaveSuccess(true);
+      setTimeout(() => setTickerSaveSuccess(false), 3000);
+    } else {
+      alert("Failed to save ticker content to server.");
+    }
+  };
 
   // State: Testimonials & Video Stories Store
   const {
@@ -1674,7 +1714,7 @@ export const Admin: React.FC = () => {
 
         {/* Tab 8: Homepage Banner Management (#10) */}
         {activeTab === "banners" && (
-          <div className="bg-white p-8 rounded-3xl border border-[#74B487]/40 shadow-sm space-y-6">
+          <div className="bg-white p-8 rounded-3xl border border-[#74B487]/40 shadow-sm space-y-8">
             <div>
               <h3 className="text-xl font-extrabold text-[#0E382E]">Homepage Hero Slides & Banner Control</h3>
               <p className="text-xs text-[#1F684B]">Update promotional hero banners and call-to-action buttons.</p>
@@ -1695,6 +1735,97 @@ export const Admin: React.FC = () => {
                   </button>
                 </div>
               ))}
+            </div>
+
+            {/* Multicolor Marquee Ticker Bar Section */}
+            <div className="pt-8 border-t border-[#74B487]/30 space-y-5">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#E67E22]/15 text-[#E67E22] text-[11px] font-black uppercase tracking-wider mb-1">
+                    <Sparkles className="w-3.5 h-3.5" /> Multicolor Scrolling Strip
+                  </span>
+                  <h4 className="text-lg font-black text-[#0E382E]">
+                    Homepage Multicolor Announcement Ticker
+                  </h4>
+                  <p className="text-xs text-[#1F684B]">
+                    Controls the scrolling banner with your 5 custom gradient colors (#cee4b7, #f1d990, #fab683, #bc6660, #bee9c8) directly below the Hero section.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setTickerInput(DEFAULT_TICKER_ITEMS.join("\n"))}
+                  className="px-3 py-1.5 border border-[#74B487]/40 text-[#0E382E] hover:bg-[#E8F1E9] text-xs font-bold rounded-xl transition-colors"
+                >
+                  Load Default Phrases
+                </button>
+              </div>
+
+              {/* Live Preview Box */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-bold text-stone-500 uppercase tracking-wider">
+                  Live Banner Gradient Preview:
+                </span>
+                <div
+                  style={{
+                    background:
+                      "linear-gradient(90deg, #cee4b7 0%, #f1d990 25%, #fab683 50%, #bc6660 75%, #bee9c8 100%)",
+                  }}
+                  className="p-3.5 rounded-xl border border-[#bc6660]/40 overflow-hidden shadow-xs"
+                >
+                  <div className="flex items-center gap-4 text-xs font-black uppercase tracking-wider text-[#0E382E] whitespace-nowrap overflow-x-auto py-0.5">
+                    {(tickerInput ? tickerInput.split("\n").filter(Boolean) : DEFAULT_TICKER_ITEMS).map((item, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-2 shrink-0">
+                        <span>{item}</span>
+                        <span className="text-[#0E382E]/40">•</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Form */}
+              <form onSubmit={handleSaveTicker} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#0E382E] uppercase mb-1.5">
+                    Announcement Phrases (Enter 1 phrase per line):
+                  </label>
+                  <textarea
+                    rows={6}
+                    value={tickerInput}
+                    onChange={(e) => setTickerInput(e.target.value)}
+                    placeholder="DUST — CHOICE OF MOTHERLAND&#10;NOT MADE FOR EVERYONE • MADE FOR THOSE WHO CHOOSE BETTER&#10;WHOLESOME LADDOO PREMIX & DRY FRUITS&#10;PAAN DIGESTIVE SHOTS&#10;ZERO ADDED SUGAR&#10;100% NATURAL NUTRITION"
+                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-2xl p-4 text-[#0E382E] font-semibold text-xs leading-relaxed focus:outline-none focus:border-[#0E382E]"
+                  />
+                  <p className="text-[11px] text-stone-500 mt-1">
+                    Tip: Separate each phrase with a new line. You can include promotional offers, seasonal discounts (e.g. Diwali Sale / Free Shipping), or product benefits.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={isSavingTicker}
+                    className="px-6 py-3 bg-[#0E382E] hover:bg-[#E67E22] text-white text-xs font-black uppercase tracking-wider rounded-xl transition-all shadow-md inline-flex items-center gap-2 disabled:opacity-50"
+                  >
+                    {isSavingTicker ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" /> Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4" /> Save Ticker Bar Changes
+                      </>
+                    )}
+                  </button>
+
+                  {tickerSaveSuccess && (
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-3 py-2 rounded-xl inline-flex items-center gap-1.5">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Saved successfully to website!
+                    </span>
+                  )}
+                </div>
+              </form>
             </div>
           </div>
         )}

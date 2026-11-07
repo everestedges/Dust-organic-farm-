@@ -37,6 +37,7 @@ import cashewCollage from "@/assets/cashew-powder-collage.webp";
 import shampooInfographic from "@/assets/shampoo-infographic.webp";
 import { CustomerTestimonials } from "@/components/cinematic/CustomerTestimonials";
 import { UpcomingProductBanner } from "@/components/cinematic/UpcomingProductBanner";
+import { useTickerStore } from "@/lib/ticker-store";
 
 const homeHeroBanners = [
   {
@@ -93,6 +94,11 @@ export const Home: React.FC = () => {
   const [activeHeroBannerIdx, setActiveHeroBannerIdx] = useState(0);
   const { addToCart, toggleWishlist, isInWishlist, setQuickViewProduct } =
     useCartStore();
+  const { items: tickerItems, fetchTicker } = useTickerStore();
+
+  useEffect(() => {
+    fetchTicker();
+  }, [fetchTicker]);
 
   const handleBuyNow = (product: Product) => {
     addToCart(product, 1);
@@ -304,64 +310,48 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Marquee Accent Strip */}
-      <section className="bg-[#E67E22] text-white py-3.5 overflow-hidden shadow-inner flex border-y border-[#D35400] select-none">
-        <div className="flex gap-8 whitespace-nowrap animate-marquee font-extrabold text-xs tracking-[0.25em] uppercase pr-8">
-          <span className="flex items-center gap-2">
-            <Award className="w-4 h-4 text-white" /> DUST — CHOICE OF MOTHERLAND
-          </span>
-          <span>•</span>
-          <span className="bg-[#0E382E] text-white px-3 py-0.5 rounded-full border border-white/30">
-            NOT MADE FOR EVERYONE • MADE FOR THOSE WHO CHOOSE BETTER
-          </span>
-          <span>•</span>
-          <span>Wholesome Laddoo Premix & DRY FRUITS</span>
-          <span>•</span>
-          <span>ROYAL PAAN DIGESTIVE SHOT</span>
-          <span>•</span>
-          <span>ZERO ADDED SUGAR</span>
-          <span>•</span>
-          <span className="flex items-center gap-2">
-            <Award className="w-4 h-4 text-white" /> DUST — CHOICE OF MOTHERLAND
-          </span>
-          <span>•</span>
-          <span className="bg-[#0E382E] text-white px-3 py-0.5 rounded-full border border-white/30">
-            NOT MADE FOR EVERYONE • MADE FOR THOSE WHO CHOOSE BETTER
-          </span>
-          <span>•</span>
-          <span>Wholesome Laddoo Premix & DRY FRUITS</span>
-          <span>•</span>
-          <span>ZERO ADDED SUGAR</span>
-          <span>•</span>
+      {/* Marquee Accent Strip (Multicolor Gradient) */}
+      <section
+        style={{
+          background:
+            "linear-gradient(90deg, #cee4b7 0%, #f1d990 25%, #fab683 50%, #bc6660 75%, #bee9c8 100%)",
+        }}
+        className="py-3 sm:py-3.5 overflow-hidden shadow-xs flex border-y border-[#bc6660]/30 select-none text-[#0E382E]"
+      >
+        <div className="flex gap-8 whitespace-nowrap animate-marquee font-black text-xs sm:text-[13px] tracking-[0.18em] uppercase pr-8 items-center">
+          {tickerItems.map((item, idx) => (
+            <React.Fragment key={`ticker-1-${idx}`}>
+              <span className="flex items-center gap-2">
+                {item.toLowerCase().includes("motherland") && <Award className="w-4 h-4 text-[#0E382E]" />}
+                {item.includes("NOT MADE FOR EVERYONE") ? (
+                  <span className="bg-[#0E382E] text-[#F6F5F0] px-3.5 py-0.5 rounded-full shadow-xs tracking-wider">
+                    {item}
+                  </span>
+                ) : (
+                  <span>{item}</span>
+                )}
+              </span>
+              <span className="text-[#0E382E]/40 font-bold">•</span>
+            </React.Fragment>
+          ))}
         </div>
 
-        <div aria-hidden="true" className="flex gap-8 whitespace-nowrap animate-marquee font-extrabold text-xs tracking-[0.25em] uppercase pr-8">
-          <span className="flex items-center gap-2">
-            <Award className="w-4 h-4 text-white" /> DUST — CHOICE OF MOTHERLAND
-          </span>
-          <span>•</span>
-          <span className="bg-[#0E382E] text-white px-3 py-0.5 rounded-full border border-white/30">
-            NOT MADE FOR EVERYONE • MADE FOR THOSE WHO CHOOSE BETTER
-          </span>
-          <span>•</span>
-          <span>Wholesome Laddoo Premix & DRY FRUITS</span>
-          <span>•</span>
-          <span>ROYAL PAAN DIGESTIVE SHOT</span>
-          <span>•</span>
-          <span>ZERO ADDED SUGAR</span>
-          <span>•</span>
-          <span className="flex items-center gap-2">
-            <Award className="w-4 h-4 text-white" /> DUST — CHOICE OF MOTHERLAND
-          </span>
-          <span>•</span>
-          <span className="bg-[#0E382E] text-white px-3 py-0.5 rounded-full border border-white/30">
-            NOT MADE FOR EVERYONE • MADE FOR THOSE WHO CHOOSE BETTER
-          </span>
-          <span>•</span>
-          <span>Wholesome Laddoo Premix & DRY FRUITS</span>
-          <span>•</span>
-          <span>ZERO ADDED SUGAR</span>
-          <span>•</span>
+        <div aria-hidden="true" className="flex gap-8 whitespace-nowrap animate-marquee font-black text-xs sm:text-[13px] tracking-[0.18em] uppercase pr-8 items-center">
+          {tickerItems.map((item, idx) => (
+            <React.Fragment key={`ticker-2-${idx}`}>
+              <span className="flex items-center gap-2">
+                {item.toLowerCase().includes("motherland") && <Award className="w-4 h-4 text-[#0E382E]" />}
+                {item.includes("NOT MADE FOR EVERYONE") ? (
+                  <span className="bg-[#0E382E] text-[#F6F5F0] px-3.5 py-0.5 rounded-full shadow-xs tracking-wider">
+                    {item}
+                  </span>
+                ) : (
+                  <span>{item}</span>
+                )}
+              </span>
+              <span className="text-[#0E382E]/40 font-bold">•</span>
+            </React.Fragment>
+          ))}
         </div>
       </section>
 
