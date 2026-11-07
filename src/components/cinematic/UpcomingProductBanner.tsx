@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Sparkles, ArrowRight, ChevronLeft, ChevronRight, Calendar, Bell } from "lucide-react";
+import { Sparkles, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
 import { useUpcomingBannersStore, UpcomingBanner } from "@/lib/upcoming-banners-store";
 
 export const UpcomingProductBanner: React.FC = () => {
@@ -93,23 +92,7 @@ export const UpcomingProductBanner: React.FC = () => {
               </p>
             )}
 
-            {/* CTA and Inquiry Actions */}
-            <div className="pt-2 flex flex-wrap items-center gap-3">
-              <Link
-                to={currentBanner.cta_link || "/combos"}
-                className="btn-dust-orange py-3.5 px-6 text-white font-extrabold text-xs uppercase tracking-widest rounded-xl transition-all flex items-center gap-2 shadow-lg hover:shadow-orange-500/20"
-              >
-                {currentBanner.cta_text || "Pre-Order Inquiry"}
-                <ArrowRight className="w-4 h-4" />
-              </Link>
 
-              <Link
-                to="/contact"
-                className="py-3.5 px-6 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-[#F6F5F0] font-extrabold text-xs uppercase tracking-widest transition-colors flex items-center gap-2"
-              >
-                <Bell className="w-3.5 h-3.5 text-[#E67E22]" /> Notify Me
-              </Link>
-            </div>
           </div>
         </div>
 
