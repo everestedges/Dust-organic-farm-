@@ -81,26 +81,8 @@ async function initDatabaseTables() {
       )
     `).catch(() => {});
 
-    // Seed default upcoming banner if empty
-    const existingBanners = await query("SELECT id FROM upcoming_banners LIMIT 1").catch(() => []);
-    if (Array.isArray(existingBanners) && existingBanners.length === 0) {
-      await query(
-        `INSERT INTO upcoming_banners (title, subtitle, tagline, launch_date, image_url, description, cta_text, cta_link, display_order, is_active)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          "Ayurvedic Herbal Haircare & Pure Fruit Powders",
-          "Next Generation Heritage Formulations Inspired by Nature",
-          "COMING SOON • IN THE PIPELINE",
-          "Expected Launch: Q1 2027",
-          "/dust-wellness-combo-advertisement.webp",
-          "Handcrafted with 100% natural herbs, zero synthetic preservatives, and authentic farm-fresh ingredients.",
-          "Pre-Order Inquiry",
-          "/combos",
-          1,
-          1
-        ]
-      ).catch(() => {});
-    }
+    // Clean up demo banner so section is hidden by default until admin posts a real upcoming product
+    await query("DELETE FROM upcoming_banners WHERE title = 'Ayurvedic Herbal Haircare & Pure Fruit Powders'").catch(() => {});
 
     await query("ALTER TABLE orders MODIFY COLUMN order_status VARCHAR(50) DEFAULT 'Pending'").catch(() => {});
     await query("ALTER TABLE orders MODIFY COLUMN payment_status VARCHAR(50) DEFAULT 'PAID'").catch(() => {});

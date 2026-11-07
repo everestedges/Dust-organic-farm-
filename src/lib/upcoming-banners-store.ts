@@ -29,25 +29,8 @@ const API_BASE =
     ? "/api"
     : "http://localhost:5000/api";
 
-const defaultBanners: UpcomingBanner[] = [
-  {
-    id: 1,
-    title: "Ayurvedic Herbal Haircare & Pure Fruit Powders",
-    subtitle: "Next-Generation Heritage Wellness Formulations Inspired by Nature",
-    tagline: "COMING SOON • IN THE PIPELINE",
-    launch_date: "Expected Launch: Q1 2027",
-    image_url: "/dust-wellness-combo-advertisement.webp",
-    description:
-      "Handcrafted with 100% natural herbs, zero synthetic preservatives, and authentic farm-fresh ingredients. Formulated for modern daily nutrition.",
-    cta_text: "Pre-Order Inquiry",
-    cta_link: "/combos",
-    display_order: 1,
-    is_active: 1,
-  },
-];
-
 export const useUpcomingBannersStore = create<UpcomingBannersState>((set, get) => ({
-  banners: defaultBanners,
+  banners: [],
   isLoading: false,
 
   fetchBanners: async (all = false) => {
@@ -58,7 +41,7 @@ export const useUpcomingBannersStore = create<UpcomingBannersState>((set, get) =
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.success && Array.isArray(data.banners) && data.banners.length > 0) {
+        if (data.success && Array.isArray(data.banners)) {
           set({ banners: data.banners });
         }
       }
