@@ -100,6 +100,10 @@ async function initDatabaseTables() {
     await query("UPDATE products SET price = 649, compare_price = 749 WHERE price <= 0 AND (slug LIKE '%cashew%' OR name LIKE '%Cashew%')").catch(() => {});
     await query("UPDATE products SET price = 246, compare_price = 299 WHERE price <= 0 AND (slug LIKE '%shampoo%' OR name LIKE '%Shampoo%')").catch(() => {});
 
+    // Ensure product name is updated from Banarasi Paan to Paan Digestive Shots in live MySQL database
+    await query("UPDATE products SET name = 'Paan Digestive Shots' WHERE name LIKE '%Banarasi Paan%'").catch(() => {});
+    await query("UPDATE products SET data_json = REPLACE(data_json, 'Banarasi Paan', 'Paan') WHERE data_json LIKE '%Banarasi Paan%'").catch(() => {});
+
     // Also repair data_json if it had price: 0
     const zeroJsonRows = await query("SELECT id, slug, name, price, data_json FROM products WHERE data_json LIKE '%\"price\":0%'").catch(() => []);
     if (Array.isArray(zeroJsonRows)) {

@@ -62,7 +62,7 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
     customerName: "Vikramaditya Singh",
     location: "Civil Lines, Jaipur",
     productSlug: "banarasi-paan-01",
-    productName: "Banarasi Paan Digestive Shots",
+    productName: "Paan Digestive Shots",
     rating: 5,
     title: "Authentic royal paan experience after celebratory dinners",
     comment:
@@ -139,7 +139,7 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
     customerName: "Ishita Banerjee",
     location: "Assi Ghat, Varanasi",
     productSlug: "banarasi-paan-01",
-    productName: "Banarasi Paan Digestive Shots",
+    productName: "Paan Digestive Shots",
     rating: 5,
     title: "My Banarasi grandmother approved — highest certification!",
     comment:

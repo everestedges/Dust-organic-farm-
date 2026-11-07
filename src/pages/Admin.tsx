@@ -2318,7 +2318,7 @@ export const Admin: React.FC = () => {
                       required
                       value={newProductName}
                       onChange={(e) => setNewProductName(e.target.value)}
-                      placeholder="e.g. Royal Banarasi Paan Digestive Shots"
+                      placeholder="e.g. Royal Paan Digestive Shots"
                       className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
                     />
                   </div>
