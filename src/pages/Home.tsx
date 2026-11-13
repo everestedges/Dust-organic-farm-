@@ -173,9 +173,9 @@ export const Home: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Full-Width Cinematic Hero Banner Slider */}
-      <section className="relative w-full aspect-[4/3] sm:aspect-[16/10] lg:aspect-[3/2] max-h-[88vh] min-h-[420px] sm:min-h-[500px] overflow-hidden select-none bg-[#0E382E]">
-        {/* Sliding Full-Width Banner Images */}
+      {/* 2. Full-Width & Full-Height Cinematic Hero Banner Slider */}
+      <section className="relative w-full h-screen min-h-[600px] overflow-hidden select-none bg-black">
+        {/* Sliding Full-Width & Full-Height Banner Images */}
         {homeHeroBanners.map((banner, idx) => (
           <div
             key={idx}
@@ -183,26 +183,16 @@ export const Home: React.FC = () => {
               activeHeroBannerIdx === idx ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
             }`}
           >
-            {/* Ambient blurred backdrop so wide screens fill seamlessly with banner colors */}
-            <img
-              src={banner.image}
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 w-full h-full object-cover blur-2xl opacity-40 scale-110 pointer-events-none"
-            />
-
-            {/* Full Unclipped Banner Image */}
             <img
               src={banner.image}
               alt={banner.alt}
               fetchPriority={idx === 0 ? "high" : "low"}
               loading={idx === 0 ? "eager" : "lazy"}
               decoding="async"
-              className="relative z-10 w-full h-full object-contain object-center"
+              className="w-full h-full object-cover object-center"
             />
-
             {/* Cinematic Contrast Overlay */}
-            <div className="absolute inset-0 z-10 bg-gradient-to-t from-black/80 via-black/40 to-black/30 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/30" />
           </div>
         ))}
 
