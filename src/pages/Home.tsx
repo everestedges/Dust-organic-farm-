@@ -174,7 +174,7 @@ export const Home: React.FC = () => {
       )}
 
       {/* 2. Full-Width & Full-Height Cinematic Hero Banner Slider */}
-      <section className="relative w-full h-screen min-h-[600px] overflow-hidden select-none bg-black">
+      <section className="relative w-full aspect-[3/2] overflow-hidden select-none bg-black">
         {/* Sliding Full-Width & Full-Height Banner Images */}
         {homeHeroBanners.map((banner, idx) => (
           <div
