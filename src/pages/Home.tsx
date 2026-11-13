@@ -173,130 +173,92 @@ export const Home: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Hero Section */}
-      <section className="relative min-h-[90vh] flex flex-col justify-between pt-36 pb-12 px-4 sm:px-8 md:px-12 lg:px-16 w-full overflow-hidden">
-        {/* Ambient glow backgrounds */}
-        <div className="absolute bottom-10 right-10 w-[450px] h-[450px] bg-[#E67E22]/5 rounded-full blur-[130px] pointer-events-none" />
+      {/* 2. Full-Width Cinematic Hero Banner Slider */}
+      <section className="relative w-full h-[75vh] sm:h-[82vh] lg:h-[88vh] min-h-[520px] overflow-hidden select-none">
+        {/* Sliding Full-Width Banner Images */}
+        {homeHeroBanners.map((banner, idx) => (
+          <div
+            key={idx}
+            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+              activeHeroBannerIdx === idx ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
+            }`}
+          >
+            <img
+              src={banner.image}
+              alt={banner.alt}
+              fetchPriority={idx === 0 ? "high" : "low"}
+              loading={idx === 0 ? "eager" : "lazy"}
+              decoding="async"
+              className="w-full h-full object-cover object-center"
+            />
+            {/* Cinematic Contrast Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/45 to-black/35" />
+          </div>
+        ))}
 
-        <div className="relative z-10 my-auto text-center md:text-left grid grid-cols-1 lg:grid-cols-12 gap-8 xl:gap-12 items-center pt-4">
-          <div className="lg:col-span-6 xl:col-span-5 space-y-6">
-            <div className="inline-flex items-center gap-2 sm:gap-3 px-4 py-1.5 bg-[#0E382E] border-2 border-[#E67E22] rounded-full text-white text-xs font-extrabold uppercase tracking-wider shadow-md">
-              <span className="text-[#E67E22] font-black">✦</span>
-              <span className="text-white/90 font-extrabold tracking-[0.14em]">NOT MADE FOR EVERYONE</span>
-              <span className="text-[#E67E22] font-black">•</span>
-              <span className="text-[#E67E22] font-black tracking-[0.14em]">MADE FOR THOSE WHO CHOOSE BETTER</span>
-            </div>
-
-            <div className="text-xs uppercase tracking-[0.25em] text-[#E67E22] font-extrabold flex items-center justify-center md:justify-start gap-2">
-              <Sparkles className="w-4 h-4" /> DUST — CHOICE OF MOTHERLAND
-            </div>
-
-            <h1 className="text-4xl sm:text-5xl xl:text-6xl 2xl:text-7xl font-extrabold text-[#0E382E] tracking-tight leading-[1.05]">
+        {/* Steady Overlay Content (Constant across all sliding banners) */}
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-4 sm:px-8 pointer-events-none pt-16 sm:pt-20">
+          <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 pointer-events-auto animate-fade-in">
+            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.1] drop-shadow-lg">
               ROOTED IN NATURE. <br />
-              <span className="text-[#E67E22]">
+              <span className="text-[#fab683]">
                 MADE FOR MODERN INDIA.
               </span>
             </h1>
 
-            <p className="text-base sm:text-lg text-[#1F684B] max-w-xl font-normal leading-relaxed">
-              Discover nourishing food blends, fruit-powered refreshments, everyday nutrition and nature-inspired personal care — thoughtfully brought together for modern living.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-4 pt-4 justify-center md:justify-start">
+            <div>
               <Link
-                to="/shop"
-                className="px-8 py-4 btn-dust-orange text-white font-extrabold text-xs uppercase tracking-[0.2em] rounded-full transition-all flex items-center gap-3 shadow-lg hover:scale-105"
-                data-cursor="SHOP"
+                to="/collections"
+                className="px-8 sm:px-10 py-3.5 sm:py-4 bg-white hover:bg-[#E67E22] text-[#0E382E] hover:text-white font-extrabold text-xs sm:text-sm uppercase tracking-[0.25em] rounded-full transition-all duration-300 shadow-2xl hover:scale-105 inline-flex items-center gap-2.5 cursor-pointer"
               >
-                Explore Catalogue <ArrowUpRight className="w-4 h-4" />
+                <span>Explore</span>
+                <ArrowUpRight className="w-4 h-4" />
               </Link>
-              <Link
-                to="/collections/wholesome-millets"
-                className="px-8 py-4 bg-[#E8F1E9] hover:bg-[#74B487]/20 border border-[#74B487] text-[#0E382E] text-xs font-extrabold uppercase tracking-[0.2em] rounded-full transition-all hover:scale-105"
-              >
-                Wholesome Laddoo Premix
-              </Link>
-            </div>
-          </div>
-
-          {/* Hero Visual Spotlight: Auto-changing Banner Carousel (Expanded on Desktop) */}
-          <div className="lg:col-span-6 xl:col-span-7 relative flex flex-col items-center justify-center w-full">
-            <div className="relative group w-full max-w-xl xl:max-w-2xl 2xl:max-w-3xl aspect-[3/2] rounded-3xl overflow-hidden border-2 border-[#74B487]/50 bg-white shadow-2xl">
-              {homeHeroBanners.map((banner, idx) => (
-                <div
-                  key={idx}
-                  className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-                    activeHeroBannerIdx === idx ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
-                  }`}
-                >
-                  <img
-                    src={banner.image}
-                    alt={banner.alt}
-                    fetchPriority={idx === 0 ? "high" : "low"}
-                    loading={idx === 0 ? "eager" : "lazy"}
-                    decoding="async"
-                    className="w-full h-full object-contain object-center bg-white"
-                  />
-                </div>
-              ))}
-
-              {/* Prev / Next Controls on hover */}
-              <button
-                type="button"
-                onClick={() =>
-                  setActiveHeroBannerIdx(
-                    (prev) => (prev - 1 + homeHeroBanners.length) % homeHeroBanners.length
-                  )
-                }
-                aria-label="Previous banner"
-                className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-black/60 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all opacity-80 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer shadow-lg"
-              >
-                <ChevronLeft className="w-5 sm:w-6 h-5 sm:h-6" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() =>
-                  setActiveHeroBannerIdx((prev) => (prev + 1) % homeHeroBanners.length)
-                }
-                aria-label="Next banner"
-                className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-black/60 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all opacity-80 sm:opacity-0 sm:group-hover:opacity-100 cursor-pointer shadow-lg"
-              >
-                <ChevronRight className="w-5 sm:w-6 h-5 sm:h-6" />
-              </button>
-            </div>
-
-            {/* Slide Navigation Controls */}
-            <div className="w-full max-w-xl xl:max-w-2xl 2xl:max-w-3xl pt-3 flex items-center justify-center">
-              <div className="flex items-center gap-2 bg-white px-3.5 py-1.5 rounded-full border border-[#74B487]/40 shadow-xs">
-                {homeHeroBanners.map((_, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setActiveHeroBannerIdx(idx)}
-                    aria-label={`Switch to banner ${idx + 1}`}
-                    className={`h-2.5 rounded-full transition-all duration-300 cursor-pointer ${
-                      activeHeroBannerIdx === idx ? "w-7 bg-[#E67E22]" : "w-2.5 bg-stone-300 hover:bg-stone-400"
-                    }`}
-                  />
-                ))}
-                <span className="text-[10px] font-black uppercase tracking-wider text-[#0E382E] ml-1 pl-1.5 border-l border-stone-200">
-                  0{activeHeroBannerIdx + 1} / 0{homeHeroBanners.length}
-                </span>
-              </div>
             </div>
           </div>
         </div>
 
-        {/* Scroll Indicator */}
-        <div className="relative z-10 flex justify-center pt-8">
-          <a
-            href="#catalogue"
-            className="flex flex-col items-center gap-2 text-[#1F684B] hover:text-[#E67E22] transition-colors text-xs uppercase tracking-widest font-extrabold"
-          >
-            <span>DISCOVER CREATIONS</span>
-            <ChevronDown className="w-4 h-4 animate-bounce text-[#E67E22]" />
-          </a>
+        {/* Prev / Next Controls */}
+        <button
+          type="button"
+          onClick={() =>
+            setActiveHeroBannerIdx(
+              (prev) => (prev - 1 + homeHeroBanners.length) % homeHeroBanners.length
+            )
+          }
+          aria-label="Previous banner"
+          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-black/40 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all cursor-pointer shadow-lg hover:scale-105"
+        >
+          <ChevronLeft className="w-5 sm:w-6 h-5 sm:h-6" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() =>
+            setActiveHeroBannerIdx((prev) => (prev + 1) % homeHeroBanners.length)
+          }
+          aria-label="Next banner"
+          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-black/40 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all cursor-pointer shadow-lg hover:scale-105"
+        >
+          <ChevronRight className="w-5 sm:w-6 h-5 sm:h-6" />
+        </button>
+
+        {/* Slider Bottom Indicators */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/20">
+          {homeHeroBanners.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => setActiveHeroBannerIdx(idx)}
+              aria-label={`Switch to banner ${idx + 1}`}
+              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                activeHeroBannerIdx === idx ? "w-8 bg-white" : "w-2.5 bg-white/40 hover:bg-white/70"
+              }`}
+            />
+          ))}
+          <span className="text-[10px] font-black uppercase tracking-wider text-white ml-1.5 pl-2 border-l border-white/30">
+            0{activeHeroBannerIdx + 1} / 0{homeHeroBanners.length}
+          </span>
         </div>
       </section>
 
