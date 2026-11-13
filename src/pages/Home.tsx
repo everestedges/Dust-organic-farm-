@@ -34,21 +34,11 @@ import aboutBannerFarmWaste from "@/assets/about-banner-farm-waste.webp";
 import aboutBannerLaddoo from "@/assets/about-banner-laddoo.webp";
 import almondCollage from "@/assets/almond-powder-collage.webp";
 import cashewCollage from "@/assets/cashew-powder-collage.webp";
-import shampooInfographic from "@/assets/shampoo-infographic.webp";
 import { CustomerTestimonials } from "@/components/cinematic/CustomerTestimonials";
 import { UpcomingProductBanner } from "@/components/cinematic/UpcomingProductBanner";
 import { useTickerStore } from "@/lib/ticker-store";
 
 const homeHeroBanners = [
-  {
-    image: shampooInfographic,
-    alt: "DUST Natural Powder Shampoo for Men - 5 Traditional Herbs",
-    title: "DUST™ Natural Powder Shampoo",
-    subtitle: "Designed for Men | 5 Traditional Herbs | No-Foam Mask",
-    price: "₹246",
-    tag: "HERBAL GROOMING",
-    productIndex: 2,
-  },
   {
     image: cashewCollage,
     alt: "DUST Premium Cashew Powder - Pure Cashew Goodness",
