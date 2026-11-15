@@ -242,24 +242,6 @@ export const Home: React.FC = () => {
         >
           <ChevronRight className="w-4 sm:w-6 h-4 sm:h-6" />
         </button>
-
-        {/* Slider Bottom Indicators */}
-        <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2 bg-black/50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full backdrop-blur-md border border-white/20">
-          {homeHeroBanners.map((_, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => setActiveHeroBannerIdx(idx)}
-              aria-label={`Switch to banner ${idx + 1}`}
-              className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                activeHeroBannerIdx === idx ? "w-6 sm:w-8 bg-white" : "w-2 sm:w-2.5 bg-white/40 hover:bg-white/70"
-              }`}
-            />
-          ))}
-          <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-white ml-1 pl-1.5 border-l border-white/30">
-            0{activeHeroBannerIdx + 1} / 0{homeHeroBanners.length}
-          </span>
-        </div>
       </section>
 
       {/* Marquee Accent Strip (Multicolor Gradient) */}
