@@ -174,7 +174,7 @@ export const Home: React.FC = () => {
       )}
 
       {/* 2. Full-Width & Full-Height Cinematic Hero Banner Slider */}
-      <section className="relative w-full aspect-[3/2] overflow-hidden select-none bg-black">
+      <section className="relative w-full h-[82vh] min-h-[540px] md:h-auto md:min-h-0 md:aspect-[3/2] overflow-hidden select-none bg-black">
         {/* Sliding Full-Width & Full-Height Banner Images */}
         {homeHeroBanners.map((banner, idx) => (
           <div
@@ -192,14 +192,14 @@ export const Home: React.FC = () => {
               className="w-full h-full object-cover object-center"
             />
             {/* Cinematic Contrast Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/35 to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/30" />
           </div>
         ))}
 
         {/* Steady Overlay Content (Constant across all sliding banners) */}
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center px-4 sm:px-8 pointer-events-none pt-16 sm:pt-20">
-          <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 pointer-events-auto animate-fade-in">
-            <h1 className="text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white tracking-tight leading-[1.1] drop-shadow-lg">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-end md:justify-center text-center px-4 sm:px-8 pb-16 sm:pb-20 md:pb-0 pointer-events-none">
+          <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 md:space-y-8 pointer-events-auto animate-fade-in">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold text-white tracking-tight leading-snug md:leading-[1.1] drop-shadow-xl">
               ROOTED IN NATURE. <br />
               <span className="text-[#fab683]">
                 MADE FOR MODERN INDIA.
@@ -209,7 +209,7 @@ export const Home: React.FC = () => {
             <div>
               <Link
                 to="/shop"
-                className="px-8 sm:px-10 py-3.5 sm:py-4 bg-white hover:bg-[#E67E22] text-[#0E382E] hover:text-white font-extrabold text-xs sm:text-sm uppercase tracking-[0.25em] rounded-full transition-all duration-300 shadow-2xl hover:scale-105 inline-flex items-center gap-2.5 cursor-pointer"
+                className="px-7 sm:px-10 py-3 sm:py-3.5 bg-white hover:bg-[#E67E22] text-[#0E382E] hover:text-white font-black text-xs sm:text-sm uppercase tracking-[0.25em] rounded-md sm:rounded-full transition-all duration-300 shadow-2xl hover:scale-105 inline-flex items-center gap-2 cursor-pointer border border-stone-200"
               >
                 <span>Explore</span>
                 <ArrowUpRight className="w-4 h-4" />
@@ -227,9 +227,9 @@ export const Home: React.FC = () => {
             )
           }
           aria-label="Previous banner"
-          className="absolute left-3 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-black/40 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all cursor-pointer shadow-lg hover:scale-105"
+          className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all cursor-pointer shadow-lg hover:scale-105"
         >
-          <ChevronLeft className="w-5 sm:w-6 h-5 sm:h-6" />
+          <ChevronLeft className="w-4 sm:w-6 h-4 sm:h-6" />
         </button>
 
         <button
@@ -238,25 +238,25 @@ export const Home: React.FC = () => {
             setActiveHeroBannerIdx((prev) => (prev + 1) % homeHeroBanners.length)
           }
           aria-label="Next banner"
-          className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-10 sm:w-12 h-10 sm:h-12 rounded-full bg-black/40 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all cursor-pointer shadow-lg hover:scale-105"
+          className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all cursor-pointer shadow-lg hover:scale-105"
         >
-          <ChevronRight className="w-5 sm:w-6 h-5 sm:h-6" />
+          <ChevronRight className="w-4 sm:w-6 h-4 sm:h-6" />
         </button>
 
         {/* Slider Bottom Indicators */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-white/20">
+        <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 sm:gap-2 bg-black/50 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full backdrop-blur-md border border-white/20">
           {homeHeroBanners.map((_, idx) => (
             <button
               key={idx}
               type="button"
               onClick={() => setActiveHeroBannerIdx(idx)}
               aria-label={`Switch to banner ${idx + 1}`}
-              className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
-                activeHeroBannerIdx === idx ? "w-8 bg-white" : "w-2.5 bg-white/40 hover:bg-white/70"
+              className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                activeHeroBannerIdx === idx ? "w-6 sm:w-8 bg-white" : "w-2 sm:w-2.5 bg-white/40 hover:bg-white/70"
               }`}
             />
           ))}
-          <span className="text-[10px] font-black uppercase tracking-wider text-white ml-1.5 pl-2 border-l border-white/30">
+          <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-white ml-1 pl-1.5 border-l border-white/30">
             0{activeHeroBannerIdx + 1} / 0{homeHeroBanners.length}
           </span>
         </div>
