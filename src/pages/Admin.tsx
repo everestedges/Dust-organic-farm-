@@ -36,6 +36,7 @@ import {
   Loader2,
   AlertCircle,
   Sparkles,
+  Truck,
 } from "lucide-react";
 import { products as initialProducts, companyInfo, Product } from "@/lib/data";
 import { useAdminAuthStore } from "@/lib/admin-auth-store";
@@ -395,7 +396,10 @@ export const Admin: React.FC = () => {
               payment: `${o.payment_status || "PAID"} (${o.payment_method || "UPI"})`,
               status: o.order_status || "Pending",
               items: o.items_summary || "1x DUST Blend",
-              awb: o.tracking_awb || "Pending Dispatch",
+              awb: o.velocity_awb || o.tracking_awb || "Pending Dispatch",
+              courier: o.courier_name || "",
+              labelUrl: o.velocity_label_url || "",
+              velocityStatus: o.velocity_status || "",
               date: o.created_at
                 ? new Date(o.created_at).toLocaleDateString("en-IN", {
                     day: "numeric",
@@ -872,6 +876,31 @@ export const Admin: React.FC = () => {
 
   const handleUpdatePrice = async (id: string, newPrice: number) => {
     await updateProductPrice(id, newPrice);
+  };
+
+  const [isShippingVelocity, setIsShippingVelocity] = useState<string | null>(null);
+
+  const handleShipWithVelocity = async (orderRef: string) => {
+    setIsShippingVelocity(orderRef);
+    try {
+      const res = await fetch(`${API_BASE}/orders/${orderRef}/ship-velocity`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(
+          `✅ Order ${orderRef} dispatched with Velocity!\nAWB: ${data.awb}\nCourier: ${data.courier || "Assigned"}`
+        );
+        fetchLiveDatabaseData();
+      } else {
+        alert(`❌ Velocity Shipping Error: ${data.message || "Failed to dispatch"}`);
+      }
+    } catch (err: any) {
+      alert(`Network error dispatching order: ${err.message}`);
+    } finally {
+      setIsShippingVelocity(null);
+    }
   };
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
@@ -1572,7 +1601,55 @@ export const Admin: React.FC = () => {
                             {order.status}
                           </span>
                         </td>
-                        <td className="p-4 font-mono text-[11px] text-[#0E382E]">{order.awb}</td>
+                        <td className="p-4">
+                          {order.awb && order.awb !== "Pending Dispatch" ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-1.5 font-mono text-[11px] font-bold text-[#0E382E]">
+                                <Truck className="w-3.5 h-3.5 text-[#25D366] shrink-0" />
+                                <span>{order.awb}</span>
+                              </div>
+                              {order.courier && (
+                                <span className="block text-[10px] text-[#1F684B] font-bold">
+                                  {order.courier}
+                                </span>
+                              )}
+                              {order.labelUrl && (
+                                <a
+                                  href={order.labelUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-black tracking-wider transition-colors shadow-2xs"
+                                  title="Download / Print Courier Label"
+                                >
+                                  🖨️ Label
+                                </a>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="space-y-1">
+                              <span className="text-[10px] text-stone-400 font-mono italic block">
+                                Not Dispatched
+                              </span>
+                              <button
+                                type="button"
+                                disabled={isShippingVelocity === order.id}
+                                onClick={() => handleShipWithVelocity(order.id)}
+                                className="px-2 py-1 bg-[#E67E22] hover:bg-[#d67018] text-white rounded text-[10px] font-extrabold inline-flex items-center gap-1 transition-all shadow-2xs cursor-pointer disabled:opacity-50"
+                              >
+                                <Truck className="w-3 h-3" />
+                                {isShippingVelocity === order.id ? "Shipping..." : "Ship via Velocity"}
+                              </button>
+                              {order.velocityStatus && order.velocityStatus.startsWith("Failed") && (
+                                <span
+                                  className="block text-[9px] text-rose-600 font-medium truncate max-w-[130px]"
+                                  title={order.velocityStatus}
+                                >
+                                  {order.velocityStatus}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </td>
                         <td className="p-4 text-right space-x-2 whitespace-nowrap">
                           <select
                             value={order.status}

@@ -1,22 +1,104 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, Truck, CheckCircle2, Clock, MapPin, Package, ShieldCheck } from "lucide-react";
+import { Search, Truck, CheckCircle2, Clock, MapPin, Package, ExternalLink, AlertCircle } from "lucide-react";
 import { companyInfo } from "@/lib/data";
+
+interface LiveTrackOrder {
+  reference: string;
+  status: string;
+  customerName: string;
+  city: string;
+  state: string;
+  awb: string | null;
+  courierName: string;
+  trackingUrl: string | null;
+  labelUrl: string | null;
+  orderDate: string;
+}
 
 export const OrderTracking: React.FC = () => {
   const [searchParams] = useSearchParams();
   const initialId = searchParams.get("id") || "";
   const [searchQuery, setSearchQuery] = useState(initialId);
-  const [searched, setSearched] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [orderData, setOrderData] = useState<LiveTrackOrder | null>(null);
 
-  const trackingSteps = [
-    { label: "Order Received", desc: "Order placed & confirmed", status: "completed", date: "26 Aug, 10:15 AM" },
-    { label: "Payment Verified", desc: "Razorpay 256-bit SSL Paid", status: "completed", date: "26 Aug, 10:16 AM" },
-    { label: "Packed at Pune Hub", desc: "Hygienically packed in Ravet, Pune", status: "completed", date: "26 Aug, 02:30 PM" },
-    { label: "Handed to Courier", desc: "Shiprocket Express Air Airway Bill #SR-994821", status: "active", date: "In Transit" },
-    { label: "Out for Delivery", desc: "Assigned to local delivery agent", status: "pending", date: "Expected Tomorrow" },
-    { label: "Delivered", desc: "Package delivered to recipient", status: "pending", date: "--" },
-  ];
+  const fetchTracking = async (term: string) => {
+    if (!term.trim()) return;
+    setLoading(true);
+    setErrorMsg(null);
+    try {
+      const apiBase =
+        typeof window !== "undefined" && window.location.hostname !== "localhost"
+          ? "/api"
+          : "http://localhost:5000/api";
+      const res = await fetch(`${apiBase}/orders/track?q=${encodeURIComponent(term.trim())}`);
+      const data = await res.json();
+      if (res.ok && data.success && data.order) {
+        setOrderData(data.order);
+      } else {
+        setOrderData(null);
+        setErrorMsg(data.message || "No order found with this Order ID or Phone number.");
+      }
+    } catch (err: any) {
+      setOrderData(null);
+      setErrorMsg("Network error connecting to tracking system: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (initialId) {
+      fetchTracking(initialId);
+    }
+  }, [initialId]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchTracking(searchQuery);
+  };
+
+  const getTimeline = () => {
+    const isDispatched = !!orderData?.awb || orderData?.status === "Handed to Courier" || orderData?.status === "Shipped" || orderData?.status === "Delivered";
+    const isDelivered = orderData?.status === "Delivered";
+
+    return [
+      {
+        label: "Order Placed & Confirmed",
+        desc: "Order registered in live system",
+        status: "completed",
+        date: orderData?.orderDate ? new Date(orderData.orderDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "Confirmed",
+      },
+      {
+        label: "Packed at Pune Hub",
+        desc: "Hygienically packed at Ravet Warehouse, Pune",
+        status: "completed",
+        date: "Completed",
+      },
+      {
+        label: "Dispatched via Velocity Courier",
+        desc: orderData?.awb
+          ? `${orderData.courierName || "Velocity Express"} — AWB: ${orderData.awb}`
+          : "AWB generation in progress",
+        status: isDispatched ? (isDelivered ? "completed" : "active") : "pending",
+        date: isDispatched ? "In Transit" : "Preparing",
+      },
+      {
+        label: "Out for Delivery",
+        desc: `Delivery agent arriving in ${orderData?.city || "your city"}`,
+        status: isDelivered ? "completed" : "pending",
+        date: isDelivered ? "Done" : "Expected in 2-3 Days",
+      },
+      {
+        label: "Delivered",
+        desc: "Package handed to customer",
+        status: isDelivered ? "completed" : "pending",
+        date: isDelivered ? "Delivered" : "--",
+      },
+    ];
+  };
 
   return (
     <div className="pt-32 pb-24 px-4 sm:px-8 md:px-12 lg:px-16 w-full min-h-screen bg-[#F6F5F0] text-[#0E382E]">
@@ -24,73 +106,100 @@ export const OrderTracking: React.FC = () => {
         {/* Search Header */}
         <div className="space-y-4 text-center">
           <span className="text-xs uppercase tracking-[0.25em] text-[#E67E22] font-extrabold flex items-center justify-center gap-2">
-            <Truck className="w-4 h-4" /> LIVE SHIPMENT TRACKING
+            <Truck className="w-4 h-4" /> LIVE VELOCITY SHIPMENT TRACKING
           </span>
           <h1 className="text-4xl sm:text-5xl font-extrabold text-[#0E382E]">
             Track Your DUST Order
           </h1>
           <p className="text-xs text-[#1F684B] max-w-md mx-auto">
-            Enter your Order ID (e.g. DST-8600-9482) or registered 10-digit mobile number to track real-time delivery status.
+            Enter your Order Reference ID (e.g. DST-8600-1234), AWB Number, or 10-digit mobile number.
           </p>
 
-          <form onSubmit={(e) => { e.preventDefault(); setSearched(true); }} className="max-w-md mx-auto flex gap-2 pt-2">
+          <form onSubmit={handleSearch} className="max-w-md mx-auto flex gap-2 pt-2">
             <div className="relative flex-1">
               <Search className="w-4 h-4 text-stone-400 absolute left-4 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Order ID or Mobile Number"
+                placeholder="Order ID, AWB, or Phone"
                 className="w-full bg-white border border-[#74B487]/40 rounded-full pl-11 pr-4 py-3 text-xs outline-none focus:border-[#E67E22] font-mono shadow-xs"
               />
             </div>
             <button
               type="submit"
-              className="btn-dust-orange px-6 py-3 text-white font-extrabold text-xs uppercase tracking-wider rounded-full shadow-md"
+              disabled={loading}
+              className="btn-dust-orange px-6 py-3 text-white font-extrabold text-xs uppercase tracking-wider rounded-full shadow-md cursor-pointer disabled:opacity-50"
             >
-              Track
+              {loading ? "Searching..." : "Track"}
             </button>
           </form>
         </div>
 
-        {searched && (
-          <div className="bg-white p-8 sm:p-12 rounded-3xl border border-[#74B487]/40 shadow-xl space-y-8">
+        {errorMsg && (
+          <div className="max-w-md mx-auto p-4 bg-rose-50 border border-rose-300 rounded-2xl text-rose-800 text-xs flex items-center gap-2.5 font-medium">
+            <AlertCircle className="w-5 h-5 shrink-0 text-rose-600" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+
+        {orderData && (
+          <div className="bg-white p-8 sm:p-12 rounded-3xl border border-[#74B487]/40 shadow-xl space-y-8 animate-fade-in">
             {/* Status Summary Banner */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 bg-[#E8F1E9] rounded-2xl border border-[#74B487]/40 gap-4">
               <div>
                 <span className="text-[10px] uppercase font-extrabold text-[#E67E22] tracking-widest">
-                  CURRENT SHIPMENT STATUS
+                  ORDER {orderData.reference}
                 </span>
                 <h3 className="text-2xl font-extrabold text-[#0E382E]">
-                  In Transit — Dispatched via Express Air
+                  {orderData.status || "In Transit"}
                 </h3>
                 <p className="text-xs text-[#1F684B] mt-0.5">
-                  Courier Partner: <strong>Shiprocket / Delhivery (AWB: SR-994821)</strong>
+                  Courier Partner:{" "}
+                  <strong>{orderData.courierName || "Velocity Express"}</strong>
+                  {orderData.awb && (
+                    <span className="font-mono ml-1 text-[#0E382E] font-bold">
+                      (AWB: {orderData.awb})
+                    </span>
+                  )}
+                </p>
+                <p className="text-[11px] text-stone-500 mt-1">
+                  Recipient: {orderData.customerName} • Destination: {orderData.city}, {orderData.state}
                 </p>
               </div>
 
-              <div className="bg-[#0E382E] text-white px-5 py-3 rounded-xl text-center shrink-0">
-                <p className="text-[10px] uppercase text-[#E67E22] font-bold">ESTIMATED DELIVERY</p>
-                <p className="text-sm font-extrabold">27–28 August 2026</p>
-              </div>
+              {orderData.awb && (
+                <div className="flex flex-col gap-2 shrink-0 w-full sm:w-auto">
+                  <a
+                    href={`https://shipfastt.in/track/${orderData.awb}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 bg-[#0E382E] hover:bg-[#E67E22] text-white rounded-xl text-xs font-bold transition-all shadow-sm"
+                  >
+                    <span>Track on Velocity</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* Timeline Progress Tracker */}
             <div className="space-y-6">
               <h4 className="text-xs uppercase tracking-widest text-[#0E382E] font-extrabold">
-                Delivery Stages Timeline
+                Live Delivery Stages
               </h4>
 
               <div className="relative pl-6 sm:pl-8 space-y-8 before:absolute before:left-3 sm:before:left-4 before:top-2 before:bottom-2 before:w-0.5 before:bg-[#74B487]/40">
-                {trackingSteps.map((step, idx) => (
+                {getTimeline().map((step, idx) => (
                   <div key={idx} className="relative flex items-start gap-4">
                     <div
-                      className={`absolute -left-6 sm:-left-8 top-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 z-10 ${step.status === "completed"
+                      className={`absolute -left-6 sm:-left-8 top-0 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 z-10 ${
+                        step.status === "completed"
                           ? "bg-[#0E382E] text-white"
                           : step.status === "active"
-                            ? "bg-[#E67E22] text-white animate-pulse"
-                            : "bg-[#F6F5F0] text-stone-400 border border-stone-300"
-                        }`}
+                          ? "bg-[#E67E22] text-white animate-pulse"
+                          : "bg-[#F6F5F0] text-stone-400 border border-stone-300"
+                      }`}
                     >
                       {step.status === "completed" ? (
                         <CheckCircle2 className="w-4 h-4 text-[#25D366]" />
@@ -117,7 +226,7 @@ export const OrderTracking: React.FC = () => {
 
             {/* Support Help */}
             <div className="pt-6 border-t border-[#74B487]/30 flex flex-col sm:flex-row justify-between items-center text-xs text-[#1F684B] font-semibold gap-2">
-              <p>Need help with your delivery? Contact Pune Customer Desk:</p>
+              <p>Need help with your delivery? Contact Customer Support:</p>
               <a href={`tel:${companyInfo.phone}`} className="text-[#E67E22] font-bold hover:underline">
                 Call {companyInfo.phoneFormatted}
               </a>

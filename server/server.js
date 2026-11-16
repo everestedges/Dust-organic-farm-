@@ -96,6 +96,12 @@ async function initDatabaseTables() {
     await query("ALTER TABLE orders MODIFY COLUMN order_status VARCHAR(50) DEFAULT 'Pending'").catch(() => {});
     await query("ALTER TABLE orders MODIFY COLUMN payment_status VARCHAR(50) DEFAULT 'PAID'").catch(() => {});
     await query("ALTER TABLE orders MODIFY COLUMN payment_method VARCHAR(50) DEFAULT 'UPI'").catch(() => {});
+    await query("ALTER TABLE orders ADD COLUMN velocity_order_id VARCHAR(100) NULL").catch(() => {});
+    await query("ALTER TABLE orders ADD COLUMN velocity_shipment_id VARCHAR(100) NULL").catch(() => {});
+    await query("ALTER TABLE orders ADD COLUMN velocity_awb VARCHAR(100) NULL").catch(() => {});
+    await query("ALTER TABLE orders ADD COLUMN velocity_label_url TEXT NULL").catch(() => {});
+    await query("ALTER TABLE orders ADD COLUMN courier_name VARCHAR(100) NULL").catch(() => {});
+    await query("ALTER TABLE orders ADD COLUMN velocity_status VARCHAR(100) NULL").catch(() => {});
     await query("ALTER TABLE products ADD COLUMN data_json LONGTEXT NULL").catch(() => {});
     await query("ALTER TABLE products MODIFY COLUMN category_id INT UNSIGNED NULL").catch(() => {});
     // Purge legacy test duplicate products with numeric slugs (2, 3, 4, 5) and deleted test SKU Hairoil
@@ -614,7 +620,169 @@ app.get("/api/distributor-leads", async (req, res) => {
 });
 
 // ---------------------------------------------------------------------
-// 3. ORDERS ENDPOINTS (Inserts & Fetches from MySQL orders & order_items)
+// 3. VELOCITY SHIPPING INTEGRATION & 100% AUTO-SHIP CONFIGURATION
+// ---------------------------------------------------------------------
+const VELOCITY_CONFIG = {
+  baseUrl: process.env.VELOCITY_BASE_URL || "https://shazam.velocity.in",
+  token:
+    process.env.VELOCITY_TOKEN ||
+    "eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzaGF6YW0iLCJjbGllbnRfaWQiOiI2NmIxZTk0Ny1lNGYzLTQ3YjUtYTk2YS02MTQ4NDBkZjZlMmMiLCJ0aWVyIjoic2lsdmVyIiwidG9rZW4iOiIzNWE5NmYwMTQ1ZGQ2ZGRkNGJkY2RlZWYwMTIyYTcwODE5NGM5YWZmYjhmZmQ4YzZlY2M5ZmIyNzM4NDU0ODM4IiwiZXhwIjoxODI2MDExMjQwfQ.pLW3Jw23js_xesmru3tIosCVS-bEj2znkUqiZ01MXW0",
+  warehouseId: process.env.VELOCITY_WAREHOUSE_ID || "WHX8DG",
+  pickupLocation: process.env.VELOCITY_PICKUP_LOCATION || "D- 907, silver gracia",
+  pickupPincode: "411085",
+  defaultWeight: 0.5,
+  defaultLength: 15,
+  defaultBreadth: 10,
+  defaultHeight: 5,
+};
+
+async function createVelocityShipment(orderData) {
+  try {
+    const isCOD =
+      (orderData.payment_method || orderData.paymentMethod || "").toUpperCase() ===
+      "COD";
+    const totalAmount = Number(orderData.total_amount || orderData.total || 0);
+    const subtotalAmount = Number(
+      orderData.subtotal_amount || orderData.subtotal || totalAmount
+    );
+
+    const now = new Date();
+    const orderDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}-${String(now.getDate()).padStart(2, "0")} ${String(
+      now.getHours()
+    ).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+
+    const rawName = (
+      orderData.customer_name ||
+      orderData.customerName ||
+      "Customer"
+    ).trim();
+    const nameParts = rawName.split(" ");
+    const firstName = nameParts[0] || "Customer";
+    const lastName = nameParts.slice(1).join(" ") || "";
+
+    const rawItems =
+      Array.isArray(orderData.items) && orderData.items.length > 0
+        ? orderData.items
+        : [
+            {
+              name: "DUST Organic Food Product",
+              quantity: 1,
+              price: totalAmount,
+            },
+          ];
+
+    const orderItems = rawItems.map((item, idx) => ({
+      name: String(
+        item.name || item.product_name || "DUST Organic Food Product"
+      ).slice(0, 100),
+      sku: String(item.sku || `DUST-SKU-${idx + 1}`).slice(0, 50),
+      units: Number(item.quantity || 1),
+      selling_price: Number(item.price || item.unit_price || totalAmount),
+      discount: 0,
+      tax: 0,
+    }));
+
+    const cleanPincode = String(orderData.pincode || "411045")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+    const cleanPhone = String(
+      orderData.customer_phone || orderData.customerPhone || "8600694906"
+    )
+      .replace(/\D/g, "")
+      .slice(-10);
+
+    const payload = {
+      order_id: String(orderData.order_reference || orderData.reference),
+      order_date: orderDate,
+      carrier_id: "",
+      billing_customer_name: firstName,
+      billing_last_name: lastName,
+      billing_address: String(
+        orderData.shipping_address || orderData.address || "Pune"
+      ).slice(0, 200),
+      billing_city: String(orderData.city || "Pune"),
+      billing_pincode: cleanPincode || "411045",
+      billing_state: String(orderData.state || "Maharashtra"),
+      billing_country: "India",
+      billing_email: String(
+        orderData.customer_email ||
+          orderData.customerEmail ||
+          "order@dustofficial.com"
+      ),
+      billing_phone: cleanPhone.length === 10 ? cleanPhone : "8600694906",
+      shipping_is_billing: true,
+      print_label: true,
+      order_items: orderItems,
+      payment_method: isCOD ? "COD" : "PREPAID",
+      sub_total: subtotalAmount,
+      cod_collectible: isCOD ? totalAmount : 0,
+      length: Number(orderData.length || VELOCITY_CONFIG.defaultLength),
+      breadth: Number(orderData.breadth || VELOCITY_CONFIG.defaultBreadth),
+      height: Number(orderData.height || VELOCITY_CONFIG.defaultHeight),
+      weight: Number(orderData.weight || VELOCITY_CONFIG.defaultWeight),
+      pickup_location: VELOCITY_CONFIG.pickupLocation,
+      warehouse_id: VELOCITY_CONFIG.warehouseId,
+    };
+
+    console.log(
+      `🚀 [Velocity API] Auto-dispatching forward shipment for Order ${payload.order_id}...`
+    );
+
+    const response = await fetch(
+      `${VELOCITY_CONFIG.baseUrl}/custom/api/v1/forward-order-orchestration`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: VELOCITY_CONFIG.token,
+        },
+        body: JSON.stringify(payload),
+      }
+    );
+
+    const data = await response.json().catch(() => ({}));
+    console.log(
+      `📦 [Velocity API] Response (${response.status}):`,
+      JSON.stringify(data)
+    );
+
+    if (
+      data &&
+      (data.status === 1 || data.status === "SUCCESS") &&
+      data.payload
+    ) {
+      const p = data.payload;
+      return {
+        success: true,
+        awb: p.awb_code || null,
+        courierName: p.courier_name || null,
+        labelUrl: p.label_url || null,
+        velocityOrderId: p.order_id || null,
+        shipmentId: p.shipment_id || null,
+        message: "Dispatched with Velocity successfully!",
+      };
+    } else {
+      const errMsg =
+        data.message ||
+        data.error ||
+        (data.meta && data.meta.message) ||
+        JSON.stringify(data);
+      return {
+        success: false,
+        error: errMsg || "Velocity shipment creation failed",
+      };
+    }
+  } catch (err) {
+    console.error("❌ Velocity Dispatch Exception:", err.message);
+    return { success: false, error: err.message };
+  }
+}
+
+// ---------------------------------------------------------------------
+// 4. ORDERS ENDPOINTS (Inserts & Fetches from MySQL orders & order_items)
 // ---------------------------------------------------------------------
 app.post("/api/orders", async (req, res) => {
   const {
@@ -682,11 +850,73 @@ app.post("/api/orders", async (req, res) => {
       }
     }
 
-    console.log(`✅ [MySQL SUCCESS] Order saved to DB: ${reference} for ${customerName} (Total: ₹${total})`);
-    return res.json({ success: true, message: "Order created successfully!", orderId });
+    console.log(
+      `✅ [MySQL SUCCESS] Order saved to DB: ${reference} for ${customerName} (Total: ₹${total})`
+    );
+
+    // -----------------------------------------------------------------
+    // 100% AUTOMATED AUTO-SHIP: Push order immediately to Velocity API
+    // -----------------------------------------------------------------
+    let velocityDispatch = null;
+    try {
+      velocityDispatch = await createVelocityShipment({
+        order_reference: reference,
+        customer_name: customerName,
+        customer_email: customerEmail,
+        customer_phone: customerPhone,
+        shipping_address: address,
+        city: city || "Pune",
+        state: state || "Maharashtra",
+        pincode: pincode || "",
+        total_amount: total,
+        subtotal_amount: subtotal || total,
+        payment_method: payment,
+        items,
+      });
+
+      if (velocityDispatch && velocityDispatch.success) {
+        await query(
+          `UPDATE orders 
+           SET tracking_awb = ?, velocity_awb = ?, courier_name = ?, velocity_label_url = ?, velocity_order_id = ?, velocity_shipment_id = ?, order_status = 'Handed to Courier', velocity_status = 'Dispatched'
+           WHERE id = ?`,
+          [
+            velocityDispatch.awb,
+            velocityDispatch.awb,
+            velocityDispatch.courierName,
+            velocityDispatch.labelUrl,
+            velocityDispatch.velocityOrderId,
+            velocityDispatch.shipmentId,
+            orderId,
+          ]
+        ).catch(() => {});
+        console.log(
+          `✅ [Velocity SUCCESS] Auto-dispatched order ${reference} - AWB: ${velocityDispatch.awb} via ${velocityDispatch.courierName}`
+        );
+      } else {
+        const failReason = velocityDispatch?.error || "Dispatch failed";
+        await query(
+          "UPDATE orders SET velocity_status = ? WHERE id = ?",
+          [`Failed: ${failReason}`.slice(0, 100), orderId]
+        ).catch(() => {});
+        console.warn(
+          `⚠️ [Velocity WARNING] Order saved in DB, but auto-ship returned: ${failReason}`
+        );
+      }
+    } catch (velErr) {
+      console.warn("⚠️ Velocity auto-dispatch exception:", velErr.message);
+    }
+
+    return res.json({
+      success: true,
+      message: "Order created successfully!",
+      orderId,
+      velocity: velocityDispatch,
+    });
   } catch (err) {
     console.error("❌ MySQL Order Error:", err.message);
-    return res.status(500).json({ success: false, message: "Database error: " + err.message });
+    return res
+      .status(500)
+      .json({ success: false, message: "Database error: " + err.message });
   }
 });
 
@@ -698,6 +928,7 @@ app.get("/api/orders", async (req, res) => {
       SELECT o.id, o.order_reference, o.customer_name, o.customer_email, o.customer_phone,
              o.shipping_address, o.city, o.state, o.pincode, o.subtotal_amount, o.total_amount,
              o.payment_method, o.payment_status, o.order_status, o.tracking_awb, o.created_at,
+             o.velocity_awb, o.velocity_label_url, o.courier_name, o.velocity_status,
              COALESCE(GROUP_CONCAT(CONCAT(oi.quantity, 'x ', oi.product_name) SEPARATOR ', '), '1x DUST Organic Blend') as items_summary
       FROM orders o
       LEFT JOIN order_items oi ON oi.order_id = o.id
@@ -707,12 +938,141 @@ app.get("/api/orders", async (req, res) => {
       sql += " WHERE LOWER(TRIM(o.customer_email)) = LOWER(TRIM(?)) ";
       params.push(email);
     }
-    sql += " GROUP BY o.id, o.order_reference, o.customer_name, o.customer_email, o.customer_phone, o.shipping_address, o.city, o.state, o.pincode, o.subtotal_amount, o.total_amount, o.payment_method, o.payment_status, o.order_status, o.tracking_awb, o.created_at ORDER BY o.id DESC ";
-    
+    sql +=
+      " GROUP BY o.id, o.order_reference, o.customer_name, o.customer_email, o.customer_phone, o.shipping_address, o.city, o.state, o.pincode, o.subtotal_amount, o.total_amount, o.payment_method, o.payment_status, o.order_status, o.tracking_awb, o.created_at, o.velocity_awb, o.velocity_label_url, o.courier_name, o.velocity_status ORDER BY o.id DESC ";
+
     const orders = await query(sql, params);
     return res.json({ success: true, count: orders.length, orders });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /api/orders/:id/ship-velocity - Manually dispatch or re-sync with Velocity
+app.post("/api/orders/:id/ship-velocity", async (req, res) => {
+  const { id } = req.params;
+  try {
+    const orders = await query(
+      "SELECT * FROM orders WHERE id = ? OR order_reference = ? LIMIT 1",
+      [id, id]
+    );
+
+    if (orders.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
+    }
+
+    const order = orders[0];
+    const items = await query(
+      "SELECT * FROM order_items WHERE order_id = ?",
+      [order.id]
+    );
+
+    const result = await createVelocityShipment({
+      order_reference: order.order_reference,
+      customer_name: order.customer_name,
+      customer_email: order.customer_email,
+      customer_phone: order.customer_phone,
+      shipping_address: order.shipping_address,
+      city: order.city,
+      state: order.state,
+      pincode: order.pincode,
+      total_amount: order.total_amount,
+      subtotal_amount: order.subtotal_amount,
+      payment_method: order.payment_method,
+      items: items.map((i) => ({
+        name: i.product_name,
+        quantity: i.quantity,
+        price: i.unit_price,
+      })),
+    });
+
+    if (result.success) {
+      await query(
+        `UPDATE orders 
+         SET tracking_awb = ?, velocity_awb = ?, courier_name = ?, velocity_label_url = ?, velocity_order_id = ?, velocity_shipment_id = ?, order_status = 'Handed to Courier', velocity_status = 'Dispatched'
+         WHERE id = ?`,
+        [
+          result.awb,
+          result.awb,
+          result.courierName,
+          result.labelUrl,
+          result.velocityOrderId,
+          result.shipmentId,
+          order.id,
+        ]
+      );
+      return res.json({
+        success: true,
+        message: "Order dispatched with Velocity successfully!",
+        awb: result.awb,
+        courier: result.courierName,
+        labelUrl: result.labelUrl,
+      });
+    } else {
+      await query("UPDATE orders SET velocity_status = ? WHERE id = ?", [
+        `Failed: ${result.error}`.slice(0, 100),
+        order.id,
+      ]);
+      return res.status(400).json({ success: false, message: result.error });
+    }
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error: " + err.message });
+  }
+});
+
+// GET /api/orders/track - Real-time tracking lookup for customers
+app.get("/api/orders/track", async (req, res) => {
+  const { q } = req.query;
+  if (!q || !q.trim()) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Query parameter q is required" });
+  }
+
+  const queryTerm = q.trim();
+  try {
+    const orders = await query(
+      `SELECT o.id, o.order_reference, o.customer_name, o.customer_phone, o.city, o.state, o.pincode,
+              o.order_status, o.tracking_awb, o.velocity_awb, o.courier_name, o.velocity_label_url, o.created_at
+       FROM orders o
+       WHERE o.order_reference = ? 
+          OR o.tracking_awb = ? 
+          OR o.velocity_awb = ? 
+          OR o.customer_phone LIKE ?
+       ORDER BY o.id DESC LIMIT 1`,
+      [queryTerm, queryTerm, queryTerm, `%${queryTerm.slice(-10)}%`]
+    );
+
+    if (orders.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No order found matching your search.",
+      });
+    }
+
+    const order = orders[0];
+    const awb = order.velocity_awb || order.tracking_awb;
+    return res.json({
+      success: true,
+      order: {
+        reference: order.order_reference,
+        status: order.order_status,
+        customerName: order.customer_name,
+        city: order.city,
+        state: order.state,
+        awb: awb || null,
+        courierName: order.courier_name || "Velocity Express",
+        trackingUrl: awb ? `https://shipfastt.in/track/${awb}` : null,
+        labelUrl: order.velocity_label_url || null,
+        orderDate: order.created_at,
+      },
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, message: err.message });
   }
 });
 
