@@ -198,8 +198,8 @@ export const Home: React.FC = () => {
 
         {/* Steady Overlay Content (Constant across all sliding banners) */}
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-end md:justify-center text-center px-4 sm:px-8 pb-16 sm:pb-20 md:pb-0 pointer-events-none">
-          <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 md:space-y-8 pointer-events-auto animate-fade-in">
-            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-extrabold text-white tracking-tight leading-snug md:leading-[1.1] drop-shadow-xl">
+          <div className="max-w-xl mx-auto space-y-3 sm:space-y-4 md:space-y-5 pointer-events-auto animate-fade-in">
+            <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-snug md:leading-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
               ROOTED IN NATURE. <br />
               <span className="text-[#fab683]">
                 MADE FOR MODERN INDIA.
@@ -209,7 +209,7 @@ export const Home: React.FC = () => {
             <div>
               <Link
                 to="/shop"
-                className="px-7 sm:px-10 py-3 sm:py-3.5 bg-white hover:bg-[#E67E22] text-[#0E382E] hover:text-white font-black text-xs sm:text-sm uppercase tracking-[0.25em] rounded-md sm:rounded-full transition-all duration-300 shadow-2xl hover:scale-105 inline-flex items-center gap-2 cursor-pointer border border-stone-200"
+                className="px-6 sm:px-8 py-2.5 sm:py-3 bg-white hover:bg-[#E67E22] text-[#0E382E] hover:text-white font-black text-xs uppercase tracking-[0.25em] rounded-md sm:rounded-full transition-all duration-300 shadow-xl hover:scale-105 inline-flex items-center gap-1.5 cursor-pointer border border-stone-200"
               >
                 <span>Explore</span>
                 <ArrowUpRight className="w-4 h-4" />
