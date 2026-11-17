@@ -5,7 +5,7 @@ export const InstagramFloatingWidget: React.FC = () => {
   const instagramUrl = "https://www.instagram.com/dust_officials/";
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-2.5 print:hidden">
+    <div className="fixed bottom-6 right-6 z-30 flex flex-col items-end gap-2.5 print:hidden">
       {/* Floating Instagram Button 1: Follow Badge */}
       <a
         href={instagramUrl}

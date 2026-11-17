@@ -11,6 +11,9 @@ import {
   Film,
   Filter,
   Plus,
+  Upload,
+  Video,
+  Loader2,
 } from "lucide-react";
 import { useTestimonialsStore, Testimonial } from "@/lib/testimonials-store";
 import { products } from "@/lib/data";
@@ -49,6 +52,10 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
   const [reviewComment, setReviewComment] = useState("");
   const [isMediaVideo, setIsMediaVideo] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(null);
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const approvedList = testimonials.filter((t) => t.isApproved);
 
@@ -71,9 +78,56 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
     setLikedMap((prev) => ({ ...prev, [id]: true }));
   };
 
-  const handleCreateReview = (e: React.FormEvent) => {
+  const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      alert("Video file size is too large. Please select a video under 50 MB.");
+      return;
+    }
+    setVideoFile(file);
+    setVideoPreview(URL.createObjectURL(file));
+  };
+
+  const handleCreateReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!authorName.trim() || !reviewComment.trim()) return;
+
+    let finalVideoUrl = videoUrl.trim();
+
+    if (isMediaVideo && videoFile) {
+      setIsUploading(true);
+      try {
+        const base64Data = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(videoFile);
+        });
+
+        const apiBase =
+          typeof window !== "undefined" && window.location.hostname !== "localhost"
+            ? "/api"
+            : "http://localhost:5000/api";
+
+        const uploadRes = await fetch(`${apiBase}/upload-video`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ video: base64Data, filename: videoFile.name }),
+        });
+
+        const uploadData = await uploadRes.json();
+        if (uploadRes.ok && uploadData.success && uploadData.url) {
+          finalVideoUrl = uploadData.url;
+        } else {
+          alert(`Video upload failed: ${uploadData.error || "Server error"}. Submitting review without video.`);
+        }
+      } catch (uploadErr: any) {
+        alert(`Error uploading video: ${uploadErr.message}. Submitting review without video.`);
+      } finally {
+        setIsUploading(false);
+      }
+    }
 
     const matchedProduct = products.find(
       (p) => p.slug === selectedProduct || p.id === selectedProduct
@@ -87,8 +141,8 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
       rating,
       title: reviewTitle.trim() || "Wholesome natural taste!",
       comment: reviewComment.trim(),
-      mediaType: isMediaVideo && videoUrl.trim() ? "video" : "text",
-      videoUrl: isMediaVideo && videoUrl.trim() ? videoUrl.trim() : undefined,
+      mediaType: isMediaVideo && finalVideoUrl ? "video" : "text",
+      videoUrl: isMediaVideo && finalVideoUrl ? finalVideoUrl : undefined,
       videoPoster: matchedProduct ? matchedProduct.storyImage : undefined,
       videoDuration: isMediaVideo ? "0:45" : undefined,
       verifiedBuyer: true,
@@ -105,6 +159,9 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
       setReviewTitle("");
       setReviewComment("");
       setVideoUrl("");
+      setVideoFile(null);
+      setVideoPreview(null);
+      setShowUrlInput(false);
       setIsMediaVideo(false);
     }, 1800);
   };
@@ -480,7 +537,7 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
 
       {/* Write a Review Modal */}
       {isWriteReviewOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-fade-in overflow-y-auto">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-fade-in overflow-y-auto">
           <div className="relative w-full max-w-lg bg-white rounded-3xl p-5 sm:p-8 shadow-2xl border border-[#74B487]/40 space-y-4 sm:space-y-5 my-auto max-h-[92vh] overflow-y-auto">
             <button
               onClick={() => setIsWriteReviewOpen(false)}
@@ -608,35 +665,112 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
                   />
                 </div>
 
-                {/* Optional Video Toggle */}
-                <div className="pt-2 border-t border-[#74B487]/20 space-y-2">
+                {/* Optional Video Toggle & Uploader */}
+                <div className="pt-3 border-t border-[#74B487]/20 space-y-3">
                   <label className="flex items-center gap-2 cursor-pointer font-bold text-[#0E382E]">
                     <input
                       type="checkbox"
                       checked={isMediaVideo}
-                      onChange={(e) => setIsMediaVideo(e.target.checked)}
-                      className="rounded accent-[#E67E22] w-4 h-4"
+                      onChange={(e) => {
+                        setIsMediaVideo(e.target.checked);
+                        if (!e.target.checked) {
+                          setVideoFile(null);
+                          setVideoPreview(null);
+                          setVideoUrl("");
+                          setShowUrlInput(false);
+                        }
+                      }}
+                      className="rounded accent-[#E67E22] w-4 h-4 cursor-pointer"
                     />
-                    <span>I have a video review / YouTube / reel link to share</span>
+                    <span className="flex items-center gap-1.5">
+                      <Video className="w-4 h-4 text-[#E67E22]" />
+                      Add a Video Review (Upload from Phone / Device)
+                    </span>
                   </label>
 
                   {isMediaVideo && (
-                    <input
-                      type="url"
-                      placeholder="Enter video URL (MP4 link, YouTube link, Google Drive, or Cloudinary)"
-                      value={videoUrl}
-                      onChange={(e) => setVideoUrl(e.target.value)}
-                      className="w-full p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl text-[#0E382E] text-base sm:text-xs focus:outline-none focus:border-[#E67E22]"
-                    />
+                    <div className="space-y-3 p-3.5 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/40">
+                      {/* Direct Device File Upload */}
+                      <div>
+                        <label className="block text-[11px] font-bold text-[#0E382E] mb-1.5">
+                          Upload Video File from Camera / Gallery:
+                        </label>
+                        <label className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-[#74B487]/60 hover:border-[#E67E22] rounded-xl bg-white cursor-pointer transition-colors group">
+                          <Upload className="w-6 h-6 text-[#1F684B] group-hover:text-[#E67E22] mb-1.5 transition-colors" />
+                          <span className="font-extrabold text-[#0E382E] text-xs text-center">
+                            {videoFile ? videoFile.name : "Tap to Choose Video (MP4, MOV, WebM)"}
+                          </span>
+                          <span className="text-[10px] text-stone-500 mt-0.5">
+                            {videoFile
+                              ? `${(videoFile.size / (1024 * 1024)).toFixed(1)} MB selected • Click to change`
+                              : "Max file size: 50 MB"}
+                          </span>
+                          <input
+                            type="file"
+                            accept="video/mp4,video/webm,video/quicktime,video/*"
+                            onChange={handleVideoFileChange}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+
+                      {/* Video Preview */}
+                      {videoPreview && (
+                        <div className="relative rounded-xl overflow-hidden bg-black max-h-48 flex items-center justify-center">
+                          <video src={videoPreview} controls className="w-full max-h-48 object-contain" />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setVideoFile(null);
+                              setVideoPreview(null);
+                            }}
+                            className="absolute top-2 right-2 bg-black/70 hover:bg-black text-white rounded-full p-1 transition-colors cursor-pointer"
+                            title="Remove video"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Optional Web Link Alternative */}
+                      <div className="pt-1 border-t border-[#74B487]/20">
+                        <button
+                          type="button"
+                          onClick={() => setShowUrlInput(!showUrlInput)}
+                          className="text-[11px] text-[#1F684B] hover:text-[#E67E22] font-bold underline transition-colors cursor-pointer"
+                        >
+                          {showUrlInput
+                            ? "Hide link input"
+                            : "Or paste YouTube / Reel / Video link instead"}
+                        </button>
+                        {showUrlInput && (
+                          <input
+                            type="url"
+                            placeholder="e.g. https://instagram.com/reel/... or https://youtu.be/..."
+                            value={videoUrl}
+                            onChange={(e) => setVideoUrl(e.target.value)}
+                            className="w-full mt-2 p-2.5 bg-white border border-[#74B487]/40 rounded-xl text-[#0E382E] text-base sm:text-xs focus:outline-none focus:border-[#E67E22]"
+                          />
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
 
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-3 bg-[#0E382E] hover:bg-[#E67E22] text-white font-extrabold uppercase tracking-wider rounded-xl transition-colors shadow-sm cursor-pointer text-xs"
+                    disabled={isUploading}
+                    className="w-full py-3.5 bg-[#0E382E] hover:bg-[#E67E22] text-white font-extrabold uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer text-xs disabled:opacity-60 flex items-center justify-center gap-2"
                   >
-                    Submit Review
+                    {isUploading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-[#E67E22]" />
+                        <span>Uploading Video File... Please wait</span>
+                      </>
+                    ) : (
+                      "Submit Review"
+                    )}
                   </button>
                 </div>
               </form>

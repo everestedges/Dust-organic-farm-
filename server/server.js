@@ -1582,6 +1582,53 @@ app.post("/api/upload-image", async (req, res) => {
   }
 });
 
+// POST /api/upload-video - Upload customer review video file and save to /uploads
+app.post("/api/upload-video", async (req, res) => {
+  try {
+    const { video, filename } = req.body;
+    if (!video) {
+      return res.status(400).json({ success: false, error: "No video data provided" });
+    }
+
+    const matches = video.match(/^data:([A-Za-z0-9\-+\/.]+);base64,(.+)$/);
+    let mimeType = "video/mp4";
+    let buffer;
+
+    if (matches && matches.length === 3) {
+      mimeType = matches[1];
+      buffer = Buffer.from(matches[2], "base64");
+    } else {
+      buffer = Buffer.from(video, "base64");
+    }
+
+    let ext = "mp4";
+    if (mimeType.includes("webm")) ext = "webm";
+    else if (mimeType.includes("quicktime") || mimeType.includes("mov")) ext = "mov";
+    else if (mimeType.includes("ogg")) ext = "ogg";
+
+    let safeBase = "customer_review_video";
+    if (filename) {
+      safeBase = filename.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 30);
+    }
+
+    const uniqueName = `${safeBase}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+    const filePath = path.join(uploadsDir, uniqueName);
+
+    await fs.promises.writeFile(filePath, buffer);
+    console.log(`🎥 [Upload] Saved review video: /uploads/${uniqueName} (${(buffer.length / (1024 * 1024)).toFixed(2)} MB)`);
+
+    return res.json({
+      success: true,
+      url: `/uploads/${uniqueName}`,
+      filename: uniqueName,
+      size: buffer.length,
+    });
+  } catch (err) {
+    console.error("❌ Video upload error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // ---------------------------------------------------------------------
 // UPCOMING PRODUCT BANNERS ENDPOINTS
 // ---------------------------------------------------------------------
