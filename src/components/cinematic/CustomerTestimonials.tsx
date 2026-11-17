@@ -480,8 +480,8 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
 
       {/* Write a Review Modal */}
       {isWriteReviewOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fade-in">
-          <div className="relative w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-[#74B487]/40 space-y-5">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-fade-in overflow-y-auto">
+          <div className="relative w-full max-w-lg bg-white rounded-3xl p-5 sm:p-8 shadow-2xl border border-[#74B487]/40 space-y-4 sm:space-y-5 my-auto max-h-[92vh] overflow-y-auto">
             <button
               onClick={() => setIsWriteReviewOpen(false)}
               className="absolute top-5 right-5 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-700 flex items-center justify-center transition-colors"
@@ -521,7 +521,7 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
                   <select
                     value={selectedProduct}
                     onChange={(e) => setSelectedProduct(e.target.value)}
-                    className="w-full p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl font-bold text-[#0E382E] focus:outline-none focus:border-[#E67E22]"
+                    className="w-full p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl font-bold text-[#0E382E] text-base sm:text-xs focus:outline-none focus:border-[#E67E22]"
                   >
                     {products.map((p) => (
                       <option key={p.slug} value={p.slug}>
@@ -562,7 +562,7 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
                       placeholder="e.g. Pooja Deshmukh"
                       value={authorName}
                       onChange={(e) => setAuthorName(e.target.value)}
-                      className="w-full p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl text-[#0E382E] focus:outline-none focus:border-[#E67E22]"
+                      className="w-full p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl text-[#0E382E] text-base sm:text-xs focus:outline-none focus:border-[#E67E22]"
                     />
                   </div>
                   <div>
@@ -573,7 +573,7 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
                       placeholder="e.g. Pune, Maharashtra"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="w-full p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl text-[#0E382E] focus:outline-none focus:border-[#E67E22]"
+                      className="w-full p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl text-[#0E382E] text-base sm:text-xs focus:outline-none focus:border-[#E67E22]"
                     />
                   </div>
                 </div>
@@ -589,7 +589,7 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
                     placeholder="e.g. Tastes authentic and made with real dry fruits!"
                     value={reviewTitle}
                     onChange={(e) => setReviewTitle(e.target.value)}
-                    className="w-full p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl text-[#0E382E] focus:outline-none focus:border-[#E67E22]"
+                    className="w-full p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl text-[#0E382E] text-base sm:text-xs focus:outline-none focus:border-[#E67E22]"
                   />
                 </div>
 
@@ -604,7 +604,7 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
                     placeholder="Share what you loved about the product, preparation ritual, or taste..."
                     value={reviewComment}
                     onChange={(e) => setReviewComment(e.target.value)}
-                    className="w-full p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl text-[#0E382E] focus:outline-none focus:border-[#E67E22]"
+                    className="w-full p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl text-[#0E382E] text-base sm:text-xs focus:outline-none focus:border-[#E67E22]"
                   />
                 </div>
 
@@ -626,7 +626,7 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
                       placeholder="Enter video URL (MP4 link, YouTube link, Google Drive, or Cloudinary)"
                       value={videoUrl}
                       onChange={(e) => setVideoUrl(e.target.value)}
-                      className="w-full p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl text-[#0E382E] focus:outline-none focus:border-[#E67E22]"
+                      className="w-full p-2.5 bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl text-[#0E382E] text-base sm:text-xs focus:outline-none focus:border-[#E67E22]"
                     />
                   )}
                 </div>
@@ -634,7 +634,7 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-3 bg-[#0E382E] hover:bg-[#E67E22] text-white font-extrabold uppercase tracking-wider rounded-xl transition-colors shadow-sm"
+                    className="w-full py-3 bg-[#0E382E] hover:bg-[#E67E22] text-white font-extrabold uppercase tracking-wider rounded-xl transition-colors shadow-sm cursor-pointer text-xs"
                   >
                     Submit Review
                   </button>
