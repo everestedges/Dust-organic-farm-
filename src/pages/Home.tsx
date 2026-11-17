@@ -173,8 +173,8 @@ export const Home: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Full-Width & Full-Height Cinematic Hero Banner Slider */}
-      <section className="relative w-full h-[82vh] min-h-[540px] md:h-auto md:min-h-0 md:aspect-[3/2] overflow-hidden select-none bg-black">
+      {/* 2. Full-Width Cinematic Hero Banner Slider (Aspect 3:2 Matches Banner Image Exactly on Mobile & Desktop) */}
+      <section className="relative w-full aspect-[3/2] overflow-hidden select-none bg-black">
         {/* Sliding Full-Width & Full-Height Banner Images */}
         {homeHeroBanners.map((banner, idx) => (
           <div
@@ -197,9 +197,9 @@ export const Home: React.FC = () => {
         ))}
 
         {/* Steady Overlay Content (Constant across all sliding banners) */}
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-end md:justify-center text-center px-4 sm:px-8 pb-16 sm:pb-20 md:pb-0 pointer-events-none">
-          <div className="max-w-xl mx-auto space-y-3 sm:space-y-4 md:space-y-5 pointer-events-auto animate-fade-in">
-            <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-snug md:leading-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-end md:justify-center text-center px-4 sm:px-8 pb-3 sm:pb-6 md:pb-0 pointer-events-none">
+          <div className="max-w-xl mx-auto space-y-1.5 sm:space-y-3 md:space-y-4 pointer-events-auto animate-fade-in">
+            <h1 className="text-xs sm:text-xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
               ROOTED IN NATURE. <br />
               <span className="text-[#fab683]">
                 MADE FOR MODERN INDIA.
@@ -209,10 +209,10 @@ export const Home: React.FC = () => {
             <div>
               <Link
                 to="/shop"
-                className="px-6 sm:px-8 py-2.5 sm:py-3 bg-white hover:bg-[#E67E22] text-[#0E382E] hover:text-white font-black text-xs uppercase tracking-[0.25em] rounded-md sm:rounded-full transition-all duration-300 shadow-xl hover:scale-105 inline-flex items-center gap-1.5 cursor-pointer border border-stone-200"
+                className="px-3.5 sm:px-6 py-1 sm:py-2.5 bg-white hover:bg-[#E67E22] text-[#0E382E] hover:text-white font-black text-[10px] sm:text-xs uppercase tracking-[0.2em] rounded-full transition-all duration-300 shadow-xl hover:scale-105 inline-flex items-center gap-1 cursor-pointer border border-stone-200"
               >
                 <span>Explore</span>
-                <ArrowUpRight className="w-4 h-4" />
+                <ArrowUpRight className="w-3 h-3 sm:w-4 sm:h-4" />
               </Link>
             </div>
           </div>
@@ -227,9 +227,9 @@ export const Home: React.FC = () => {
             )
           }
           aria-label="Previous banner"
-          className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all cursor-pointer shadow-lg hover:scale-105"
+          className="absolute left-2 sm:left-6 top-1/2 -translate-y-1/2 z-30 w-6 h-6 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-black/40 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all cursor-pointer shadow-lg hover:scale-105"
         >
-          <ChevronLeft className="w-4 sm:w-6 h-4 sm:h-6" />
+          <ChevronLeft className="w-3.5 h-3.5 sm:w-5 sm:h-5 md:w-6 md:h-6" />
         </button>
 
         <button
@@ -238,9 +238,9 @@ export const Home: React.FC = () => {
             setActiveHeroBannerIdx((prev) => (prev + 1) % homeHeroBanners.length)
           }
           aria-label="Next banner"
-          className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-black/40 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all cursor-pointer shadow-lg hover:scale-105"
+          className="absolute right-2 sm:right-6 top-1/2 -translate-y-1/2 z-30 w-6 h-6 sm:w-10 sm:h-10 md:w-12 md:h-12 rounded-full bg-black/40 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all cursor-pointer shadow-lg hover:scale-105"
         >
-          <ChevronRight className="w-4 sm:w-6 h-4 sm:h-6" />
+          <ChevronRight className="w-3.5 h-3.5 sm:w-5 sm:h-5 md:w-6 md:h-6" />
         </button>
       </section>
 
