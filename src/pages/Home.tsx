@@ -41,6 +41,7 @@ import { useTickerStore } from "@/lib/ticker-store";
 const homeHeroBanners = [
   {
     image: cashewCollage,
+    mobileImage: "/hero-cashew-mobile.webp",
     alt: "DUST Premium Cashew Powder - Pure Cashew Goodness",
     title: "DUST™ Premium Cashew Powder",
     subtitle: "Pure Cashew Goodness | Everyday Nutrition",
@@ -50,6 +51,7 @@ const homeHeroBanners = [
   },
   {
     image: aboutBannerLaddoo,
+    mobileImage: "/hero-laddoo-mobile.webp",
     alt: "Warm Family Laddoo Mix - DUST Wholesome Goodness",
     title: "Shahi Ragi & Dry Fruit Laddoo Mix",
     subtitle: "Wholesome Laddoo Premix | Premium Nuts",
@@ -59,6 +61,7 @@ const homeHeroBanners = [
   },
   {
     image: almondCollage,
+    mobileImage: "/hero-almond-mobile.webp",
     alt: "DUST Almond Powder - Pure Almond Goodness",
     title: "DUST™ Almond Powder",
     subtitle: "Pure Almond Goodness | Everyday Nutrition",
@@ -68,6 +71,7 @@ const homeHeroBanners = [
   },
   {
     image: aboutBannerFarmWaste,
+    mobileImage: "/hero-farm-mobile.webp",
     alt: "From Farm Waste to Nourishing Goodness - DUST",
     title: "From Farm Surplus to Superfoods",
     subtitle: "100% Real Fruit & Pure Nutrition",
@@ -173,8 +177,8 @@ export const Home: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Full-Width Cinematic Hero Banner Slider (Aspect 3:2 Matches Banner Image Exactly on Mobile & Desktop) */}
-      <section className="relative w-full aspect-[3/2] overflow-hidden select-none bg-black">
+      {/* 2. Full-Width Responsive Hero Banner Slider (Portrait 3:4 on Mobile, Landscape 3:2 on Desktop) */}
+      <section className="relative w-full aspect-[3/4] sm:aspect-[4/5] md:aspect-[3/2] overflow-hidden select-none bg-black">
         {/* Sliding Full-Width & Full-Height Banner Images */}
         {homeHeroBanners.map((banner, idx) => (
           <div
@@ -183,23 +187,26 @@ export const Home: React.FC = () => {
               activeHeroBannerIdx === idx ? "opacity-100 z-10" : "opacity-0 z-0 pointer-events-none"
             }`}
           >
-            <img
-              src={banner.image}
-              alt={banner.alt}
-              fetchPriority={idx === 0 ? "high" : "low"}
-              loading={idx === 0 ? "eager" : "lazy"}
-              decoding="async"
-              className="w-full h-full object-cover object-center"
-            />
+            <picture>
+              <source media="(max-width: 767px)" srcSet={banner.mobileImage} />
+              <img
+                src={banner.image}
+                alt={banner.alt}
+                fetchPriority={idx === 0 ? "high" : "low"}
+                loading={idx === 0 ? "eager" : "lazy"}
+                decoding="async"
+                className="w-full h-full object-cover object-center"
+              />
+            </picture>
             {/* Cinematic Contrast Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/30" />
           </div>
         ))}
 
         {/* Steady Overlay Content (Constant across all sliding banners) */}
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-end md:justify-center text-center px-4 sm:px-8 pb-3 sm:pb-6 md:pb-0 pointer-events-none">
+        <div className="absolute inset-0 z-20 flex flex-col items-center justify-end md:justify-center text-center px-4 sm:px-8 pb-8 sm:pb-10 md:pb-0 pointer-events-none">
           <div className="max-w-xl mx-auto space-y-1.5 sm:space-y-3 md:space-y-4 pointer-events-auto animate-fade-in">
-            <h1 className="text-xs sm:text-xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
+            <h1 className="text-sm sm:text-xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
               ROOTED IN NATURE. <br />
               <span className="text-[#fab683]">
                 MADE FOR MODERN INDIA.
