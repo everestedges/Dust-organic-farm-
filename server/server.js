@@ -627,9 +627,9 @@ const VELOCITY_CONFIG = {
   token:
     process.env.VELOCITY_TOKEN ||
     "eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzaGF6YW0iLCJjbGllbnRfaWQiOiI2NmIxZTk0Ny1lNGYzLTQ3YjUtYTk2YS02MTQ4NDBkZjZlMmMiLCJ0aWVyIjoic2lsdmVyIiwidG9rZW4iOiIzNWE5NmYwMTQ1ZGQ2ZGRkNGJkY2RlZWYwMTIyYTcwODE5NGM5YWZmYjhmZmQ4YzZlY2M5ZmIyNzM4NDU0ODM4IiwiZXhwIjoxODI2MDExMjQwfQ.pLW3Jw23js_xesmru3tIosCVS-bEj2znkUqiZ01MXW0",
-  warehouseId: process.env.VELOCITY_WAREHOUSE_ID || "WHX8DG",
-  pickupLocation: process.env.VELOCITY_PICKUP_LOCATION || "D- 907, silver gracia",
-  pickupPincode: "411085",
+  warehouseId: process.env.VELOCITY_WAREHOUSE_ID || "WHHE57",
+  pickupLocation: process.env.VELOCITY_PICKUP_LOCATION || "DUST Farm Pune",
+  pickupPincode: "412101",
   defaultWeight: 0.5,
   defaultLength: 15,
   defaultBreadth: 10,
@@ -642,9 +642,6 @@ async function createVelocityShipment(orderData) {
       (orderData.payment_method || orderData.paymentMethod || "").toUpperCase() ===
       "COD";
     const totalAmount = Number(orderData.total_amount || orderData.total || 0);
-    const subtotalAmount = Number(
-      orderData.subtotal_amount || orderData.subtotal || totalAmount
-    );
 
     const now = new Date();
     const orderDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
@@ -685,6 +682,24 @@ async function createVelocityShipment(orderData) {
       tax: 0,
     }));
 
+    // If order total includes shipping / handling fee, include it so items sum matches total
+    const itemsTotal = orderItems.reduce(
+      (sum, item) =>
+        sum + (Number(item.selling_price) || 0) * (Number(item.units) || 1),
+      0
+    );
+    const shippingHandlingDiff = totalAmount - itemsTotal;
+    if (shippingHandlingDiff > 0) {
+      orderItems.push({
+        name: "Shipping & Delivery Charge",
+        sku: "DUST-SHIPPING-FEE",
+        units: 1,
+        selling_price: shippingHandlingDiff,
+        discount: 0,
+        tax: 0,
+      });
+    }
+
     const cleanPincode = String(orderData.pincode || "411045")
       .replace(/\D/g, "")
       .slice(0, 6);
@@ -717,7 +732,7 @@ async function createVelocityShipment(orderData) {
       print_label: true,
       order_items: orderItems,
       payment_method: isCOD ? "COD" : "PREPAID",
-      sub_total: subtotalAmount,
+      sub_total: totalAmount,
       cod_collectible: isCOD ? totalAmount : 0,
       length: Number(orderData.length || VELOCITY_CONFIG.defaultLength),
       breadth: Number(orderData.breadth || VELOCITY_CONFIG.defaultBreadth),
