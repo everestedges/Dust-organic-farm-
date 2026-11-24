@@ -78,6 +78,7 @@ const homeHeroBanners = [
     price: "₹299",
     tag: "HERITAGE WELLNESS",
     productIndex: 4,
+    hideOverlay: true,
   },
 ];
 
@@ -203,9 +204,15 @@ export const Home: React.FC = () => {
           </div>
         ))}
 
-        {/* Steady Overlay Content (Constant across all sliding banners) */}
-        <div className="absolute inset-0 z-20 flex flex-col items-center justify-end md:justify-center text-center px-4 sm:px-8 pb-8 sm:pb-10 md:pb-0 pointer-events-none">
-          <div className="max-w-xl mx-auto space-y-1.5 sm:space-y-3 md:space-y-4 pointer-events-auto animate-fade-in">
+        {/* Steady Overlay Content (Hidden on slides with hideOverlay: true) */}
+        <div
+          className={`absolute inset-0 z-20 flex flex-col items-center justify-end md:justify-center text-center px-4 sm:px-8 pb-8 sm:pb-10 md:pb-0 pointer-events-none transition-all duration-700 ease-in-out ${
+            homeHeroBanners[activeHeroBannerIdx]?.hideOverlay
+              ? "opacity-0 pointer-events-none translate-y-3"
+              : "opacity-100 pointer-events-auto translate-y-0"
+          }`}
+        >
+          <div className="max-w-xl mx-auto space-y-1.5 sm:space-y-3 md:space-y-4">
             <h1 className="text-sm sm:text-xl md:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight drop-shadow-[0_4px_12px_rgba(0,0,0,0.85)]">
               ROOTED IN NATURE. <br />
               <span className="text-[#fab683]">
