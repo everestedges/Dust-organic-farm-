@@ -16,7 +16,7 @@ export const CartDrawer: React.FC = () => {
   if (!isCartOpen) return null;
 
   const subtotal = getSubtotal();
-  const freeShippingThreshold = 799;
+  const freeShippingThreshold = 599;
   const progressPercent = Math.min(100, (subtotal / freeShippingThreshold) * 100);
 
   return (
@@ -60,7 +60,7 @@ export const CartDrawer: React.FC = () => {
                     <strong className="text-[#E67E22] font-bold">
                       ₹{freeShippingThreshold - subtotal}
                     </strong>{" "}
-                    more for Free Shipping (Prepaid ₹799+)
+                    more for Free Shipping (Prepaid ₹599+)
                   </>
                 )}
               </span>
@@ -72,7 +72,7 @@ export const CartDrawer: React.FC = () => {
               />
             </div>
             <p className="text-[10px] text-stone-600 leading-tight">
-              *Free delivery on prepaid orders ₹799+. For COD orders, ₹120 delivery fee applies.
+              *Free delivery on prepaid orders ₹599+. For COD orders, ₹120 delivery fee applies.
             </p>
             <div className="flex items-center gap-1.5 pt-1 text-[10px] text-[#0E382E] font-medium">
               <Clock className="w-3 h-3 text-[#E67E22] shrink-0" />

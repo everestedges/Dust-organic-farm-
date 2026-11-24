@@ -10,9 +10,11 @@ export const Cart: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
 
   const subtotal = getSubtotal();
-  const isPrepaidFree = subtotal >= 799;
+  const freeShippingThreshold = 599;
+  const isPrepaidFree = subtotal >= freeShippingThreshold;
   const shippingFee = subtotal === 0 ? 0 : isPrepaidFree ? 0 : 50;
   const grandTotal = subtotal + shippingFee;
+  const progressPercent = Math.min(100, (subtotal / freeShippingThreshold) * 100);
 
   return (
     <div className="pt-32 pb-24 px-4 sm:px-8 md:px-12 lg:px-16 w-full min-h-screen bg-[#F6F5F0] text-[#0E382E]">
@@ -130,6 +132,36 @@ export const Cart: React.FC = () => {
               Order Summary
             </h3>
 
+            {/* Free Shipping Progress Panel */}
+            <div className="bg-white p-4 rounded-2xl border border-[#74B487]/40 space-y-2">
+              <div className="flex justify-between text-xs font-sans">
+                <span className="text-[#0E382E] font-medium">
+                  {subtotal >= freeShippingThreshold ? (
+                    <span className="text-[#0E382E] font-bold flex items-center gap-1">
+                      ✓ <strong className="text-[#E67E22]">Free Prepaid Shipping Unlocked!</strong>
+                    </span>
+                  ) : (
+                    <>
+                      Add{" "}
+                      <strong className="text-[#E67E22] font-bold">
+                        ₹{freeShippingThreshold - subtotal}
+                      </strong>{" "}
+                      more for Free Shipping (Prepaid ₹599+)
+                    </>
+                  )}
+                </span>
+              </div>
+              <div className="w-full h-2 bg-stone-100 rounded-full overflow-hidden border border-[#74B487]/30">
+                <div
+                  className="h-full bg-[#E67E22] transition-all duration-300 rounded-full"
+                  style={{ width: `${progressPercent}%` }}
+                />
+              </div>
+              <p className="text-[10px] text-stone-600 leading-tight">
+                *Free delivery on prepaid orders ₹599+. For COD orders, ₹120 delivery fee applies.
+              </p>
+            </div>
+
             <div className="space-y-3 text-xs text-[#0E382E] font-medium">
               <div className="flex justify-between">
                 <span className="text-stone-600">Subtotal</span>
@@ -140,7 +172,7 @@ export const Cart: React.FC = () => {
                 <span className="font-bold">{shippingFee === 0 ? "FREE" : `₹${shippingFee}`}</span>
               </div>
               <p className="text-[10px] text-stone-500 leading-tight">
-                *Free shipping on prepaid orders ₹799+. COD orders incur ₹120 delivery fee.
+                *Free shipping on prepaid orders ₹599+. COD orders incur ₹120 delivery fee.
               </p>
               <div className="flex justify-between border-t border-[#74B487]/30 pt-3 text-sm font-extrabold text-[#0E382E]">
                 <span>Grand Total</span>

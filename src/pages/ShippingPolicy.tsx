@@ -32,9 +32,9 @@ export const ShippingPolicy: React.FC = () => {
           </div>
 
           <div className="bg-white p-6 rounded-3xl border border-[#74B487]/40 shadow-xs space-y-2">
-            <div className="text-2xl font-extrabold text-[#E67E22]">₹799+</div>
+            <div className="text-2xl font-extrabold text-[#E67E22]">₹599+</div>
             <h3 className="text-xs font-extrabold text-[#0E382E] uppercase">Free Prepaid Shipping</h3>
-            <p className="text-[11px] text-[#1F684B]">Zero delivery fee automatically applied on prepaid orders ₹799 and above.</p>
+            <p className="text-[11px] text-[#1F684B]">Zero delivery fee automatically applied on prepaid orders ₹599 and above.</p>
           </div>
         </div>
 
@@ -49,7 +49,7 @@ export const ShippingPolicy: React.FC = () => {
           <section className="space-y-2">
             <h2 className="text-lg font-extrabold text-[#0E382E]">2. Free Shipping Policy (Prepaid Only)</h2>
             <p>
-              Free Express Shipping is available across India exclusively for <strong>prepaid orders</strong> (UPI, Credit/Debit Cards, Net Banking) of <strong>₹799 and above</strong>. Prepaid orders below ₹799 are subject to a nominal standard shipping fee of ₹50.
+              Free Express Shipping is available across India exclusively for <strong>prepaid orders</strong> (UPI, Credit/Debit Cards, Net Banking) of <strong>₹599 and above</strong>. Prepaid orders below ₹599 are subject to a nominal standard shipping fee of ₹50.
             </p>
           </section>
 

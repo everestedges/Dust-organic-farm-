@@ -43,13 +43,13 @@ const faqData: FAQItem[] = [
     category: "Orders & Shipping",
     question: "What are the shipping charges and delivery timelines?",
     answer:
-      "We offer FREE Express Shipping across India on all prepaid orders of ₹799 and above. For prepaid orders below ₹799, standard shipping is ₹50. For Cash on Delivery (COD) orders, a flat delivery fee of ₹120 applies. Orders are dispatched within 24 hours and delivered in 3–5 business days.",
+      "We offer FREE Express Shipping across India on all prepaid orders of ₹599 and above. For prepaid orders below ₹599, standard shipping is ₹50. For Cash on Delivery (COD) orders, a flat delivery fee of ₹120 applies. Orders are dispatched within 24 hours and delivered in 3–5 business days.",
   },
   {
     category: "Orders & Shipping",
     question: "Can I place Cash on Delivery (COD) orders?",
     answer:
-      "Yes, COD is available across serviceable PIN codes in India. Please note that COD orders incur a delivery and handling fee of ₹120. Free shipping applies exclusively to prepaid orders of ₹799 and above.",
+      "Yes, COD is available across serviceable PIN codes in India. Please note that COD orders incur a delivery and handling fee of ₹120. Free shipping applies exclusively to prepaid orders of ₹599 and above.",
   },
   {
     category: "Company & Support",

@@ -43,7 +43,7 @@ export const Checkout: React.FC = () => {
   const subtotal = getSubtotal();
   const discountAmount = Math.round((subtotal * discountPercent) / 100);
   const isCOD = formData.paymentMethod === "cod";
-  const shippingFee = subtotal === 0 ? 0 : isCOD ? 120 : subtotal >= 799 ? 0 : 50;
+  const shippingFee = subtotal === 0 ? 0 : isCOD ? 120 : subtotal >= 599 ? 0 : 50;
   const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
 
   const handleApplyPromo = (e: React.FormEvent) => {
@@ -288,9 +288,9 @@ export const Checkout: React.FC = () => {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               {[
-                { id: "upi", label: "UPI / GPay / PhonePe", note: "Prepaid • Free Shipping on ₹799+" },
-                { id: "card", label: "Credit / Debit Card", note: "Prepaid • Free Shipping on ₹799+" },
-                { id: "netbanking", label: "Net Banking", note: "Prepaid • Free Shipping on ₹799+" },
+                { id: "upi", label: "UPI / GPay / PhonePe", note: "Prepaid • Free Shipping on ₹599+" },
+                { id: "card", label: "Credit / Debit Card", note: "Prepaid • Free Shipping on ₹599+" },
+                { id: "netbanking", label: "Net Banking", note: "Prepaid • Free Shipping on ₹599+" },
                 { id: "cod", label: "Cash on Delivery", note: "₹120 Delivery fee applies" },
               ].map((pm) => (
                 <button
@@ -404,11 +404,11 @@ export const Checkout: React.FC = () => {
             </div>
             {isCOD ? (
               <p className="text-[10px] text-[#E67E22] font-semibold leading-tight">
-                *Cash on Delivery incurs a ₹120 fee. Switch to Prepaid (UPI/Card) for Free Shipping on orders ₹799+!
+                *Cash on Delivery incurs a ₹120 fee. Switch to Prepaid (UPI/Card) for Free Shipping on orders ₹599+!
               </p>
-            ) : subtotal < 799 ? (
+            ) : subtotal < 599 ? (
               <p className="text-[10px] text-stone-500 leading-tight">
-                *Add ₹{799 - subtotal} more to unlock Free Shipping on this prepaid order.
+                *Add ₹{599 - subtotal} more to unlock Free Shipping on this prepaid order.
               </p>
             ) : (
               <p className="text-[10px] text-[#25D366] font-semibold leading-tight">
