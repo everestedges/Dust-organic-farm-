@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Star,
   Play,
@@ -14,6 +14,8 @@ import {
   Upload,
   Video,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { useTestimonialsStore, Testimonial } from "@/lib/testimonials-store";
 import { products } from "@/lib/data";
@@ -31,7 +33,7 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
   title = "Real Stories & Verified Experiences",
   subtitle = "Discover why thousands of Indian households have made DUST their daily tradition for nutrition and digestive wellness.",
 }) => {
-  const { testimonials, likeTestimonial, addTestimonial } = useTestimonialsStore();
+  const { testimonials, likeTestimonial, addTestimonial, fetchFromBackend } = useTestimonialsStore();
 
   const [activeFilter, setActiveFilter] = useState<string>(
     currentProductSlug ?? "all"
@@ -40,6 +42,17 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
   const [isWriteReviewOpen, setIsWriteReviewOpen] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [likedMap, setLikedMap] = useState<Record<string, boolean>>({});
+
+  // Carousel State for Written Reviews
+  const reviewCarouselRef = useRef<HTMLDivElement>(null);
+  const [isReviewCarouselHovered, setIsReviewCarouselHovered] = useState(false);
+
+  // Fetch latest reviews from backend on mount
+  useEffect(() => {
+    if (fetchFromBackend) {
+      fetchFromBackend();
+    }
+  }, [fetchFromBackend]);
 
   // New Review Form State
   const [authorName, setAuthorName] = useState("");
@@ -77,6 +90,39 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
     likeTestimonial(id);
     setLikedMap((prev) => ({ ...prev, [id]: true }));
   };
+
+  const scrollReviewsNext = () => {
+    if (!reviewCarouselRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = reviewCarouselRef.current;
+    if (scrollLeft >= scrollWidth - clientWidth - 25) {
+      reviewCarouselRef.current.scrollTo({ left: 0, behavior: "smooth" });
+    } else {
+      const card = reviewCarouselRef.current.firstElementChild as HTMLElement;
+      const scrollStep = card ? card.offsetWidth + 24 : clientWidth / 3;
+      reviewCarouselRef.current.scrollBy({ left: scrollStep, behavior: "smooth" });
+    }
+  };
+
+  const scrollReviewsPrev = () => {
+    if (!reviewCarouselRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = reviewCarouselRef.current;
+    if (scrollLeft <= 25) {
+      reviewCarouselRef.current.scrollTo({ left: scrollWidth, behavior: "smooth" });
+    } else {
+      const card = reviewCarouselRef.current.firstElementChild as HTMLElement;
+      const scrollStep = card ? card.offsetWidth + 24 : clientWidth / 3;
+      reviewCarouselRef.current.scrollBy({ left: -scrollStep, behavior: "smooth" });
+    }
+  };
+
+  // Auto-scroll written reviews carousel every 3.8s if not hovered or touched
+  useEffect(() => {
+    if (isReviewCarouselHovered || textReviews.length <= 1) return;
+    const interval = setInterval(() => {
+      scrollReviewsNext();
+    }, 3800);
+    return () => clearInterval(interval);
+  }, [isReviewCarouselHovered, textReviews.length]);
 
   const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -152,6 +198,10 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
     });
 
     setReviewSubmitted(true);
+    // Smoothly scroll the carousel to the start so the newly added review is immediately front and center!
+    setTimeout(() => {
+      reviewCarouselRef.current?.scrollTo({ left: 0, behavior: "smooth" });
+    }, 150);
     setTimeout(() => {
       setReviewSubmitted(false);
       setIsWriteReviewOpen(false);
@@ -381,23 +431,60 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
           </div>
         )}
 
-        {/* Section 2: Written Reviews & Detailed Customer Feedback */}
-        <div className="space-y-4">
+        {/* Section 2: Written Reviews & Detailed Customer Feedback (Auto-Carousel) */}
+        <div
+          className="space-y-4"
+          onMouseEnter={() => setIsReviewCarouselHovered(true)}
+          onMouseLeave={() => setIsReviewCarouselHovered(false)}
+          onTouchStart={() => setIsReviewCarouselHovered(true)}
+          onTouchEnd={() => setIsReviewCarouselHovered(false)}
+        >
           <div className="flex items-center justify-between">
             <h3 className="text-xl sm:text-2xl font-extrabold text-[#0E382E] flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-[#E67E22]" />
               <span>Customer Reviews & Experience</span>
             </h3>
-            <span className="text-xs text-stone-500 font-bold">
-              Showing {textReviews.length} reviews
-            </span>
+
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-stone-500 font-bold hidden sm:inline">
+                Showing {textReviews.length} reviews
+              </span>
+
+              {/* Prev / Next controls */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={scrollReviewsPrev}
+                  className="w-8 h-8 rounded-full border border-[#74B487]/40 bg-white hover:bg-[#E8F1E9] text-[#0E382E] flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
+                  aria-label="Previous reviews"
+                  title="Previous reviews"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={scrollReviewsNext}
+                  className="w-8 h-8 rounded-full border border-[#74B487]/40 bg-white hover:bg-[#E8F1E9] text-[#0E382E] flex items-center justify-center transition-all cursor-pointer shadow-xs active:scale-95"
+                  aria-label="Next reviews"
+                  title="Next reviews"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Carousel Track */}
+          <div
+            ref={reviewCarouselRef}
+            className="flex items-stretch gap-6 overflow-x-auto scroll-smooth scrollbar-none py-2 px-1 -mx-1"
+            style={{ scrollSnapType: "x mandatory" }}
+          >
             {textReviews.map((item) => (
               <div
                 key={item.id}
-                className="bg-white rounded-3xl border border-[#74B487]/40 p-6 flex flex-col justify-between shadow-xs hover:shadow-md hover:border-[#E67E22]/60 transition-all duration-300 space-y-4"
+                style={{ scrollSnapAlign: "start" }}
+                className="w-[88vw] sm:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] shrink-0 bg-white rounded-3xl border border-[#74B487]/40 p-6 flex flex-col justify-between shadow-xs hover:shadow-md hover:border-[#E67E22]/60 transition-all duration-300 space-y-4"
               >
                 <div className="space-y-3">
                   {/* Rating + Date Header */}
