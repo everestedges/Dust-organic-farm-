@@ -2250,20 +2250,29 @@ export const Admin: React.FC = () => {
                     key={banner.id}
                     className="p-5 sm:p-6 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/30 hover:border-[#74B487] transition-all flex flex-col lg:flex-row gap-5 items-start lg:items-center justify-between shadow-xs"
                   >
-                    {/* Thumbnail Image */}
-                    <div className="relative w-full lg:w-56 h-36 rounded-xl overflow-hidden bg-stone-200 shrink-0 border border-[#74B487]/30 shadow-xs">
+                    {/* Thumbnail Image / Video */}
+                    <div className="relative w-full lg:w-56 h-36 rounded-xl overflow-hidden bg-stone-900 shrink-0 border border-[#74B487]/30 shadow-xs">
                       {banner.image_url ? (
-                        <img
-                          src={banner.image_url}
-                          alt={banner.title}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = "/dust-wellness-combo-advertisement.webp";
-                          }}
-                        />
+                        /\.(mp4|webm|ogg|mov)($|\?)/i.test(banner.image_url) || banner.image_url.startsWith("data:video") ? (
+                          <video
+                            src={banner.image_url}
+                            muted
+                            playsInline
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={banner.image_url}
+                            alt={banner.title}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLImageElement).src = "/banners/dragon-berry-blast-upcoming.jpg";
+                            }}
+                          />
+                        )
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-stone-400 font-bold">
-                          No Image
+                          No Creative
                         </div>
                       )}
                       <span className="absolute top-2 left-2 bg-[#0E382E]/90 text-[#F6F5F0] text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider backdrop-blur-xs">
@@ -3763,8 +3772,8 @@ export const Admin: React.FC = () => {
               </button>
             </div>
 
-            <form onSubmit={handleSaveUpcomingBanner} className="space-y-5 text-xs">
-              {/* Title & Subtitle */}
+            <form onSubmit={handleSaveUpcomingBanner} className="space-y-4 text-xs">
+              {/* Title */}
               <div>
                 <label className="block font-bold text-[#0E382E] uppercase mb-1">
                   Banner Title / Product Name *
@@ -3772,63 +3781,22 @@ export const Admin: React.FC = () => {
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Ayurvedic Herbal Haircare & Pure Fruit Powders"
+                  placeholder="e.g. Dragon Berry Blast Fruit Drink Powder"
                   value={upcomingForm.title}
                   onChange={(e) => setUpcomingForm({ ...upcomingForm, title: e.target.value })}
                   className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
                 />
+                <span className="text-[10px] text-stone-500">Used for banner identification and accessibility</span>
               </div>
 
-              <div>
-                <label className="block font-bold text-[#0E382E] uppercase mb-1">
-                  Subtitle / High-Concept Hook
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Next-Generation Heritage Wellness Formulations Inspired by Nature"
-                  value={upcomingForm.subtitle}
-                  onChange={(e) => setUpcomingForm({ ...upcomingForm, subtitle: e.target.value })}
-                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
-                />
-              </div>
-
-              {/* Tagline & Launch Date */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-[#0E382E] uppercase mb-1">
-                    Tagline Badge
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. COMING SOON • IN THE PIPELINE"
-                    value={upcomingForm.tagline}
-                    onChange={(e) => setUpcomingForm({ ...upcomingForm, tagline: e.target.value })}
-                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-[#0E382E] uppercase mb-1">
-                    Expected Launch Date
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Expected Launch: Q1 2027"
-                    value={upcomingForm.launch_date}
-                    onChange={(e) => setUpcomingForm({ ...upcomingForm, launch_date: e.target.value })}
-                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
-                  />
-                </div>
-              </div>
-
-              {/* Banner Image Upload & URL */}
+              {/* Banner Creative Upload & URL (Supports Images and Videos) */}
               <div className="space-y-3 p-4 bg-[#E8F1E9]/40 rounded-2xl border border-[#74B487]/40">
                 <div>
                   <label className="block font-bold text-[#0E382E] uppercase">
-                    Showcase Banner Image *
+                    Showcase Creative (Image or Video) *
                   </label>
                   <p className="text-[10.5px] text-stone-500 font-medium mt-0.5">
-                    Recommended Size: <strong>1920 × 960 px (2:1 Widescreen Ratio)</strong>. This uploaded creative will fill the full container size on the website.
+                    Recommended: <strong>1920 × 960 px (2:1 Widescreen Ratio)</strong>. Supports <strong>JPG, PNG, WebP, and MP4/WebM teaser videos</strong>. Fills the full container on the home page.
                   </p>
                 </div>
 
@@ -3836,10 +3804,10 @@ export const Admin: React.FC = () => {
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <label className="flex-1 cursor-pointer bg-white border border-[#74B487]/60 hover:bg-[#E8F1E9] text-[#0E382E] px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-2xs">
                     <Upload className="w-4 h-4 text-[#E67E22]" />
-                    <span>{isUploadingUpcomingImg ? "Uploading Image..." : "Upload Full Banner Photo from Laptop / Mobile"}</span>
+                    <span>{isUploadingUpcomingImg ? "Uploading Creative..." : "Upload Photo or Video from Laptop / Mobile"}</span>
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/*,video/mp4,video/webm,video/quicktime"
                       onChange={handleUpcomingImageUpload}
                       disabled={isUploadingUpcomingImg}
                       className="hidden"
@@ -3847,86 +3815,71 @@ export const Admin: React.FC = () => {
                   </label>
                 </div>
 
-                {/* Fallback image URL input */}
+                {/* Fallback image / video URL input */}
                 <div>
                   <label className="block text-[11px] font-bold text-[#1F684B] uppercase mb-1">
-                    Or Enter Image URL / Public Path
+                    Or Enter Image / Video URL
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="/banners/dragon-berry-blast-upcoming.jpg or https://..."
+                    placeholder="/banners/dragon-berry-blast-upcoming.jpg or /uploads/video.mp4"
                     value={upcomingForm.image_url}
                     onChange={(e) => setUpcomingForm({ ...upcomingForm, image_url: e.target.value })}
                     className="w-full bg-white border border-[#74B487]/40 rounded-xl p-2.5 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
                   />
                 </div>
 
-                {/* Preview Box */}
+                {/* Preview Box (Supports Image & Video) */}
                 {upcomingForm.image_url && (
                   <div className="pt-2">
                     <p className="text-[10px] font-bold text-[#1F684B] uppercase mb-1">
                       Full-Size Banner Preview (2:1 Aspect Ratio):
                     </p>
                     <div className="relative w-full aspect-[2/1] rounded-2xl overflow-hidden bg-stone-900 border border-[#74B487]/50 shadow-inner">
-                      <img
-                        src={upcomingForm.image_url}
-                        alt="Upcoming Banner Preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = "/banners/dragon-berry-blast-upcoming.jpg";
-                        }}
-                      />
+                      {/\.(mp4|webm|ogg|mov)($|\?)/i.test(upcomingForm.image_url) || upcomingForm.image_url.startsWith("data:video") ? (
+                        <video
+                          src={upcomingForm.image_url}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <img
+                          src={upcomingForm.image_url}
+                          alt="Upcoming Banner Preview"
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).src = "/banners/dragon-berry-blast-upcoming.jpg";
+                          }}
+                        />
+                      )}
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Description */}
-              <div>
-                <label className="block font-bold text-[#0E382E] uppercase mb-1">
-                  Teaser Description
-                </label>
-                <textarea
-                  rows={3}
-                  placeholder="Share a teaser of the ingredients, formulation process, or health benefits..."
-                  value={upcomingForm.description}
-                  onChange={(e) => setUpcomingForm({ ...upcomingForm, description: e.target.value })}
-                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
-                />
-              </div>
-
-              {/* CTA Details & Display Order */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Click Destination Link & Display Order in 2-column grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block font-bold text-[#0E382E] uppercase mb-1">
-                    CTA Button Text
+                    Banner Click Destination Link
                   </label>
                   <input
                     type="text"
-                    placeholder="e.g. Pre-Order Inquiry"
-                    value={upcomingForm.cta_text}
-                    onChange={(e) => setUpcomingForm({ ...upcomingForm, cta_text: e.target.value })}
-                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-[#0E382E] uppercase mb-1">
-                    CTA Button Link
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. /combos or /contact"
+                    placeholder="e.g. /contact or WhatsApp link"
                     value={upcomingForm.cta_link}
                     onChange={(e) => setUpcomingForm({ ...upcomingForm, cta_link: e.target.value })}
                     className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
                   />
+                  <span className="text-[10px] text-stone-500">Where customers go when they tap the banner</span>
                 </div>
 
                 <div>
                   <label className="block font-bold text-[#0E382E] uppercase mb-1">
-                    Display Order
+                    Display Order (Slide #)
                   </label>
                   <input
                     type="number"
@@ -3935,6 +3888,7 @@ export const Admin: React.FC = () => {
                     onChange={(e) => setUpcomingForm({ ...upcomingForm, display_order: parseInt(e.target.value) || 0 })}
                     className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
                   />
+                  <span className="text-[10px] text-stone-500">Lower numbers appear first (e.g. 1, 2, 3)</span>
                 </div>
               </div>
 

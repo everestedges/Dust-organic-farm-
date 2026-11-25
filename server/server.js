@@ -1644,6 +1644,9 @@ app.post("/api/upload-image", async (req, res) => {
     else if (mimeType.includes("webp")) ext = "webp";
     else if (mimeType.includes("gif")) ext = "gif";
     else if (mimeType.includes("svg")) ext = "svg";
+    else if (mimeType.includes("mp4") || mimeType.includes("video")) ext = "mp4";
+    else if (mimeType.includes("webm")) ext = "webm";
+    else if (mimeType.includes("quicktime") || mimeType.includes("mov")) ext = "mov";
 
     let safeBase = "product";
     if (filename) {

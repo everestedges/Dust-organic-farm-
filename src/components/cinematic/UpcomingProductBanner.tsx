@@ -26,6 +26,11 @@ export const UpcomingProductBanner: React.FC = () => {
 
   const currentBanner: UpcomingBanner = (banners[activeIndex] ?? banners[0]) as UpcomingBanner;
 
+  const isVideoMedia = (url?: string) => {
+    if (!url) return false;
+    return /\.(mp4|webm|ogg|mov)($|\?)/i.test(url) || url.startsWith("data:video");
+  };
+
   return (
     <section className="py-10 sm:py-14 px-4 sm:px-8 md:px-12 lg:px-16 w-full">
       {/* Section Header */}
@@ -50,15 +55,26 @@ export const UpcomingProductBanner: React.FC = () => {
           className="block relative w-full aspect-[16/9] sm:aspect-[2/1] overflow-hidden cursor-pointer"
           title={currentBanner.title}
         >
-          <img
-            src={currentBanner.image_url}
-            alt={currentBanner.title}
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.src = "/banners/dragon-berry-blast-upcoming.jpg";
-            }}
-            className="w-full h-full object-cover sm:object-fill transition-transform duration-700 ease-out group-hover:scale-[1.015]"
-          />
+          {isVideoMedia(currentBanner.image_url) ? (
+            <video
+              src={currentBanner.image_url}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.015]"
+            />
+          ) : (
+            <img
+              src={currentBanner.image_url}
+              alt={currentBanner.title}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "/banners/dragon-berry-blast-upcoming.jpg";
+              }}
+              className="w-full h-full object-cover sm:object-fill transition-transform duration-700 ease-out group-hover:scale-[1.015]"
+            />
+          )}
 
           {/* Interactive Hover Vignette Overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
