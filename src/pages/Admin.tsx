@@ -165,6 +165,7 @@ export const Admin: React.FC = () => {
   const [tVideoUrl, setTVideoUrl] = useState("");
   const [tVideoPoster, setTVideoPoster] = useState("");
   const [tVideoDuration, setTVideoDuration] = useState("0:45");
+  const [isUploadingReviewPoster, setIsUploadingReviewPoster] = useState(false);
   const [tVerified, setTVerified] = useState(true);
   const [tFeatured, setTFeatured] = useState(true);
   const [tApproved, setTApproved] = useState(true);
@@ -522,6 +523,18 @@ export const Admin: React.FC = () => {
     setIsUploadingMainImg(false);
     if (uploadedUrl) {
       setNewProductImageUrl(uploadedUrl);
+    }
+    e.target.value = "";
+  };
+
+  const handleReviewPosterUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploadingReviewPoster(true);
+    const uploadedUrl = await uploadImageFile(file);
+    setIsUploadingReviewPoster(false);
+    if (uploadedUrl) {
+      setTVideoPoster(uploadedUrl);
     }
     e.target.value = "";
   };
@@ -3219,7 +3232,7 @@ export const Admin: React.FC = () => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block font-bold text-[#0E382E] uppercase mb-1">
                         Video Duration
@@ -3234,16 +3247,74 @@ export const Admin: React.FC = () => {
                     </div>
                     <div>
                       <label className="block font-bold text-[#0E382E] uppercase mb-1">
-                        Poster Image URL (optional)
+                        Poster Image (Optional)
                       </label>
+                      <div className="flex items-center gap-2">
+                        <label className={`cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all shadow-sm ${
+                          isUploadingReviewPoster
+                            ? "bg-stone-300 text-stone-600 cursor-not-allowed"
+                            : "bg-[#0E382E] text-white hover:bg-[#164d40]"
+                        }`}>
+                          {isUploadingReviewPoster ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-[#E67E22]" />
+                              <span>Uploading...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Upload className="w-3.5 h-3.5 text-[#E67E22]" />
+                              <span>Upload from Device</span>
+                            </>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            disabled={isUploadingReviewPoster}
+                            onChange={handleReviewPosterUpload}
+                            className="hidden"
+                          />
+                        </label>
+                        <span className="text-[11px] text-stone-500 font-medium">or paste link</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Poster Image URL Input & Preview */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
                       <input
                         type="text"
-                        placeholder="Image URL or leave blank"
+                        placeholder="Poster Image URL (or upload from device above)"
                         value={tVideoPoster}
                         onChange={(e) => setTVideoPoster(e.target.value)}
-                        className="w-full bg-white border border-[#74B487]/40 rounded-xl p-2.5 text-[#0E382E] font-semibold"
+                        className="w-full bg-white border border-[#74B487]/40 rounded-xl p-2.5 text-[#0E382E] font-semibold text-xs"
                       />
+                      {tVideoPoster && (
+                        <button
+                          type="button"
+                          onClick={() => setTVideoPoster("")}
+                          className="px-2.5 py-2 bg-stone-100 hover:bg-red-50 text-stone-600 hover:text-red-600 rounded-xl text-xs font-bold border border-stone-200 transition-colors flex items-center gap-1 shrink-0"
+                          title="Remove poster"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                          <span>Clear</span>
+                        </button>
+                      )}
                     </div>
+
+                    {tVideoPoster && (
+                      <div className="flex items-center gap-3 p-2 bg-white/80 rounded-xl border border-[#74B487]/30">
+                        <img
+                          src={tVideoPoster}
+                          alt="Poster preview"
+                          className="w-12 h-12 object-cover rounded-lg border border-[#74B487]/40 shadow-sm"
+                        />
+                        <div className="text-xs text-[#0E382E] overflow-hidden">
+                          <p className="font-bold text-[#0E382E]">Poster Preview</p>
+                          <p className="text-[11px] text-stone-500 truncate max-w-xs">{tVideoPoster}</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
