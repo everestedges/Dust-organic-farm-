@@ -116,6 +116,34 @@ async function initDatabaseTables() {
     `).catch(() => {});
     await query("ALTER TABLE testimonials ADD COLUMN is_read BOOLEAN DEFAULT FALSE").catch(() => {});
 
+    // Coupons & Promotional Offers table
+    await query(`
+      CREATE TABLE IF NOT EXISTS coupons (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        code VARCHAR(50) NOT NULL UNIQUE,
+        discount_type VARCHAR(20) DEFAULT 'percentage',
+        discount_value DECIMAL(10,2) NOT NULL,
+        min_order_amount DECIMAL(10,2) DEFAULT 0,
+        max_discount_amount DECIMAL(10,2) NULL,
+        expiry_date VARCHAR(50) NOT NULL,
+        description VARCHAR(255) NULL,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `).catch(() => {});
+
+    // Seed default active coupons if empty
+    const existingCoupons = await query("SELECT COUNT(*) as count FROM coupons").catch(() => [{ count: 0 }]);
+    if (!existingCoupons || existingCoupons[0]?.count === 0) {
+      await query(`
+        INSERT INTO coupons (code, discount_type, discount_value, min_order_amount, expiry_date, description, is_active)
+        VALUES 
+          ('PANINDIA15', 'percentage', 15.00, 500.00, '2026-12-31', '15% OFF on orders above ₹500', 1),
+          ('WELCOME10', 'percentage', 10.00, 299.00, '2026-12-31', '10% OFF on your first purchase above ₹299', 1),
+          ('DUST50', 'fixed', 50.00, 499.00, '2026-12-31', 'Flat ₹50 OFF on orders above ₹499', 1)
+      `).catch(() => {});
+    }
+
     // Clean up demo banner so section is hidden by default until admin posts a real upcoming product
     await query("DELETE FROM upcoming_banners WHERE title = 'Ayurvedic Herbal Haircare & Pure Fruit Powders'").catch(() => {});
 
@@ -1998,6 +2026,159 @@ app.delete("/api/testimonials/:id", async (req, res) => {
     await query("DELETE FROM testimonials WHERE id = ?", [id]);
     return res.json({ success: true, message: "Review deleted successfully" });
   } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------
+// COUPONS & OFFERS ENDPOINTS
+// ---------------------------------------------------------------------
+app.get("/api/coupons", async (req, res) => {
+  try {
+    const showAll = req.query.all === "true";
+    const sql = showAll
+      ? "SELECT * FROM coupons ORDER BY id DESC"
+      : "SELECT * FROM coupons WHERE is_active = 1 AND (expiry_date >= CURDATE() OR expiry_date = '' OR expiry_date IS NULL) ORDER BY id DESC";
+    const rows = await query(sql);
+    const coupons = rows.map((r) => ({
+      id: r.id,
+      code: r.code,
+      discountType: r.discount_type || "percentage",
+      discountValue: Number(r.discount_value),
+      minOrderAmount: Number(r.min_order_amount || 0),
+      maxDiscountAmount: r.max_discount_amount ? Number(r.max_discount_amount) : null,
+      expiryDate: r.expiry_date,
+      description: r.description || "",
+      isActive: Boolean(r.is_active),
+      createdAt: r.created_at,
+    }));
+    return res.json({ success: true, count: coupons.length, coupons });
+  } catch (err) {
+    console.error("❌ Fetch coupons error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post("/api/coupons", async (req, res) => {
+  const {
+    code,
+    discountType,
+    discountValue,
+    minOrderAmount,
+    maxDiscountAmount,
+    expiryDate,
+    description,
+    isActive,
+  } = req.body;
+
+  if (!code || !discountValue) {
+    return res.status(400).json({ success: false, message: "Coupon code and discount value are required" });
+  }
+
+  const cleanCode = String(code).trim().toUpperCase();
+
+  try {
+    const result = await query(
+      `INSERT INTO coupons (code, discount_type, discount_value, min_order_amount, max_discount_amount, expiry_date, description, is_active)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         discount_type = VALUES(discount_type),
+         discount_value = VALUES(discount_value),
+         min_order_amount = VALUES(min_order_amount),
+         max_discount_amount = VALUES(max_discount_amount),
+         expiry_date = VALUES(expiry_date),
+         description = VALUES(description),
+         is_active = VALUES(is_active)`,
+      [
+        cleanCode,
+        discountType || "percentage",
+        Number(discountValue),
+        Number(minOrderAmount || 0),
+        maxDiscountAmount ? Number(maxDiscountAmount) : null,
+        expiryDate || "2026-12-31",
+        description || "",
+        isActive !== false ? 1 : 0,
+      ]
+    );
+
+    console.log(`🎟️ [MySQL] Coupon saved: ${cleanCode}`);
+    return res.json({ success: true, id: result.insertId, message: "Coupon saved successfully" });
+  } catch (err) {
+    console.error("❌ Save coupon error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put("/api/coupons/:id", async (req, res) => {
+  const { id } = req.params;
+  const {
+    code,
+    discountType,
+    discountValue,
+    minOrderAmount,
+    maxDiscountAmount,
+    expiryDate,
+    description,
+    isActive,
+  } = req.body;
+
+  try {
+    const updates = [];
+    const params = [];
+
+    if (code !== undefined) {
+      updates.push("code = ?");
+      params.push(String(code).trim().toUpperCase());
+    }
+    if (discountType !== undefined) {
+      updates.push("discount_type = ?");
+      params.push(discountType);
+    }
+    if (discountValue !== undefined) {
+      updates.push("discount_value = ?");
+      params.push(Number(discountValue));
+    }
+    if (minOrderAmount !== undefined) {
+      updates.push("min_order_amount = ?");
+      params.push(Number(minOrderAmount));
+    }
+    if (maxDiscountAmount !== undefined) {
+      updates.push("max_discount_amount = ?");
+      params.push(maxDiscountAmount ? Number(maxDiscountAmount) : null);
+    }
+    if (expiryDate !== undefined) {
+      updates.push("expiry_date = ?");
+      params.push(expiryDate);
+    }
+    if (description !== undefined) {
+      updates.push("description = ?");
+      params.push(description);
+    }
+    if (isActive !== undefined) {
+      updates.push("is_active = ?");
+      params.push(isActive ? 1 : 0);
+    }
+
+    if (updates.length > 0) {
+      params.push(id);
+      await query(`UPDATE coupons SET ${updates.join(", ")} WHERE id = ?`, params);
+    }
+
+    return res.json({ success: true, message: "Coupon updated successfully" });
+  } catch (err) {
+    console.error("❌ Update coupon error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete("/api/coupons/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await query("DELETE FROM coupons WHERE id = ?", [id]);
+    console.log(`🗑️ [MySQL] Deleted coupon id=${id}`);
+    return res.json({ success: true, message: "Coupon deleted successfully" });
+  } catch (err) {
+    console.error("❌ Delete coupon error:", err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });

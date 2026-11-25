@@ -1,16 +1,26 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShieldCheck, CheckCircle2, ArrowLeft, Clock } from "lucide-react";
+import { ShieldCheck, CheckCircle2, ArrowLeft, Clock, Ticket, Tag, X as XIcon, Sparkles } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 import { useAuthStore } from "@/lib/auth-store";
+import { useCouponsStore, Coupon } from "@/lib/coupons-store";
 
 export const Checkout: React.FC = () => {
   const { cart, getSubtotal, clearCart } = useCartStore();
   const { user, isAuthenticated, openAuthModal } = useAuthStore();
 
+  const { coupons, fetchCoupons, validateCoupon } = useCouponsStore();
+
+  useEffect(() => {
+    fetchCoupons(false);
+  }, [fetchCoupons]);
+
   const [promoCode, setPromoCode] = useState("");
-  const [discountPercent, setDiscountPercent] = useState(0);
-  const [promoApplied, setPromoApplied] = useState(false);
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [couponFeedback, setCouponFeedback] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
 
   const [formData, setFormData] = useState({
     name: user?.name || "",
@@ -41,15 +51,56 @@ export const Checkout: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const subtotal = getSubtotal();
-  const discountAmount = Math.round((subtotal * discountPercent) / 100);
+
+  // Dynamic coupon discount calculation
+  let discountAmount = 0;
+  if (appliedCoupon) {
+    const maxCap = appliedCoupon.maxDiscountAmount || appliedCoupon.maxDiscount;
+    if (appliedCoupon.minOrderAmount && subtotal < appliedCoupon.minOrderAmount) {
+      discountAmount = 0;
+    } else if (appliedCoupon.discountType === "percentage") {
+      let disc = Math.round((subtotal * appliedCoupon.discountValue) / 100);
+      if (maxCap && disc > maxCap) {
+        disc = maxCap;
+      }
+      discountAmount = disc;
+    } else {
+      discountAmount = Math.min(subtotal, appliedCoupon.discountValue);
+    }
+  }
+
   const isCOD = formData.paymentMethod === "cod";
   const shippingFee = subtotal === 0 ? 0 : isCOD ? 120 : subtotal >= 599 ? 0 : 50;
   const grandTotal = Math.max(0, subtotal - discountAmount + shippingFee);
 
+  const applyCouponCode = (code: string) => {
+    const clean = code.trim().toUpperCase();
+    if (!clean) return;
+    const result = validateCoupon(clean, subtotal);
+    if (result.isValid && result.coupon) {
+      setAppliedCoupon(result.coupon);
+      setPromoCode(result.coupon.code);
+      setCouponFeedback({
+        type: "success",
+        message: result.message,
+      });
+    } else {
+      setCouponFeedback({
+        type: "error",
+        message: result.message,
+      });
+    }
+  };
+
   const handleApplyPromo = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!promoCode.trim()) return;
-    alert("Invalid or expired Promo Code.");
+    applyCouponCode(promoCode);
+  };
+
+  const handleRemovePromo = () => {
+    setAppliedCoupon(null);
+    setPromoCode("");
+    setCouponFeedback(null);
   };
 
   const handleCompleteOrder = async (e: React.FormEvent) => {
@@ -80,6 +131,8 @@ export const Checkout: React.FC = () => {
       pincode: (formData.pincode || "411045").trim(),
       total: grandTotal,
       subtotal: subtotal,
+      discount: discountAmount,
+      promoCode: appliedCoupon?.code || null,
       paymentMethod: isCOD ? "COD" : "UPI",
       items:
         cart.length > 0
@@ -355,27 +408,147 @@ export const Checkout: React.FC = () => {
             ))}
           </div>
 
-          {/* Promo Code Form */}
-          <form onSubmit={handleApplyPromo} className="flex gap-2 pt-2 border-t border-[#74B487]/30">
-            <input
-              type="text"
-              placeholder="Enter Promo Code"
-              value={promoCode}
-              onChange={(e) => setPromoCode(e.target.value)}
-              className="flex-1 bg-white px-3 py-2 text-xs text-[#0E382E] rounded-xl border border-[#74B487]/40 outline-none uppercase font-extrabold"
-            />
-            <button
-              type="submit"
-              className="px-4 py-2 btn-dust-orange text-white text-xs font-extrabold uppercase tracking-wider rounded-xl shadow-xs"
-            >
-              Apply
-            </button>
-          </form>
+          {/* Available Offers Picker */}
+          {(() => {
+            const activeCoupons = coupons.filter(
+              (c) => c.isActive && (!c.expiryDate || new Date(c.expiryDate).getTime() >= Date.now())
+            );
+            if (activeCoupons.length === 0) return null;
+            return (
+              <div className="pt-2 border-t border-[#74B487]/30 space-y-2">
+                <div className="flex items-center justify-between text-xs font-extrabold text-[#0E382E]">
+                  <span className="inline-flex items-center gap-1.5">
+                    <Ticket className="w-3.5 h-3.5 text-[#E67E22]" /> Available Offers & Coupons
+                  </span>
+                  <span className="text-[10px] text-stone-500 font-bold">
+                    {activeCoupons.length} offer{activeCoupons.length > 1 ? "s" : ""}
+                  </span>
+                </div>
 
-          {promoApplied && (
-            <p className="text-xs text-[#E67E22] font-extrabold">
-              ✓ Promo code applied! 10% Discount included.
-            </p>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                  {activeCoupons.map((cpn) => {
+                    const isSelected = appliedCoupon?.code === cpn.code;
+                    const meetsMin = !cpn.minOrderAmount || subtotal >= cpn.minOrderAmount;
+
+                    return (
+                      <div
+                        key={cpn.id}
+                        className={`p-2 rounded-xl border text-xs flex items-center justify-between gap-2 transition-all ${
+                          isSelected
+                            ? "bg-[#25D366]/10 border-[#25D366]/40 shadow-xs"
+                            : meetsMin
+                            ? "bg-white border-[#74B487]/30 hover:border-[#0E382E]"
+                            : "bg-stone-50 border-stone-200 opacity-60"
+                        }`}
+                      >
+                        <div className="min-w-0 space-y-0.5">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-mono font-black text-[#0E382E] bg-stone-100 px-2 py-0.5 rounded border border-stone-200 text-[11px]">
+                              {cpn.code}
+                            </span>
+                            <span className="font-extrabold text-[#E67E22] text-[11px]">
+                              {cpn.discountType === "percentage"
+                                ? `${cpn.discountValue}% OFF`
+                                : `₹${cpn.discountValue} FLAT OFF`}
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-stone-500 truncate">
+                            {cpn.description || (cpn.minOrderAmount ? `Orders above ₹${cpn.minOrderAmount}` : "Valid on all orders")}
+                          </p>
+                        </div>
+
+                        {isSelected ? (
+                          <button
+                            type="button"
+                            onClick={handleRemovePromo}
+                            className="shrink-0 text-[10px] font-extrabold text-red-500 hover:underline px-2 py-1"
+                          >
+                            Remove
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => applyCouponCode(cpn.code)}
+                            className="shrink-0 px-2.5 py-1 bg-[#0E382E] hover:bg-[#E67E22] text-white text-[10px] font-extrabold rounded-lg uppercase transition-colors"
+                          >
+                            Apply
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Promo Code Form / Applied State */}
+          {!appliedCoupon ? (
+            <div className="pt-2 border-t border-[#74B487]/30 space-y-1.5">
+              <form onSubmit={handleApplyPromo} className="flex gap-2">
+                <div className="relative flex-1">
+                  <Tag className="w-3.5 h-3.5 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Enter Coupon Code"
+                    value={promoCode}
+                    onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                    className="w-full bg-white pl-8 pr-3 py-2 text-xs text-[#0E382E] rounded-xl border border-[#74B487]/40 outline-none uppercase font-extrabold tracking-wider focus:border-[#0E382E]"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="px-4 py-2 btn-dust-orange text-white text-xs font-extrabold uppercase tracking-wider rounded-xl shadow-xs"
+                >
+                  Apply
+                </button>
+              </form>
+
+              {couponFeedback && (
+                <p
+                  className={`text-xs font-extrabold flex items-center gap-1.5 ${
+                    couponFeedback.type === "success" ? "text-[#25D366]" : "text-red-500"
+                  }`}
+                >
+                  {couponFeedback.type === "success" ? (
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  ) : (
+                    <span>⚠️</span>
+                  )}
+                  {couponFeedback.message}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="pt-2 border-t border-[#74B487]/30">
+              <div className="p-2.5 rounded-xl bg-[#25D366]/15 border border-[#25D366]/40 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <div className="w-6 h-6 rounded-full bg-[#25D366] text-white flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <span className="font-mono font-black text-xs text-[#0E382E] uppercase">
+                      {appliedCoupon.code}
+                    </span>
+                    <p className="text-[10px] text-[#0E382E] font-extrabold">
+                      ✓ Coupon Applied: Save ₹{discountAmount} (
+                      {appliedCoupon.discountType === "percentage"
+                        ? `${appliedCoupon.discountValue}% OFF`
+                        : `₹${appliedCoupon.discountValue} FLAT`}
+                      )
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleRemovePromo}
+                  className="px-2.5 py-1 text-[11px] font-extrabold text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Calculation Breakdown */}
@@ -386,7 +559,13 @@ export const Checkout: React.FC = () => {
             </div>
             {discountAmount > 0 && (
               <div className="flex justify-between text-[#E67E22] font-extrabold">
-                <span>Discount (10%)</span>
+                <span>
+                  Coupon Discount ({appliedCoupon?.code}{" "}
+                  {appliedCoupon?.discountType === "percentage"
+                    ? `${appliedCoupon?.discountValue}%`
+                    : "FLAT"}
+                  )
+                </span>
                 <span>-₹{discountAmount}</span>
               </div>
             )}

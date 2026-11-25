@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Clock, Lock } from "lucide-react";
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, ShieldCheck, Clock, Lock, Ticket } from "lucide-react";
 import { useCartStore } from "@/lib/cart-store";
 import { useAuthStore } from "@/lib/auth-store";
 
@@ -160,6 +160,17 @@ export const Cart: React.FC = () => {
               <p className="text-[10px] text-stone-600 leading-tight">
                 *Free delivery on prepaid orders ₹599+. For COD orders, ₹120 delivery fee applies.
               </p>
+            </div>
+
+            {/* Coupon Callout */}
+            <div className="bg-white p-3 rounded-2xl border border-[#74B487]/30 flex items-center justify-between gap-2 text-xs">
+              <div className="flex items-center gap-2 min-w-0">
+                <Ticket className="w-4 h-4 text-[#E67E22] shrink-0" />
+                <span className="text-[#0E382E] font-bold truncate">Have a Coupon or Offer Code?</span>
+              </div>
+              <span className="text-[10px] font-extrabold text-[#E67E22] bg-[#E67E22]/10 px-2 py-0.5 rounded-md shrink-0">
+                Apply at Checkout
+              </span>
             </div>
 
             <div className="space-y-3 text-xs text-[#0E382E] font-medium">
