@@ -90,6 +90,32 @@ async function initDatabaseTables() {
       )
     `).catch(() => {});
 
+    // Customer Reviews & Video Testimonials table
+    await query(`
+      CREATE TABLE IF NOT EXISTS testimonials (
+        id VARCHAR(100) PRIMARY KEY,
+        customer_name VARCHAR(255) NOT NULL,
+        location VARCHAR(255) NOT NULL,
+        product_slug VARCHAR(255) NOT NULL,
+        product_name VARCHAR(255) NOT NULL,
+        rating INT DEFAULT 5,
+        title VARCHAR(255) NOT NULL,
+        comment TEXT NOT NULL,
+        media_type VARCHAR(50) DEFAULT 'text',
+        video_url TEXT NULL,
+        video_poster TEXT NULL,
+        video_duration VARCHAR(50) NULL,
+        verified_buyer BOOLEAN DEFAULT TRUE,
+        is_featured BOOLEAN DEFAULT TRUE,
+        is_approved BOOLEAN DEFAULT TRUE,
+        is_read BOOLEAN DEFAULT FALSE,
+        helpful_count INT DEFAULT 0,
+        date_str VARCHAR(100) DEFAULT 'Just now',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `).catch(() => {});
+    await query("ALTER TABLE testimonials ADD COLUMN is_read BOOLEAN DEFAULT FALSE").catch(() => {});
+
     // Clean up demo banner so section is hidden by default until admin posts a real upcoming product
     await query("DELETE FROM upcoming_banners WHERE title = 'Ayurvedic Herbal Haircare & Pure Fruit Powders'").catch(() => {});
 
@@ -1821,6 +1847,157 @@ app.post("/api/ticker", async (req, res) => {
     return res.json({ success: true, message: "Ticker content updated successfully" });
   } catch (err) {
     console.error("❌ Update ticker error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------
+// TESTIMONIALS / CUSTOMER REVIEWS ENDPOINTS
+// ---------------------------------------------------------------------
+app.get("/api/testimonials", async (req, res) => {
+  try {
+    const rows = await query("SELECT * FROM testimonials ORDER BY created_at DESC");
+    const testimonials = rows.map((r) => ({
+      id: r.id,
+      customerName: r.customer_name,
+      location: r.location,
+      productSlug: r.product_slug,
+      productName: r.product_name,
+      rating: r.rating,
+      title: r.title,
+      comment: r.comment,
+      mediaType: r.media_type || "text",
+      videoUrl: r.video_url || undefined,
+      videoPoster: r.video_poster || undefined,
+      videoDuration: r.video_duration || undefined,
+      verifiedBuyer: Boolean(r.verified_buyer),
+      isFeatured: Boolean(r.is_featured),
+      isApproved: Boolean(r.is_approved),
+      isRead: Boolean(r.is_read),
+      date: r.date_str || "Recently",
+      helpfulCount: r.helpful_count || 0,
+    }));
+    return res.json({ success: true, count: testimonials.length, testimonials });
+  } catch (err) {
+    console.error("❌ Fetch testimonials error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post("/api/testimonials", async (req, res) => {
+  const {
+    id,
+    customerName,
+    location,
+    productSlug,
+    productName,
+    rating,
+    title,
+    comment,
+    mediaType,
+    videoUrl,
+    videoPoster,
+    videoDuration,
+    verifiedBuyer,
+    isFeatured,
+    isApproved,
+    isRead,
+  } = req.body;
+
+  const reviewId = id || `test-${Date.now()}`;
+
+  try {
+    await query(
+      `INSERT INTO testimonials (
+        id, customer_name, location, product_slug, product_name, rating,
+        title, comment, media_type, video_url, video_poster, video_duration,
+        verified_buyer, is_featured, is_approved, is_read, helpful_count, date_str
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        customer_name = VALUES(customer_name),
+        location = VALUES(location),
+        rating = VALUES(rating),
+        title = VALUES(title),
+        comment = VALUES(comment),
+        media_type = VALUES(media_type),
+        video_url = VALUES(video_url),
+        video_poster = VALUES(video_poster),
+        is_approved = VALUES(is_approved),
+        is_featured = VALUES(is_featured),
+        is_read = VALUES(is_read)`,
+      [
+        reviewId,
+        customerName || "Customer",
+        location || "India",
+        productSlug || "general",
+        productName || "DUST Product",
+        rating || 5,
+        title || "Customer Review",
+        comment || "",
+        mediaType || "text",
+        videoUrl || null,
+        videoPoster || null,
+        videoDuration || null,
+        verifiedBuyer !== false,
+        isFeatured !== false,
+        isApproved !== false,
+        isRead === true,
+        0,
+        "Just now",
+      ]
+    );
+
+    console.log(`⭐ [MySQL] Customer review synced (ID: ${reviewId}, isRead: ${Boolean(isRead)})`);
+    return res.json({ success: true, id: reviewId, message: "Review saved successfully" });
+  } catch (err) {
+    console.error("❌ Save testimonial error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put("/api/testimonials/mark-all-read", async (req, res) => {
+  try {
+    await query("UPDATE testimonials SET is_read = 1 WHERE is_read = 0");
+    return res.json({ success: true, message: "All reviews marked as read" });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put("/api/testimonials/:id", async (req, res) => {
+  const { id } = req.params;
+  const { isApproved, isFeatured, isRead } = req.body;
+  try {
+    const updates = [];
+    const params = [];
+    if (typeof isApproved === "boolean") {
+      updates.push("is_approved = ?");
+      params.push(isApproved ? 1 : 0);
+    }
+    if (typeof isFeatured === "boolean") {
+      updates.push("is_featured = ?");
+      params.push(isFeatured ? 1 : 0);
+    }
+    if (typeof isRead === "boolean") {
+      updates.push("is_read = ?");
+      params.push(isRead ? 1 : 0);
+    }
+    if (updates.length > 0) {
+      params.push(id);
+      await query(`UPDATE testimonials SET ${updates.join(", ")} WHERE id = ?`, params);
+    }
+    return res.json({ success: true, message: "Review updated successfully" });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete("/api/testimonials/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await query("DELETE FROM testimonials WHERE id = ?", [id]);
+    return res.json({ success: true, message: "Review deleted successfully" });
+  } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
   }
 });

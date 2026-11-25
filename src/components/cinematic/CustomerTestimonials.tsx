@@ -148,6 +148,7 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
       verifiedBuyer: true,
       isFeatured: true,
       isApproved: true,
+      isRead: false, // New customer review - triggers notification in Admin Panel
     });
 
     setReviewSubmitted(true);

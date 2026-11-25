@@ -142,8 +142,13 @@ export const Admin: React.FC = () => {
     deleteTestimonial,
     toggleApproval,
     toggleFeatured,
+    markAsRead,
+    markAllAsRead,
+    fetchFromBackend: fetchTestimonialsFromBackend,
     resetToDefaults,
   } = useTestimonialsStore();
+
+  const unreadReviewsCount = testimonials.filter((t) => t.isRead === false).length;
 
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [editingTestimonial, setEditingTestimonial] = useState<Testimonial | null>(null);
@@ -472,6 +477,9 @@ export const Admin: React.FC = () => {
 
       // 5. Fetch upcoming banners from MySQL
       fetchUpcomingBanners(true);
+
+      // 6. Fetch live customer reviews & video testimonials
+      fetchTestimonialsFromBackend();
     } catch (err) {
       console.warn("Could not load live database records:", err);
     } finally {
@@ -481,6 +489,10 @@ export const Admin: React.FC = () => {
 
   useEffect(() => {
     fetchLiveDatabaseData();
+    const reviewSyncTimer = setInterval(() => {
+      fetchTestimonialsFromBackend();
+    }, 15000);
+    return () => clearInterval(reviewSyncTimer);
   }, []);
 
   // Image Upload Helpers (Upload directly from laptop / mobile device)
@@ -1134,6 +1146,12 @@ export const Admin: React.FC = () => {
               }`}
           >
             <Video className="w-4 h-4 text-[#E67E22]" /> Customer Videos & Reviews
+            {unreadReviewsCount > 0 && (
+              <span className="ml-1 px-2.5 py-0.5 text-[10px] font-black rounded-full bg-[#E67E22] text-white animate-pulse flex items-center gap-1 shadow-sm">
+                <span>{unreadReviewsCount}</span>
+                <span className="text-[9px]">NEW</span>
+              </span>
+            )}
           </button>
 
           <button
@@ -2089,6 +2107,16 @@ export const Admin: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-3">
+                {unreadReviewsCount > 0 && (
+                  <button
+                    onClick={() => markAllAsRead()}
+                    className="px-3.5 py-2 bg-[#E67E22]/10 hover:bg-[#E67E22]/20 text-[#E67E22] text-xs font-bold rounded-xl border border-[#E67E22]/30 transition-all flex items-center gap-1.5"
+                    title="Mark all unread reviews as seen"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-[#E67E22]" />
+                    <span>Mark All Read ({unreadReviewsCount})</span>
+                  </button>
+                )}
                 <button
                   onClick={resetToDefaults}
                   className="px-4 py-2 border border-[#74B487]/40 text-[#0E382E] hover:bg-[#E8F1E9] text-xs font-bold rounded-xl transition-colors"
@@ -2112,9 +2140,12 @@ export const Admin: React.FC = () => {
                 <p className="text-2xl font-black text-[#0E382E]">{testimonials.length}</p>
               </div>
               <div className="p-4 bg-[#E8F1E9] rounded-2xl border border-[#74B487]/40 text-center space-y-1">
-                <span className="text-[10px] uppercase font-bold text-[#1F684B]">Video Stories</span>
-                <p className="text-2xl font-black text-[#E67E22]">
-                  {testimonials.filter((t) => t.mediaType === "video").length}
+                <span className="text-[10px] uppercase font-bold text-[#1F684B]">New Unread</span>
+                <p className="text-2xl font-black text-[#E67E22] flex items-center justify-center gap-1.5">
+                  {unreadReviewsCount}
+                  {unreadReviewsCount > 0 && (
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#E67E22] animate-ping" />
+                  )}
                 </p>
               </div>
               <div className="p-4 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/30 text-center space-y-1">
@@ -2124,9 +2155,9 @@ export const Admin: React.FC = () => {
                 </p>
               </div>
               <div className="p-4 bg-[#F6F5F0] rounded-2xl border border-[#74B487]/30 text-center space-y-1">
-                <span className="text-[10px] uppercase font-bold text-stone-500">Average Rating</span>
-                <p className="text-2xl font-black text-[#E67E22] flex items-center justify-center gap-1">
-                  5.0 <Star className="w-4 h-4 fill-current inline stroke-none" />
+                <span className="text-[10px] uppercase font-bold text-stone-500">Video Stories</span>
+                <p className="text-2xl font-black text-[#0E382E]">
+                  {testimonials.filter((t) => t.mediaType === "video").length}
                 </p>
               </div>
             </div>
@@ -2233,6 +2264,12 @@ export const Admin: React.FC = () => {
                             {t.customerName}
                           </span>
                           <span className="text-[11px] text-stone-500">({t.location})</span>
+                          {t.isRead === false && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase text-white bg-[#E67E22] px-2.5 py-0.5 rounded-full shadow-xs animate-pulse">
+                              <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+                              NEW REVIEW
+                            </span>
+                          )}
                           {t.verifiedBuyer && (
                             <span className="inline-flex items-center gap-0.5 text-[9px] font-black uppercase text-[#1F684B] bg-[#E8F1E9] px-2 py-0.5 rounded-full border border-[#74B487]/30">
                               <CheckCircle2 className="w-3 h-3 text-[#25D366]" /> Verified Buyer
@@ -2271,6 +2308,17 @@ export const Admin: React.FC = () => {
                     {/* Right: Actions */}
                     <div className="flex flex-wrap md:flex-col items-end gap-2 shrink-0">
                       <div className="flex items-center gap-2">
+                        {t.isRead === false && (
+                          <button
+                            onClick={() => markAsRead(t.id)}
+                            className="px-2.5 py-1.5 bg-[#E67E22] hover:bg-[#d67018] text-white rounded-lg text-[11px] font-extrabold transition-colors shadow-xs flex items-center gap-1"
+                            title="Mark review as read"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <span>Mark Read</span>
+                          </button>
+                        )}
+
                         {/* Live Toggle */}
                         <button
                           onClick={() => toggleApproval(t.id)}

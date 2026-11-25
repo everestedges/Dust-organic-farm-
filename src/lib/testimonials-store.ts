@@ -21,6 +21,7 @@ export interface Testimonial {
   verifiedBuyer: boolean;
   isFeatured: boolean;
   isApproved: boolean;
+  isRead?: boolean;
   date: string;
   helpfulCount: number;
 }
@@ -32,6 +33,9 @@ interface TestimonialsStore {
   deleteTestimonial: (id: string) => void;
   toggleApproval: (id: string) => void;
   toggleFeatured: (id: string) => void;
+  markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
+  fetchFromBackend: () => Promise<void>;
   likeTestimonial: (id: string) => void;
   resetToDefaults: () => void;
 }
@@ -54,6 +58,7 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
     verifiedBuyer: true,
     isFeatured: true,
     isApproved: true,
+    isRead: true,
     date: "3 days ago",
     helpfulCount: 42,
   },
@@ -74,6 +79,7 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
     verifiedBuyer: true,
     isFeatured: true,
     isApproved: true,
+    isRead: true,
     date: "1 week ago",
     helpfulCount: 57,
   },
@@ -94,6 +100,7 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
     verifiedBuyer: true,
     isFeatured: true,
     isApproved: true,
+    isRead: true,
     date: "2 weeks ago",
     helpfulCount: 38,
   },
@@ -114,6 +121,7 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
     verifiedBuyer: true,
     isFeatured: true,
     isApproved: true,
+    isRead: true,
     date: "4 days ago",
     helpfulCount: 29,
   },
@@ -131,6 +139,7 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
     verifiedBuyer: true,
     isFeatured: true,
     isApproved: true,
+    isRead: true,
     date: "5 days ago",
     helpfulCount: 21,
   },
@@ -148,6 +157,7 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
     verifiedBuyer: true,
     isFeatured: true,
     isApproved: true,
+    isRead: true,
     date: "2 weeks ago",
     helpfulCount: 64,
   },
@@ -165,6 +175,7 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
     verifiedBuyer: true,
     isFeatured: true,
     isApproved: true,
+    isRead: true,
     date: "3 weeks ago",
     helpfulCount: 19,
   },
@@ -182,6 +193,7 @@ export const INITIAL_TESTIMONIALS: Testimonial[] = [
     verifiedBuyer: true,
     isFeatured: true,
     isApproved: true,
+    isRead: true,
     date: "1 day ago",
     helpfulCount: 35,
   },
@@ -192,44 +204,164 @@ export const useTestimonialsStore = create<TestimonialsStore>()(
     (set) => ({
       testimonials: INITIAL_TESTIMONIALS,
 
-      addTestimonial: (data) =>
+      addTestimonial: (data) => {
+        const newTestimonial: Testimonial = {
+          ...data,
+          id: `test-${Date.now()}`,
+          date: "Just now",
+          helpfulCount: 0,
+          isRead: data.isRead !== undefined ? data.isRead : false,
+        };
         set((state) => ({
-          testimonials: [
-            {
-              ...data,
-              id: `test-${Date.now()}`,
-              date: "Just now",
-              helpfulCount: 0,
-            },
-            ...state.testimonials,
-          ],
-        })),
+          testimonials: [newTestimonial, ...state.testimonials],
+        }));
 
-      updateTestimonial: (id, updates) =>
+        try {
+          const apiBase =
+            typeof window !== "undefined" && window.location.hostname !== "localhost"
+              ? "/api"
+              : "http://localhost:5000/api";
+          fetch(`${apiBase}/testimonials`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(newTestimonial),
+          }).catch(() => {});
+        } catch (_) {}
+      },
+
+      updateTestimonial: (id, updates) => {
         set((state) => ({
           testimonials: state.testimonials.map((t) =>
             t.id === id ? { ...t, ...updates } : t
           ),
-        })),
+        }));
+        try {
+          const apiBase =
+            typeof window !== "undefined" && window.location.hostname !== "localhost"
+              ? "/api"
+              : "http://localhost:5000/api";
+          fetch(`${apiBase}/testimonials/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updates),
+          }).catch(() => {});
+        } catch (_) {}
+      },
 
-      deleteTestimonial: (id) =>
+      deleteTestimonial: (id) => {
         set((state) => ({
           testimonials: state.testimonials.filter((t) => t.id !== id),
-        })),
+        }));
+        try {
+          const apiBase =
+            typeof window !== "undefined" && window.location.hostname !== "localhost"
+              ? "/api"
+              : "http://localhost:5000/api";
+          fetch(`${apiBase}/testimonials/${id}`, {
+            method: "DELETE",
+          }).catch(() => {});
+        } catch (_) {}
+      },
 
-      toggleApproval: (id) =>
+      toggleApproval: (id) => {
+        set((state) => {
+          const target = state.testimonials.find((t) => t.id === id);
+          const newStatus = target ? !target.isApproved : true;
+          try {
+            const apiBase =
+              typeof window !== "undefined" && window.location.hostname !== "localhost"
+                ? "/api"
+                : "http://localhost:5000/api";
+            fetch(`${apiBase}/testimonials/${id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ isApproved: newStatus, isRead: true }),
+            }).catch(() => {});
+          } catch (_) {}
+          return {
+            testimonials: state.testimonials.map((t) =>
+              t.id === id ? { ...t, isApproved: !t.isApproved, isRead: true } : t
+            ),
+          };
+        });
+      },
+
+      toggleFeatured: (id) => {
+        set((state) => {
+          const target = state.testimonials.find((t) => t.id === id);
+          const newStatus = target ? !target.isFeatured : true;
+          try {
+            const apiBase =
+              typeof window !== "undefined" && window.location.hostname !== "localhost"
+                ? "/api"
+                : "http://localhost:5000/api";
+            fetch(`${apiBase}/testimonials/${id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ isFeatured: newStatus }),
+            }).catch(() => {});
+          } catch (_) {}
+          return {
+            testimonials: state.testimonials.map((t) =>
+              t.id === id ? { ...t, isFeatured: !t.isFeatured } : t
+            ),
+          };
+        });
+      },
+
+      markAsRead: (id) => {
         set((state) => ({
           testimonials: state.testimonials.map((t) =>
-            t.id === id ? { ...t, isApproved: !t.isApproved } : t
+            t.id === id ? { ...t, isRead: true } : t
           ),
-        })),
+        }));
+        try {
+          const apiBase =
+            typeof window !== "undefined" && window.location.hostname !== "localhost"
+              ? "/api"
+              : "http://localhost:5000/api";
+          fetch(`${apiBase}/testimonials/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ isRead: true }),
+          }).catch(() => {});
+        } catch (_) {}
+      },
 
-      toggleFeatured: (id) =>
+      markAllAsRead: () => {
         set((state) => ({
-          testimonials: state.testimonials.map((t) =>
-            t.id === id ? { ...t, isFeatured: !t.isFeatured } : t
-          ),
-        })),
+          testimonials: state.testimonials.map((t) => ({ ...t, isRead: true })),
+        }));
+        try {
+          const apiBase =
+            typeof window !== "undefined" && window.location.hostname !== "localhost"
+              ? "/api"
+              : "http://localhost:5000/api";
+          fetch(`${apiBase}/testimonials/mark-all-read`, {
+            method: "PUT",
+          }).catch(() => {});
+        } catch (_) {}
+      },
+
+      fetchFromBackend: async () => {
+        try {
+          const apiBase =
+            typeof window !== "undefined" && window.location.hostname !== "localhost"
+              ? "/api"
+              : "http://localhost:5000/api";
+          const res = await fetch(`${apiBase}/testimonials`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && Array.isArray(data.testimonials) && data.testimonials.length > 0) {
+              set((state) => {
+                const backendIds = new Set(data.testimonials.map((t: Testimonial) => t.id));
+                const localsNotInBackend = state.testimonials.filter((t) => !backendIds.has(t.id));
+                return { testimonials: [...data.testimonials, ...localsNotInBackend] };
+              });
+            }
+          }
+        } catch (_) {}
+      },
 
       likeTestimonial: (id) =>
         set((state) => ({
