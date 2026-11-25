@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Sparkles, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { useUpcomingBannersStore, UpcomingBanner } from "@/lib/upcoming-banners-store";
 
 export const UpcomingProductBanner: React.FC = () => {
@@ -15,7 +16,7 @@ export const UpcomingProductBanner: React.FC = () => {
     if (banners.length <= 1) return;
     const timer = setInterval(() => {
       setActiveIndex((prev) => (prev + 1) % banners.length);
-    }, 4500);
+    }, 5500);
     return () => clearInterval(timer);
   }, [banners.length]);
 
@@ -26,14 +27,14 @@ export const UpcomingProductBanner: React.FC = () => {
   const currentBanner: UpcomingBanner = (banners[activeIndex] ?? banners[0]) as UpcomingBanner;
 
   return (
-    <section className="py-12 sm:py-16 px-4 sm:px-8 md:px-12 lg:px-16 w-full">
+    <section className="py-10 sm:py-14 px-4 sm:px-8 md:px-12 lg:px-16 w-full">
       {/* Section Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 border-b border-[#74B487]/40 pb-5">
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 sm:mb-8 border-b border-[#74B487]/40 pb-4 sm:pb-5">
         <div>
           <span className="text-xs uppercase tracking-[0.25em] text-[#E67E22] font-extrabold flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5 text-[#E67E22]" /> IN THE PIPELINE • COMING SOON
           </span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0E382E] mt-1">
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-[#0E382E] mt-1">
             Upcoming Product Launches
           </h2>
         </div>
@@ -42,86 +43,53 @@ export const UpcomingProductBanner: React.FC = () => {
         </p>
       </div>
 
-      {/* Main Banner Showcase */}
-      <div className="relative group rounded-3xl overflow-hidden border-2 border-[#74B487]/50 bg-gradient-to-br from-[#0E382E] via-[#124237] to-[#0E382E] text-white shadow-2xl">
-        {/* Ambient Warm Glow Background */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[#E67E22]/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#74B487]/20 rounded-full blur-3xl pointer-events-none" />
+      {/* Full-Size Panoramic Banner Container */}
+      <div className="relative group rounded-3xl overflow-hidden border-2 border-[#74B487]/40 shadow-2xl bg-[#1a0518] transition-all duration-300">
+        <Link
+          to={currentBanner.cta_link || "/contact"}
+          className="block relative w-full aspect-[16/9] sm:aspect-[2/1] overflow-hidden cursor-pointer"
+          title={currentBanner.title}
+        >
+          <img
+            src={currentBanner.image_url}
+            alt={currentBanner.title}
+            onError={(e) => {
+              const target = e.target as HTMLImageElement;
+              target.src = "/banners/dragon-berry-blast-upcoming.jpg";
+            }}
+            className="w-full h-full object-cover sm:object-fill transition-transform duration-700 ease-out group-hover:scale-[1.015]"
+          />
 
-        <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center p-6 sm:p-10 lg:p-12">
-          {/* Left Column: Visual Showcase */}
-          <div className="lg:col-span-6 flex flex-col items-center justify-center">
-            <div className="relative w-full max-w-md aspect-[4/3] rounded-2xl overflow-hidden bg-white/95 border-2 border-white/20 shadow-xl group-hover:scale-[1.01] transition-transform duration-500">
-              <img
-                src={currentBanner.image_url}
-                alt={currentBanner.title}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.src = "/logo.png";
-                }}
-                className="w-full h-full object-contain p-4 transition-transform duration-700 group-hover:scale-105"
-              />
-              {/* Badge overlay on image */}
-              <div className="absolute top-3 left-3 bg-[#0E382E]/90 backdrop-blur-md text-[#E67E22] px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border border-[#E67E22]/40 shadow-xs flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#E67E22] animate-ping" />
-                {currentBanner.tagline || "COMING SOON"}
-              </div>
-            </div>
-          </div>
+          {/* Interactive Hover Vignette Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        </Link>
 
-          {/* Right Column: Editorial Details & Teaser */}
-          <div className="lg:col-span-6 space-y-4 sm:space-y-5 text-left">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-[11px] font-bold text-[#E8F1E9]">
-              <Calendar className="w-3.5 h-3.5 text-[#E67E22]" />
-              <span>{currentBanner.launch_date || "Launching Soon"}</span>
-            </div>
-
-            <h3 className="text-2xl sm:text-4xl font-extrabold text-[#F6F5F0] leading-tight tracking-tight">
-              {currentBanner.title}
-            </h3>
-
-            {currentBanner.subtitle && (
-              <p className="text-sm sm:text-base font-semibold text-[#E67E22]">
-                {currentBanner.subtitle}
-              </p>
-            )}
-
-            {currentBanner.description && (
-              <p className="text-xs sm:text-sm text-[#E8F1E9]/80 leading-relaxed font-normal">
-                {currentBanner.description}
-              </p>
-            )}
-
-
-          </div>
-        </div>
-
-        {/* Carousel Controls (if multiple banners) */}
+        {/* Carousel Controls (when multiple banners exist) */}
         {banners.length > 1 && (
           <>
             <button
               onClick={() => setActiveIndex((prev) => (prev - 1 + banners.length) % banners.length)}
               aria-label="Previous banner"
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/50 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all opacity-0 group-hover:opacity-100 cursor-pointer shadow-lg"
+              className="absolute left-3 sm:left-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all opacity-0 group-hover:opacity-100 cursor-pointer shadow-lg"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               onClick={() => setActiveIndex((prev) => (prev + 1) % banners.length)}
               aria-label="Next banner"
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-9 h-9 rounded-full bg-black/50 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all opacity-0 group-hover:opacity-100 cursor-pointer shadow-lg"
+              className="absolute right-3 sm:right-5 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-[#E67E22] text-white flex items-center justify-center backdrop-blur-md border border-white/30 transition-all opacity-0 group-hover:opacity-100 cursor-pointer shadow-lg"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
 
             {/* Pagination Dots */}
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/20">
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 bg-black/50 px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/20">
               {banners.map((_, idx) => (
                 <button
                   key={idx}
                   onClick={() => setActiveIndex(idx)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
-                    activeIndex === idx ? "w-6 bg-[#E67E22]" : "w-2 bg-white/40 hover:bg-white/70"
+                  className={`h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                    activeIndex === idx ? "w-6 bg-[#E67E22]" : "w-2 bg-white/40 hover:bg-white/80"
                   }`}
                   aria-label={`Go to slide ${idx + 1}`}
                 />

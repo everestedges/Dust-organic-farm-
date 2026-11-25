@@ -579,14 +579,14 @@ export const Admin: React.FC = () => {
   const openNewUpcomingBannerModal = () => {
     setEditingUpcomingBanner(null);
     setUpcomingForm({
-      title: "",
-      subtitle: "",
-      tagline: "COMING SOON • IN THE PIPELINE",
+      title: "Dragon Berry Blast Fruit Drink Powder",
+      subtitle: "Real Fruit Goodness • Instant Refreshment • Energizing & Reviving",
+      tagline: "COMING SOON",
       launch_date: "Expected Launch: Q1 2027",
-      image_url: "",
-      description: "",
-      cta_text: "Pre-Order Inquiry",
-      cta_link: "/combos",
+      image_url: "/banners/dragon-berry-blast-upcoming.jpg",
+      description: "Pure dried dragon fruit, strawberries & blueberries drink powder. Just add water and shake.",
+      cta_text: "Stay Tuned",
+      cta_link: "/contact",
       display_order: upcomingBanners.length + 1,
     });
     setIsUpcomingModalOpen(true);
@@ -3823,15 +3823,20 @@ export const Admin: React.FC = () => {
 
               {/* Banner Image Upload & URL */}
               <div className="space-y-3 p-4 bg-[#E8F1E9]/40 rounded-2xl border border-[#74B487]/40">
-                <label className="block font-bold text-[#0E382E] uppercase">
-                  Showcase Banner Image *
-                </label>
+                <div>
+                  <label className="block font-bold text-[#0E382E] uppercase">
+                    Showcase Banner Image *
+                  </label>
+                  <p className="text-[10.5px] text-stone-500 font-medium mt-0.5">
+                    Recommended Size: <strong>1920 × 960 px (2:1 Widescreen Ratio)</strong>. This uploaded creative will fill the full container size on the website.
+                  </p>
+                </div>
 
                 {/* Upload from device */}
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                   <label className="flex-1 cursor-pointer bg-white border border-[#74B487]/60 hover:bg-[#E8F1E9] text-[#0E382E] px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-2xs">
                     <Upload className="w-4 h-4 text-[#E67E22]" />
-                    <span>{isUploadingUpcomingImg ? "Uploading Image..." : "Upload Photo from Laptop / Mobile"}</span>
+                    <span>{isUploadingUpcomingImg ? "Uploading Image..." : "Upload Full Banner Photo from Laptop / Mobile"}</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -3850,7 +3855,7 @@ export const Admin: React.FC = () => {
                   <input
                     type="text"
                     required
-                    placeholder="/dust-wellness-combo-advertisement.webp or https://..."
+                    placeholder="/banners/dragon-berry-blast-upcoming.jpg or https://..."
                     value={upcomingForm.image_url}
                     onChange={(e) => setUpcomingForm({ ...upcomingForm, image_url: e.target.value })}
                     className="w-full bg-white border border-[#74B487]/40 rounded-xl p-2.5 text-[#0E382E] font-semibold focus:outline-none focus:border-[#0E382E]"
@@ -3860,14 +3865,16 @@ export const Admin: React.FC = () => {
                 {/* Preview Box */}
                 {upcomingForm.image_url && (
                   <div className="pt-2">
-                    <p className="text-[10px] font-bold text-[#1F684B] uppercase mb-1">Live Image Preview:</p>
-                    <div className="relative w-full h-40 rounded-xl overflow-hidden bg-stone-900 border border-[#74B487]/50 shadow-inner">
+                    <p className="text-[10px] font-bold text-[#1F684B] uppercase mb-1">
+                      Full-Size Banner Preview (2:1 Aspect Ratio):
+                    </p>
+                    <div className="relative w-full aspect-[2/1] rounded-2xl overflow-hidden bg-stone-900 border border-[#74B487]/50 shadow-inner">
                       <img
                         src={upcomingForm.image_url}
                         alt="Upcoming Banner Preview"
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).src = "/dust-wellness-combo-advertisement.webp";
+                          (e.currentTarget as HTMLImageElement).src = "/banners/dragon-berry-blast-upcoming.jpg";
                         }}
                       />
                     </div>

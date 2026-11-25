@@ -144,8 +144,25 @@ async function initDatabaseTables() {
       `).catch(() => {});
     }
 
-    // Clean up demo banner so section is hidden by default until admin posts a real upcoming product
-    await query("DELETE FROM upcoming_banners WHERE title = 'Ayurvedic Herbal Haircare & Pure Fruit Powders'").catch(() => {});
+    // Seed Dragon Berry Blast upcoming banner if table is empty
+    const existingUpcoming = await query("SELECT COUNT(*) AS cnt FROM upcoming_banners").catch(() => [{ cnt: 0 }]);
+    if (existingUpcoming && existingUpcoming[0] && existingUpcoming[0].cnt === 0) {
+      await query(`
+        INSERT INTO upcoming_banners (title, subtitle, tagline, launch_date, image_url, description, cta_text, cta_link, display_order, is_active)
+        VALUES (
+          'Dragon Berry Blast Fruit Drink Powder',
+          'Real Fruit Goodness • Instant Refreshment • Energizing & Reviving',
+          'COMING SOON',
+          'Expected Launch: Q1 2027',
+          '/banners/dragon-berry-blast-upcoming.jpg',
+          'Pure dried dragon fruit, strawberries & blueberries. Just add water and shake.',
+          'Stay Tuned',
+          '/contact',
+          1,
+          1
+        )
+      `).catch(() => {});
+    }
 
     await query("ALTER TABLE orders MODIFY COLUMN order_status VARCHAR(50) DEFAULT 'Pending'").catch(() => {});
     await query("ALTER TABLE orders MODIFY COLUMN payment_status VARCHAR(50) DEFAULT 'PAID'").catch(() => {});

@@ -15,6 +15,22 @@ export interface UpcomingBanner {
   created_at?: string;
 }
 
+export const DEFAULT_UPCOMING_BANNERS: UpcomingBanner[] = [
+  {
+    id: 1,
+    title: "Dragon Berry Blast Fruit Drink Powder",
+    subtitle: "Real Fruit Goodness • Instant Refreshment • Energizing & Reviving",
+    tagline: "COMING SOON",
+    launch_date: "Expected Launch: Q1 2027",
+    image_url: "/banners/dragon-berry-blast-upcoming.jpg",
+    description: "Pure dried dragon fruit, strawberries & blueberries. Just add water, shake and energize your day.",
+    cta_text: "Stay Tuned",
+    cta_link: "/contact",
+    display_order: 1,
+    is_active: 1,
+  },
+];
+
 interface UpcomingBannersState {
   banners: UpcomingBanner[];
   isLoading: boolean;
@@ -30,7 +46,7 @@ const API_BASE =
     : "http://localhost:5000/api";
 
 export const useUpcomingBannersStore = create<UpcomingBannersState>((set, get) => ({
-  banners: [],
+  banners: DEFAULT_UPCOMING_BANNERS,
   isLoading: false,
 
   fetchBanners: async (all = false) => {
@@ -42,7 +58,13 @@ export const useUpcomingBannersStore = create<UpcomingBannersState>((set, get) =
       if (res.ok) {
         const data = await res.json();
         if (data.success && Array.isArray(data.banners)) {
-          set({ banners: data.banners });
+          if (data.banners.length > 0) {
+            set({ banners: data.banners });
+          } else if (!all) {
+            set({ banners: DEFAULT_UPCOMING_BANNERS });
+          } else {
+            set({ banners: [] });
+          }
         }
       }
     } catch (err) {
