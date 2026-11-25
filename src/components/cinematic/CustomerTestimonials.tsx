@@ -207,7 +207,7 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
           <div className="flex items-center gap-3 shrink-0">
             <button
               onClick={() => setIsWriteReviewOpen(true)}
-              className="px-5 py-3 rounded-2xl bg-[#0E382E] hover:bg-[#E67E22] text-white text-xs font-extrabold uppercase tracking-wider transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2"
+              className="px-5 py-3 rounded-2xl bg-[#E67E22] hover:bg-[#d67018] text-white text-xs font-extrabold uppercase tracking-wider transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer"
             >
               <Plus className="w-4 h-4" />
               <span>Write a Review</span>
@@ -761,7 +761,7 @@ export const CustomerTestimonials: React.FC<CustomerTestimonialsProps> = ({
                   <button
                     type="submit"
                     disabled={isUploading}
-                    className="w-full py-3.5 bg-[#0E382E] hover:bg-[#E67E22] text-white font-extrabold uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer text-xs disabled:opacity-60 flex items-center justify-center gap-2"
+                    className="w-full py-3.5 bg-[#E67E22] hover:bg-[#d67018] text-white font-extrabold uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer text-xs disabled:opacity-60 flex items-center justify-center gap-2"
                   >
                     {isUploading ? (
                       <>
