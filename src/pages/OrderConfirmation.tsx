@@ -63,15 +63,24 @@ export const OrderConfirmation: React.FC = () => {
         <div className="bg-white p-8 sm:p-12 rounded-3xl border border-[#74B487]/40 shadow-md space-y-6 printable-invoice">
           <div className="flex flex-col sm:flex-row justify-between items-start border-b border-[#74B487]/30 pb-6 gap-4">
             <div>
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-[#0E382E] flex items-center justify-center text-white text-xs font-bold">
-                  D
+              <div className="flex items-center gap-3">
+                <div className="relative w-12 h-12 rounded-full overflow-hidden border border-[#74B487]/50 shadow-xs flex items-center justify-center bg-[#0E382E] shrink-0">
+                  <img
+                    src="/logo.png"
+                    alt="DUST — Choice of Motherland"
+                    className="w-full h-full object-cover scale-[1.38]"
+                  />
                 </div>
-                <h2 className="text-xl font-extrabold text-[#0E382E] tracking-wider">
-                  DUST — CHOICE OF MOTHERLAND
-                </h2>
+                <div>
+                  <h2 className="text-xl font-extrabold text-[#0E382E] tracking-wider leading-tight">
+                    DUST — CHOICE OF MOTHERLAND
+                  </h2>
+                  <p className="text-[10px] text-[#E67E22] font-black uppercase tracking-widest">
+                    Pure & Natural Wellness Nutrition
+                  </p>
+                </div>
               </div>
-              <p className="text-[11px] text-[#1F684B] mt-1 font-semibold">
+              <p className="text-[11px] text-[#1F684B] mt-2 font-semibold">
                 Parent Company: <strong>{companyInfo.name}</strong>
               </p>
               <p className="text-[10px] text-[#74B487] font-medium">
