@@ -117,15 +117,11 @@ export const useCouponsStore = create<CouponsStore>()(
             body: JSON.stringify(data),
           });
           if (res.ok) {
-            const result = await res.json();
-            if (result.success && result.id) {
-              set((state) => ({
-                coupons: state.coupons.map((c) =>
-                  c.code === cleanCode ? { ...c, id: result.id } : c
-                ),
-              }));
+            const result = await res.json().catch(() => null);
+            if (result?.success) {
+              await get().fetchCoupons(true);
+              return true;
             }
-            return true;
           }
         } catch (err) {
           console.error("Failed to sync coupon to database:", err);
@@ -134,49 +130,66 @@ export const useCouponsStore = create<CouponsStore>()(
       },
 
       updateCoupon: async (id: number | string, updates: Partial<Coupon>) => {
+        const cleanCode = updates.code ? updates.code.trim().toUpperCase() : undefined;
+        // Optimistically update local store
         set((state) => ({
           coupons: state.coupons.map((c) =>
-            c.id === id
+            String(c.id) === String(id) || (cleanCode && c.code === cleanCode) || c.code === String(id)
               ? {
                   ...c,
                   ...updates,
-                  code: updates.code ? updates.code.trim().toUpperCase() : c.code,
+                  code: cleanCode || c.code,
                 }
               : c
           ),
         }));
 
         try {
-          await fetch(`${getApiBase()}/coupons/${id}`, {
+          const res = await fetch(`${getApiBase()}/coupons/${encodeURIComponent(String(id))}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(updates),
           });
-          return true;
+          if (res.ok) {
+            const data = await res.json().catch(() => null);
+            if (data?.success) {
+              await get().fetchCoupons(true);
+              return true;
+            }
+          }
         } catch (err) {
           console.error("Failed to update coupon on server:", err);
           return false;
         }
+        return false;
       },
 
       deleteCoupon: async (id: number | string) => {
         set((state) => ({
-          coupons: state.coupons.filter((c) => c.id !== id),
+          coupons: state.coupons.filter(
+            (c) => String(c.id) !== String(id) && c.code !== String(id)
+          ),
         }));
 
         try {
-          await fetch(`${getApiBase()}/coupons/${id}`, {
+          const res = await fetch(`${getApiBase()}/coupons/${encodeURIComponent(String(id))}`, {
             method: "DELETE",
           });
-          return true;
+          if (res.ok) {
+            await get().fetchCoupons(true);
+            return true;
+          }
         } catch (err) {
           console.error("Failed to delete coupon on server:", err);
           return false;
         }
+        return false;
       },
 
       toggleCouponActive: async (id: number | string) => {
-        const target = get().coupons.find((c) => c.id === id);
+        const target = get().coupons.find(
+          (c) => String(c.id) === String(id) || c.code === String(id)
+        );
         if (!target) return false;
         const newActive = !target.isActive;
         return get().updateCoupon(id, { isActive: newActive });

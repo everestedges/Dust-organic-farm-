@@ -132,6 +132,18 @@ async function initDatabaseTables() {
       )
     `).catch(() => {});
 
+    // Seed default coupons if table is empty
+    const existingCoupons = await query("SELECT COUNT(*) as count FROM coupons").catch(() => [{ count: 0 }]);
+    if (!existingCoupons || existingCoupons[0]?.count === 0) {
+      await query(`
+        INSERT INTO coupons (code, discount_type, discount_value, min_order_amount, expiry_date, description, is_active)
+        VALUES 
+          ('PANINDIA15', 'percentage', 15.00, 500.00, '2026-12-31', '15% OFF on orders above ₹500 across India', 1),
+          ('WELCOME10', 'percentage', 10.00, 299.00, '2026-12-31', '10% OFF on your first wellness order above ₹299', 1),
+          ('DUST50', 'fixed', 50.00, 499.00, '2026-12-31', 'Flat ₹50 Instant Cashback/Discount on orders above ₹499', 1)
+      `).catch(() => {});
+    }
+
     // Categories table
     await query(`
       CREATE TABLE IF NOT EXISTS categories (
@@ -2194,48 +2206,88 @@ app.put("/api/coupons/:id", async (req, res) => {
   } = req.body;
 
   try {
-    const updates = [];
-    const params = [];
+    const cleanCode = code ? String(code).trim().toUpperCase() : null;
+    const isNumericId = !isNaN(Number(id)) && Number(id) > 0;
 
-    if (code !== undefined) {
-      updates.push("code = ?");
-      params.push(String(code).trim().toUpperCase());
+    // Check if coupon exists by id or code
+    let existing = null;
+    if (isNumericId) {
+      const rows = await query("SELECT * FROM coupons WHERE id = ? LIMIT 1", [Number(id)]);
+      if (rows && rows.length > 0) existing = rows[0];
     }
-    if (discountType !== undefined) {
-      updates.push("discount_type = ?");
-      params.push(discountType);
+    if (!existing && cleanCode) {
+      const rows = await query("SELECT * FROM coupons WHERE code = ? LIMIT 1", [cleanCode]);
+      if (rows && rows.length > 0) existing = rows[0];
     }
-    if (discountValue !== undefined) {
-      updates.push("discount_value = ?");
-      params.push(Number(discountValue));
-    }
-    if (minOrderAmount !== undefined) {
-      updates.push("min_order_amount = ?");
-      params.push(Number(minOrderAmount));
-    }
-    if (maxDiscountAmount !== undefined) {
-      updates.push("max_discount_amount = ?");
-      params.push(maxDiscountAmount ? Number(maxDiscountAmount) : null);
-    }
-    if (expiryDate !== undefined) {
-      updates.push("expiry_date = ?");
-      params.push(expiryDate);
-    }
-    if (description !== undefined) {
-      updates.push("description = ?");
-      params.push(description);
-    }
-    if (isActive !== undefined) {
-      updates.push("is_active = ?");
-      params.push(isActive ? 1 : 0);
+    if (!existing && isNaN(Number(id))) {
+      const rows = await query("SELECT * FROM coupons WHERE code = ? LIMIT 1", [String(id).trim().toUpperCase()]);
+      if (rows && rows.length > 0) existing = rows[0];
     }
 
-    if (updates.length > 0) {
-      params.push(id);
-      await query(`UPDATE coupons SET ${updates.join(", ")} WHERE id = ?`, params);
-    }
+    if (existing) {
+      const updates = [];
+      const params = [];
 
-    return res.json({ success: true, message: "Coupon updated successfully" });
+      if (cleanCode !== null) {
+        updates.push("code = ?");
+        params.push(cleanCode);
+      }
+      if (discountType !== undefined) {
+        updates.push("discount_type = ?");
+        params.push(discountType);
+      }
+      if (discountValue !== undefined) {
+        updates.push("discount_value = ?");
+        params.push(Number(discountValue));
+      }
+      if (minOrderAmount !== undefined) {
+        updates.push("min_order_amount = ?");
+        params.push(Number(minOrderAmount));
+      }
+      if (maxDiscountAmount !== undefined) {
+        updates.push("max_discount_amount = ?");
+        params.push(maxDiscountAmount ? Number(maxDiscountAmount) : null);
+      }
+      if (expiryDate !== undefined) {
+        updates.push("expiry_date = ?");
+        params.push(expiryDate);
+      }
+      if (description !== undefined) {
+        updates.push("description = ?");
+        params.push(description);
+      }
+      if (isActive !== undefined) {
+        updates.push("is_active = ?");
+        params.push(isActive ? 1 : 0);
+      }
+
+      if (updates.length > 0) {
+        params.push(existing.id);
+        await query(`UPDATE coupons SET ${updates.join(", ")} WHERE id = ?`, params);
+      }
+
+      console.log(`🎟️ [MySQL] Coupon updated: id=${existing.id}, code=${cleanCode || existing.code}`);
+      return res.json({ success: true, id: existing.id, message: "Coupon updated successfully" });
+    } else {
+      // Coupon didn't exist in DB yet: INSERT it (UPSERT behavior)
+      const finalCode = cleanCode || String(id).trim().toUpperCase();
+      const insertSql = `
+        INSERT INTO coupons (code, discount_type, discount_value, min_order_amount, max_discount_amount, expiry_date, description, is_active)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `;
+      const result = await query(insertSql, [
+        finalCode,
+        discountType || "percentage",
+        Number(discountValue) || 10,
+        Number(minOrderAmount) || 0,
+        maxDiscountAmount ? Number(maxDiscountAmount) : null,
+        expiryDate || "2026-12-31",
+        description || "",
+        isActive !== undefined ? (isActive ? 1 : 0) : 1,
+      ]);
+      console.log(`🎟️ [MySQL] Coupon upserted: id=${result.insertId}, code=${finalCode}`);
+      return res.json({ success: true, id: result.insertId, message: "Coupon saved successfully" });
+    }
   } catch (err) {
     console.error("❌ Update coupon error:", err);
     return res.status(500).json({ success: false, error: err.message });
@@ -2245,8 +2297,13 @@ app.put("/api/coupons/:id", async (req, res) => {
 app.delete("/api/coupons/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    await query("DELETE FROM coupons WHERE id = ?", [id]);
-    console.log(`🗑️ [MySQL] Deleted coupon id=${id}`);
+    const isNumericId = !isNaN(Number(id)) && Number(id) > 0;
+    if (isNumericId) {
+      await query("DELETE FROM coupons WHERE id = ? OR code = ?", [Number(id), String(id).trim().toUpperCase()]);
+    } else {
+      await query("DELETE FROM coupons WHERE code = ?", [String(id).trim().toUpperCase()]);
+    }
+    console.log(`🗑️ [MySQL] Deleted coupon id/code=${id}`);
     return res.json({ success: true, message: "Coupon deleted successfully" });
   } catch (err) {
     console.error("❌ Delete coupon error:", err);
