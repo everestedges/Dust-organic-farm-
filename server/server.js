@@ -132,18 +132,6 @@ async function initDatabaseTables() {
       )
     `).catch(() => {});
 
-    // Seed default coupons if table is empty
-    const existingCoupons = await query("SELECT COUNT(*) as count FROM coupons").catch(() => [{ count: 0 }]);
-    if (!existingCoupons || existingCoupons[0]?.count === 0) {
-      await query(`
-        INSERT INTO coupons (code, discount_type, discount_value, min_order_amount, expiry_date, description, is_active)
-        VALUES 
-          ('PANINDIA15', 'percentage', 15.00, 500.00, '2026-12-31', '15% OFF on orders above ₹500 across India', 1),
-          ('WELCOME10', 'percentage', 10.00, 299.00, '2026-12-31', '10% OFF on your first wellness order above ₹299', 1),
-          ('DUST50', 'fixed', 50.00, 499.00, '2026-12-31', 'Flat ₹50 Instant Cashback/Discount on orders above ₹499', 1)
-      `).catch(() => {});
-    }
-
     // Categories table
     await query(`
       CREATE TABLE IF NOT EXISTS categories (
