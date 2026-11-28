@@ -37,6 +37,8 @@ import {
   AlertCircle,
   Sparkles,
   Truck,
+  Download,
+  FileSpreadsheet,
 } from "lucide-react";
 import { products as initialProducts, companyInfo, Product } from "@/lib/data";
 import { useAdminAuthStore } from "@/lib/admin-auth-store";
@@ -422,6 +424,56 @@ export const Admin: React.FC = () => {
 
   // State 7: Customers
   const [customers, setCustomers] = useState<any[]>([]);
+  const [customerSearchQuery, setCustomerSearchQuery] = useState("");
+
+  const exportCustomersToCSV = () => {
+    if (customers.length === 0) {
+      alert("No registered customers found to export.");
+      return;
+    }
+
+    const headers = [
+      "Customer ID",
+      "Full Name",
+      "Email Address",
+      "Mobile Number",
+      "Orders Placed",
+      "Total Spent (INR)",
+      "Registered Date",
+    ];
+
+    const rows = customers.map((c) => [
+      `"${c.id ?? ""}"`,
+      `"${(c.name || "").replace(/"/g, '""')}"`,
+      `"${(c.email || "").replace(/"/g, '""')}"`,
+      `"${(c.phone || "").replace(/"/g, '""')}"`,
+      `"${c.orders ?? 0}"`,
+      `"${(c.totalSpent || "0").replace(/[^0-9.]/g, "")}"`,
+      `"${(c.date || "").replace(/"/g, '""')}"`,
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map((r) => r.join(","))].join("\r\n");
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const today = new Date().toISOString().split("T")[0];
+    link.href = url;
+    link.setAttribute("download", `dust-registered-customers-${today}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const filteredCustomers = customers.filter((c) => {
+    if (!customerSearchQuery.trim()) return true;
+    const q = customerSearchQuery.toLowerCase();
+    return (
+      (c.name || "").toLowerCase().includes(q) ||
+      (c.email || "").toLowerCase().includes(q) ||
+      (c.phone || "").toLowerCase().includes(q)
+    );
+  });
 
   // State 8: Customer Orders
   const [orders, setOrders] = useState<any[]>([]);
@@ -2189,10 +2241,55 @@ export const Admin: React.FC = () => {
 
         {/* Tab 6: Customer Directory (#7) */}
         {activeTab === "customers" && (
-          <div className="bg-white p-8 rounded-3xl border border-[#74B487]/40 shadow-sm space-y-6">
-            <div>
-              <h3 className="text-xl font-extrabold text-[#0E382E]">Registered Customer Directory</h3>
-              <p className="text-xs text-[#1F684B]">Search customer profiles and view purchase history.</p>
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#74B487]/40 shadow-sm space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xl font-extrabold text-[#0E382E]">Registered Customer Directory</h3>
+                  <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-[#E8F1E9] text-[#0E382E] border border-[#74B487]/30">
+                    {customers.length} Customers
+                  </span>
+                </div>
+                <p className="text-xs text-[#1F684B] mt-1">
+                  Search customer profiles, track lifetime spending, and export records for WhatsApp/Email marketing.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-3">
+                {/* Search Input */}
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-stone-400" />
+                  <input
+                    type="text"
+                    placeholder="Search name, email, phone..."
+                    value={customerSearchQuery}
+                    onChange={(e) => setCustomerSearchQuery(e.target.value)}
+                    className="bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl pl-8 pr-8 py-2 text-xs text-[#0E382E] font-medium focus:outline-none focus:border-[#0E382E] w-56 sm:w-64"
+                  />
+                  {customerSearchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setCustomerSearchQuery("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Export Button */}
+                <button
+                  type="button"
+                  onClick={exportCustomersToCSV}
+                  disabled={customers.length === 0}
+                  className="px-4 py-2 bg-[#0E382E] hover:bg-[#E67E22] text-white text-xs font-extrabold rounded-xl flex items-center gap-2 shadow-sm transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Export all customers to Excel / CSV spreadsheet"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-[#E67E22]" />
+                  <span>Export to Excel / CSV</span>
+                  <Download className="w-3.5 h-3.5" />
+                </button>
+              </div>
             </div>
 
             <div className="border border-[#74B487]/30 rounded-2xl overflow-hidden text-xs">
@@ -2208,15 +2305,17 @@ export const Admin: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#74B487]/20 text-[#1F684B]">
-                  {customers.length === 0 ? (
+                  {filteredCustomers.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="p-8 text-center text-stone-500 font-medium italic">
-                        No registered customers found in the database. When new users register, they will appear here automatically.
+                        {customerSearchQuery
+                          ? `No customers matching "${customerSearchQuery}".`
+                          : "No registered customers found in the database. When new users register, they will appear here automatically."}
                       </td>
                     </tr>
                   ) : (
-                    customers.map((cust) => (
-                      <tr key={cust.id}>
+                    filteredCustomers.map((cust) => (
+                      <tr key={cust.id} className="hover:bg-[#F6F5F0]/60 transition-colors">
                         <td className="p-4 font-extrabold text-[#0E382E]">{cust.name}</td>
                         <td className="p-4">{cust.email}</td>
                         <td className="p-4 font-mono">{cust.phone}</td>
