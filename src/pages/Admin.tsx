@@ -1635,49 +1635,201 @@ export const Admin: React.FC = () => {
 
         {/* Tab 3: Categories & Variants (#2, #3) */}
         {activeTab === "categories" && (
-          <div className="bg-white p-8 rounded-3xl border border-[#74B487]/40 shadow-sm space-y-6">
-            <div>
-              <h3 className="text-xl font-extrabold text-[#0E382E]">Product Categories & Package Variants</h3>
-              <p className="text-xs text-[#1F684B]">Organize product classifications and package variant sizes.</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="border border-[#74B487]/30 p-6 rounded-2xl bg-[#F6F5F0] space-y-3">
-                <h4 className="font-extrabold text-[#0E382E]">Active Categories</h4>
-                <ul className="space-y-2 text-xs">
-                  {categories.map((cat) => (
-                    <li key={cat.id} className="bg-white p-3 rounded-xl border border-[#74B487]/30 flex justify-between items-center">
-                      <div>
-                        <p className="font-extrabold text-[#0E382E]">{cat.name}</p>
-                        <span className="text-[10px] text-[#74B487] font-mono">slug: {cat.slug}</span>
-                      </div>
-                      <span className="bg-[#0E382E] text-[#E67E22] font-bold px-2.5 py-1 rounded-full text-[10px]">
-                        {cat.count} SKUs
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+          <div className="bg-white p-6 sm:p-8 rounded-3xl border border-[#74B487]/40 shadow-sm space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="text-xl sm:text-2xl font-extrabold text-[#0E382E]">
+                  Product Categories & Package Variants
+                </h3>
+                <p className="text-xs text-[#1F684B]">
+                  Organize product classifications, storefront filters, and package variant sizes across your catalog.
+                </p>
               </div>
 
-              <div className="border border-[#74B487]/30 p-6 rounded-2xl bg-[#F6F5F0] space-y-3">
-                <h4 className="font-extrabold text-[#0E382E]">Standard Package Variants</h4>
-                <ul className="space-y-2 text-xs">
-                  <li className="bg-white p-3 rounded-xl border border-[#74B487]/30 flex justify-between items-center">
-                    <div>
-                      <p className="font-extrabold text-[#0E382E]">20g Digestive Pouch</p>
-                      <span className="text-[10px] text-[#74B487]">Makes 4 After-Meal Shots</span>
-                    </div>
-                    <span className="text-xs font-extrabold text-[#0E382E]">₹249</span>
-                  </li>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    fetchCategories(true);
+                    fetchVariants();
+                  }}
+                  disabled={isCategoriesLoading}
+                  className="px-3 py-2 bg-[#F6F5F0] hover:bg-[#74B487]/20 border border-[#74B487]/40 text-[#0E382E] text-xs font-bold rounded-xl flex items-center gap-1.5 transition-colors"
+                  title="Reload from Database"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${isCategoriesLoading ? "animate-spin" : ""}`} />
+                  Refresh
+                </button>
+                <button
+                  type="button"
+                  onClick={openNewCategoryModal}
+                  className="px-4 py-2 bg-[#0E382E] hover:bg-[#E67E22] text-white text-xs font-extrabold rounded-xl flex items-center gap-1.5 shadow-sm transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  + Add Category
+                </button>
+                <button
+                  type="button"
+                  onClick={openNewVariantModal}
+                  className="px-4 py-2 bg-[#E67E22] hover:bg-[#D35400] text-white text-xs font-extrabold rounded-xl flex items-center gap-1.5 shadow-sm transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  + Add Variant
+                </button>
+              </div>
+            </div>
 
-                  <li className="bg-white p-3 rounded-xl border border-[#74B487]/30 flex justify-between items-center">
-                    <div>
-                      <p className="font-extrabold text-[#0E382E]">100g Cooler Pack</p>
-                      <span className="text-[10px] text-[#74B487]">Makes 10 Refreshment Drinks</span>
-                    </div>
-                    <span className="text-xs font-extrabold text-[#0E382E]">₹199</span>
-                  </li>
-                </ul>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Active Categories Column */}
+              <div className="border border-[#74B487]/30 p-5 sm:p-6 rounded-2xl bg-[#F6F5F0] space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-[#0E382E]" />
+                    <h4 className="font-extrabold text-[#0E382E] text-sm">
+                      Active Categories ({categories.length})
+                    </h4>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={openNewCategoryModal}
+                    className="text-[11px] font-bold text-[#E67E22] hover:underline flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Add New
+                  </button>
+                </div>
+
+                {categories.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-stone-500 bg-white rounded-xl border border-dashed border-[#74B487]/40">
+                    No categories configured yet. Click "+ Add Category" above.
+                  </div>
+                ) : (
+                  <ul className="space-y-2.5 text-xs">
+                    {categories.map((cat) => (
+                      <li
+                        key={cat.id}
+                        className="bg-white p-3.5 rounded-xl border border-[#74B487]/30 hover:border-[#74B487] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs transition-all"
+                      >
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="font-extrabold text-[#0E382E] text-sm leading-tight">
+                              {cat.name}
+                            </p>
+                            {cat.isActive === false ? (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-stone-200 text-stone-600">
+                                Hidden
+                              </span>
+                            ) : (
+                              <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-[#E8F1E9] text-[#1F684B]">
+                                Active
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 flex-wrap text-[11px] text-[#74B487]">
+                            <span className="font-mono bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200 text-[#0E382E] text-[10px]">
+                              slug: {cat.slug}
+                            </span>
+                            {(cat.desc || cat.description) && (
+                              <span className="text-stone-500 text-[11px] truncate max-w-xs">
+                                {cat.desc || cat.description}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                          <span className="bg-[#0E382E] text-[#E67E22] font-extrabold px-2.5 py-1 rounded-full text-[10px]">
+                            {cat.count ?? 0} SKUs
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => openEditCategoryModal(cat)}
+                            className="p-1.5 rounded-lg text-stone-500 hover:text-[#0E382E] hover:bg-[#F6F5F0] transition-colors"
+                            title="Edit Category"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCategory(cat)}
+                            className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            title="Delete Category"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Standard Package Variants Column */}
+              <div className="border border-[#74B487]/30 p-5 sm:p-6 rounded-2xl bg-[#F6F5F0] space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-[#0E382E]" />
+                    <h4 className="font-extrabold text-[#0E382E] text-sm">
+                      Standard Package Variants ({variants.length})
+                    </h4>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={openNewVariantModal}
+                    className="text-[11px] font-bold text-[#E67E22] hover:underline flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Add New
+                  </button>
+                </div>
+
+                {variants.length === 0 ? (
+                  <div className="p-8 text-center text-xs text-stone-500 bg-white rounded-xl border border-dashed border-[#74B487]/40">
+                    No variants configured yet. Click "+ Add Variant" above.
+                  </div>
+                ) : (
+                  <ul className="space-y-2.5 text-xs">
+                    {variants.map((v) => (
+                      <li
+                        key={v.id}
+                        className="bg-white p-3.5 rounded-xl border border-[#74B487]/30 hover:border-[#74B487] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs transition-all"
+                      >
+                        <div className="space-y-0.5 min-w-0 flex-1">
+                          <p className="font-extrabold text-[#0E382E] text-sm leading-tight">
+                            {v.name}
+                          </p>
+                          {v.subtitle && (
+                            <span className="text-[11px] text-[#1F684B] block">
+                              {v.subtitle}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2.5 self-end sm:self-center shrink-0">
+                          {v.price !== null && v.price !== undefined && (
+                            <span className="text-xs font-extrabold text-[#0E382E] bg-[#E8F1E9] px-2.5 py-1 rounded-full">
+                              ₹{v.price}
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => openEditVariantModal(v)}
+                            className="p-1.5 rounded-lg text-stone-500 hover:text-[#0E382E] hover:bg-[#F6F5F0] transition-colors"
+                            title="Edit Variant"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteVariant(v)}
+                            className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            title="Delete Variant"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
           </div>
@@ -3032,14 +3184,14 @@ export const Admin: React.FC = () => {
                       </label>
                       <select
                         value={newProductCategory}
-                        onChange={(e) => setNewProductCategory(e.target.value as any)}
+                        onChange={(e) => setNewProductCategory(e.target.value)}
                         className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-semibold"
                       >
-                        <option value="heritage-wellness">Heritage Wellness (Digestion, Herbal)</option>
-                        <option value="wholesome-millets">Wholesome Laddoo Premix (Millets, Nuts)</option>
-                        <option value="pure-fruit-powders">Pure Fruit Powders</option>
-                        <option value="pure-nut-powders">Pure Nut Powders (Almond, Cashew)</option>
-                        <option value="herbal-haircare">Herbal Haircare</option>
+                        {categories.map((c) => (
+                          <option key={c.id} value={c.slug}>
+                            {c.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
 
@@ -4343,6 +4495,281 @@ export const Admin: React.FC = () => {
                     "Save Changes"
                   ) : (
                     "Create Coupon"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* Category Creation / Edit Modal */}
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-[#74B487]/50 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setIsCategoryModalOpen(false)}
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="mb-6">
+              <span className="text-[10px] font-extrabold tracking-widest text-[#E67E22] uppercase">
+                {editingCategory ? "EDIT CATEGORY" : "NEW CATEGORY"}
+              </span>
+              <h3 className="text-2xl font-black text-[#0E382E]">
+                {editingCategory ? "Update Product Category" : "Add Product Category"}
+              </h3>
+              <p className="text-xs text-stone-500 mt-1">
+                Categories group products on the website and provide storefront filtering.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveCategory} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#0E382E] uppercase mb-1">
+                  Category Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Pure Fruit Powders"
+                  value={categoryForm.name}
+                  onChange={(e) => {
+                    const name = e.target.value;
+                    const autoSlug = name
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, "-")
+                      .replace(/(^-|-$)/g, "");
+                    setCategoryForm({
+                      ...categoryForm,
+                      name,
+                      slug: editingCategory ? categoryForm.slug : autoSlug,
+                    });
+                  }}
+                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-bold focus:outline-none focus:border-[#0E382E]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#0E382E] uppercase mb-1">
+                  URL Slug Identifier *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. pure-fruit-powders"
+                  value={categoryForm.slug}
+                  onChange={(e) =>
+                    setCategoryForm({
+                      ...categoryForm,
+                      slug: e.target.value
+                        .toLowerCase()
+                        .replace(/[^a-z0-9-]/g, ""),
+                    })
+                  }
+                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-mono text-xs focus:outline-none focus:border-[#0E382E]"
+                />
+                <p className="text-[10px] text-stone-400 mt-1">
+                  Used in URL filters and internally. Lowercase letters, numbers, and hyphens only.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#0E382E] uppercase mb-1">
+                  Description / Subtitle (Optional)
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="Short note describing products in this category..."
+                  value={categoryForm.desc}
+                  onChange={(e) =>
+                    setCategoryForm({ ...categoryForm, desc: e.target.value })
+                  }
+                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] text-xs font-medium focus:outline-none focus:border-[#0E382E]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#0E382E] uppercase mb-1">
+                    Display Order
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={categoryForm.displayOrder}
+                    onChange={(e) =>
+                      setCategoryForm({
+                        ...categoryForm,
+                        displayOrder: parseInt(e.target.value) || 1,
+                      })
+                    }
+                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-bold focus:outline-none focus:border-[#0E382E]"
+                  />
+                </div>
+
+                <div className="flex items-center pt-6">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={categoryForm.isActive}
+                      onChange={(e) =>
+                        setCategoryForm({
+                          ...categoryForm,
+                          isActive: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 accent-[#0E382E] rounded"
+                    />
+                    <span className="text-xs font-bold text-[#0E382E]">
+                      Visible in Shop Filters
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-[#74B487]/20">
+                <button
+                  type="button"
+                  onClick={() => setIsCategoryModalOpen(false)}
+                  className="w-1/2 bg-stone-100 hover:bg-stone-200 text-stone-700 py-3 rounded-xl font-bold uppercase text-xs transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingCategory}
+                  className="w-1/2 bg-[#0E382E] hover:bg-[#E67E22] text-white py-3 rounded-xl font-bold uppercase text-xs transition-colors shadow-md inline-flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isSavingCategory ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Saving...
+                    </>
+                  ) : editingCategory ? (
+                    "Save Changes"
+                  ) : (
+                    "Create Category"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Package Variant Creation / Edit Modal */}
+      {isVariantModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-[#74B487]/50 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setIsVariantModalOpen(false)}
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="mb-6">
+              <span className="text-[10px] font-extrabold tracking-widest text-[#E67E22] uppercase">
+                {editingVariant ? "EDIT PACKAGE VARIANT" : "NEW PACKAGE VARIANT"}
+              </span>
+              <h3 className="text-2xl font-black text-[#0E382E]">
+                {editingVariant ? "Update Package Variant" : "Add Package Variant"}
+              </h3>
+              <p className="text-xs text-stone-500 mt-1">
+                Define standard packaging sizes and serving descriptions.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveVariant} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[#0E382E] uppercase mb-1">
+                  Variant Pack Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 200g Standard Pouch or 500g Value Pack"
+                  value={variantForm.name}
+                  onChange={(e) =>
+                    setVariantForm({ ...variantForm, name: e.target.value })
+                  }
+                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-bold focus:outline-none focus:border-[#0E382E]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[#0E382E] uppercase mb-1">
+                  Servings / Usage Subtitle (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. Makes 20 Daily Servings or 10 Refreshment Drinks"
+                  value={variantForm.subtitle}
+                  onChange={(e) =>
+                    setVariantForm({ ...variantForm, subtitle: e.target.value })
+                  }
+                  className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] text-xs font-medium focus:outline-none focus:border-[#0E382E]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-[#0E382E] uppercase mb-1">
+                    Standard Price (₹) (Optional)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="e.g. 299"
+                    value={variantForm.price}
+                    onChange={(e) =>
+                      setVariantForm({ ...variantForm, price: e.target.value })
+                    }
+                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-bold focus:outline-none focus:border-[#0E382E]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[#0E382E] uppercase mb-1">
+                    Display Order
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={variantForm.displayOrder}
+                    onChange={(e) =>
+                      setVariantForm({
+                        ...variantForm,
+                        displayOrder: parseInt(e.target.value) || 1,
+                      })
+                    }
+                    className="w-full bg-[#F6F5F0] border border-[#74B487]/40 rounded-xl p-3 text-[#0E382E] font-bold focus:outline-none focus:border-[#0E382E]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t border-[#74B487]/20">
+                <button
+                  type="button"
+                  onClick={() => setIsVariantModalOpen(false)}
+                  className="w-1/2 bg-stone-100 hover:bg-stone-200 text-stone-700 py-3 rounded-xl font-bold uppercase text-xs transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingVariant}
+                  className="w-1/2 bg-[#0E382E] hover:bg-[#E67E22] text-white py-3 rounded-xl font-bold uppercase text-xs transition-colors shadow-md inline-flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isSavingVariant ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Saving...
+                    </>
+                  ) : editingVariant ? (
+                    "Save Changes"
+                  ) : (
+                    "Create Variant"
                   )}
                 </button>
               </div>
