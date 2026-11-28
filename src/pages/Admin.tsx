@@ -943,6 +943,7 @@ export const Admin: React.FC = () => {
           : null;
 
       const payload = {
+        originalCode: editingCoupon ? editingCoupon.code : undefined,
         code: cleanCode,
         discountType: couponForm.discountType,
         discountValue: val,

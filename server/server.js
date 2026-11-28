@@ -131,6 +131,8 @@ async function initDatabaseTables() {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `).catch(() => {});
+    await query("ALTER TABLE coupons ADD COLUMN max_discount_amount DECIMAL(10,2) NULL").catch(() => {});
+    await query("ALTER TABLE coupons ADD COLUMN description VARCHAR(255) NULL").catch(() => {});
 
     // Categories table
     await query(`
@@ -2130,6 +2132,17 @@ app.get("/api/coupons", async (req, res) => {
   }
 });
 
+const normalizeCouponDate = (d) => {
+  if (!d) return "2026-12-31";
+  const str = String(d).trim().split("T")[0];
+  if (/^\d{4}-\d{2}-\d{2}$/.test(str)) return str;
+  const parsed = new Date(str);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString().split("T")[0];
+  }
+  return "2026-12-31";
+};
+
 app.post("/api/coupons", async (req, res) => {
   const {
     code,
@@ -2149,29 +2162,38 @@ app.post("/api/coupons", async (req, res) => {
   const cleanCode = String(code).trim().toUpperCase();
 
   try {
-    const result = await query(
-      `INSERT INTO coupons (code, discount_type, discount_value, min_order_amount, max_discount_amount, expiry_date, description, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE
-         discount_type = VALUES(discount_type),
-         discount_value = VALUES(discount_value),
-         min_order_amount = VALUES(min_order_amount),
-         max_discount_amount = VALUES(max_discount_amount),
-         expiry_date = VALUES(expiry_date),
-         description = VALUES(description),
-         is_active = VALUES(is_active)`,
-      [
-        cleanCode,
-        discountType || "percentage",
-        Number(discountValue),
-        Number(minOrderAmount || 0),
-        maxDiscountAmount ? Number(maxDiscountAmount) : null,
-        expiryDate || "2026-12-31",
-        description || "",
-        isActive !== false ? 1 : 0,
-      ]
-    );
+    const couponCols = await query("SHOW COLUMNS FROM coupons").catch(() => []);
+    const availableCols = new Set(couponCols.map((c) => c.Field));
 
+    const cols = ["code", "discount_type", "discount_value", "min_order_amount", "expiry_date", "is_active"];
+    const vals = [
+      cleanCode,
+      discountType || "percentage",
+      Number(discountValue),
+      Number(minOrderAmount || 0),
+      normalizeCouponDate(expiryDate),
+      isActive !== false ? 1 : 0,
+    ];
+
+    if (availableCols.has("max_discount_amount")) {
+      cols.push("max_discount_amount");
+      vals.push(maxDiscountAmount ? Number(maxDiscountAmount) : null);
+    }
+    if (availableCols.has("description")) {
+      cols.push("description");
+      vals.push(description || "");
+    }
+
+    const placeholders = cols.map(() => "?").join(", ");
+    const updateClauses = cols.filter(c => c !== "code").map(c => `\`${c}\` = VALUES(\`${c}\`)`).join(", ");
+
+    const sql = `
+      INSERT INTO coupons (${cols.map(c => `\`${c}\``).join(", ")})
+      VALUES (${placeholders})
+      ON DUPLICATE KEY UPDATE ${updateClauses}
+    `;
+
+    const result = await query(sql, vals);
     console.log(`🎟️ [MySQL] Coupon saved: ${cleanCode}`);
     return res.json({ success: true, id: result.insertId, message: "Coupon saved successfully" });
   } catch (err) {
@@ -2183,6 +2205,7 @@ app.post("/api/coupons", async (req, res) => {
 app.put("/api/coupons/:id", async (req, res) => {
   const { id } = req.params;
   const {
+    originalCode,
     code,
     discountType,
     discountValue,
@@ -2197,18 +2220,25 @@ app.put("/api/coupons/:id", async (req, res) => {
     const cleanCode = code ? String(code).trim().toUpperCase() : null;
     const isNumericId = !isNaN(Number(id)) && Number(id) > 0;
 
-    // Check if coupon exists by id or code
+    const couponCols = await query("SHOW COLUMNS FROM coupons").catch(() => []);
+    const availableCols = new Set(couponCols.map((c) => c.Field));
+
+    // Check if coupon exists by originalCode, numeric id, or cleanCode
     let existing = null;
-    if (isNumericId) {
-      const rows = await query("SELECT * FROM coupons WHERE id = ? LIMIT 1", [Number(id)]);
+    if (originalCode) {
+      const rows = await query("SELECT * FROM coupons WHERE code = ? LIMIT 1", [String(originalCode).trim().toUpperCase()]).catch(() => []);
+      if (rows && rows.length > 0) existing = rows[0];
+    }
+    if (!existing && isNumericId) {
+      const rows = await query("SELECT * FROM coupons WHERE id = ? LIMIT 1", [Number(id)]).catch(() => []);
       if (rows && rows.length > 0) existing = rows[0];
     }
     if (!existing && cleanCode) {
-      const rows = await query("SELECT * FROM coupons WHERE code = ? LIMIT 1", [cleanCode]);
+      const rows = await query("SELECT * FROM coupons WHERE code = ? LIMIT 1", [cleanCode]).catch(() => []);
       if (rows && rows.length > 0) existing = rows[0];
     }
     if (!existing && isNaN(Number(id))) {
-      const rows = await query("SELECT * FROM coupons WHERE code = ? LIMIT 1", [String(id).trim().toUpperCase()]);
+      const rows = await query("SELECT * FROM coupons WHERE code = ? LIMIT 1", [String(id).trim().toUpperCase()]).catch(() => []);
       if (rows && rows.length > 0) existing = rows[0];
     }
 
@@ -2216,36 +2246,36 @@ app.put("/api/coupons/:id", async (req, res) => {
       const updates = [];
       const params = [];
 
-      if (cleanCode !== null) {
-        updates.push("code = ?");
+      if (cleanCode !== null && availableCols.has("code")) {
+        updates.push("`code` = ?");
         params.push(cleanCode);
       }
-      if (discountType !== undefined) {
-        updates.push("discount_type = ?");
+      if (discountType !== undefined && availableCols.has("discount_type")) {
+        updates.push("`discount_type` = ?");
         params.push(discountType);
       }
-      if (discountValue !== undefined) {
-        updates.push("discount_value = ?");
+      if (discountValue !== undefined && availableCols.has("discount_value")) {
+        updates.push("`discount_value` = ?");
         params.push(Number(discountValue));
       }
-      if (minOrderAmount !== undefined) {
-        updates.push("min_order_amount = ?");
+      if (minOrderAmount !== undefined && availableCols.has("min_order_amount")) {
+        updates.push("`min_order_amount` = ?");
         params.push(Number(minOrderAmount));
       }
-      if (maxDiscountAmount !== undefined) {
-        updates.push("max_discount_amount = ?");
+      if (maxDiscountAmount !== undefined && availableCols.has("max_discount_amount")) {
+        updates.push("`max_discount_amount` = ?");
         params.push(maxDiscountAmount ? Number(maxDiscountAmount) : null);
       }
-      if (expiryDate !== undefined) {
-        updates.push("expiry_date = ?");
-        params.push(expiryDate);
+      if (expiryDate !== undefined && availableCols.has("expiry_date")) {
+        updates.push("`expiry_date` = ?");
+        params.push(normalizeCouponDate(expiryDate));
       }
-      if (description !== undefined) {
-        updates.push("description = ?");
+      if (description !== undefined && availableCols.has("description")) {
+        updates.push("`description` = ?");
         params.push(description);
       }
-      if (isActive !== undefined) {
-        updates.push("is_active = ?");
+      if (isActive !== undefined && availableCols.has("is_active")) {
+        updates.push("`is_active` = ?");
         params.push(isActive ? 1 : 0);
       }
 
@@ -2257,23 +2287,38 @@ app.put("/api/coupons/:id", async (req, res) => {
       console.log(`🎟️ [MySQL] Coupon updated: id=${existing.id}, code=${cleanCode || existing.code}`);
       return res.json({ success: true, id: existing.id, message: "Coupon updated successfully" });
     } else {
-      // Coupon didn't exist in DB yet: INSERT it (UPSERT behavior)
-      const finalCode = cleanCode || String(id).trim().toUpperCase();
-      const insertSql = `
-        INSERT INTO coupons (code, discount_type, discount_value, min_order_amount, max_discount_amount, expiry_date, description, is_active)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `;
-      const result = await query(insertSql, [
+      // Coupon didn't exist in DB yet: insert/upsert it
+      const finalCode = cleanCode || (originalCode ? String(originalCode).trim().toUpperCase() : String(id).trim().toUpperCase());
+      const cols = ["code", "discount_type", "discount_value", "min_order_amount", "expiry_date", "is_active"];
+      const vals = [
         finalCode,
         discountType || "percentage",
         Number(discountValue) || 10,
         Number(minOrderAmount) || 0,
-        maxDiscountAmount ? Number(maxDiscountAmount) : null,
-        expiryDate || "2026-12-31",
-        description || "",
+        normalizeCouponDate(expiryDate),
         isActive !== undefined ? (isActive ? 1 : 0) : 1,
-      ]);
-      console.log(`🎟️ [MySQL] Coupon upserted: id=${result.insertId}, code=${finalCode}`);
+      ];
+
+      if (availableCols.has("max_discount_amount")) {
+        cols.push("max_discount_amount");
+        vals.push(maxDiscountAmount ? Number(maxDiscountAmount) : null);
+      }
+      if (availableCols.has("description")) {
+        cols.push("description");
+        vals.push(description || "");
+      }
+
+      const placeholders = cols.map(() => "?").join(", ");
+      const updateClauses = cols.filter(c => c !== "code").map(c => `\`${c}\` = VALUES(\`${c}\`)`).join(", ");
+
+      const sql = `
+        INSERT INTO coupons (${cols.map(c => `\`${c}\``).join(", ")})
+        VALUES (${placeholders})
+        ON DUPLICATE KEY UPDATE ${updateClauses}
+      `;
+
+      const result = await query(sql, vals);
+      console.log(`🎟️ [MySQL] Coupon upserted: id=${result.insertId || existing?.id}, code=${finalCode}`);
       return res.json({ success: true, id: result.insertId, message: "Coupon saved successfully" });
     }
   } catch (err) {

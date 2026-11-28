@@ -55,7 +55,7 @@ interface CouponsStore {
   isLoading: boolean;
   fetchCoupons: (isAdmin?: boolean) => Promise<void>;
   addCoupon: (data: CouponInput) => Promise<boolean>;
-  updateCoupon: (id: number | string, data: Partial<Coupon>) => Promise<boolean>;
+  updateCoupon: (id: number | string, data: Partial<Coupon> & { originalCode?: string | undefined }) => Promise<boolean>;
   deleteCoupon: (id: number | string) => Promise<boolean>;
   toggleCouponActive: (id: number | string) => Promise<boolean>;
   validateCoupon: (
@@ -129,12 +129,15 @@ export const useCouponsStore = create<CouponsStore>()(
         return true;
       },
 
-      updateCoupon: async (id: number | string, updates: Partial<Coupon>) => {
+      updateCoupon: async (id: number | string, updates: Partial<Coupon> & { originalCode?: string | undefined }) => {
         const cleanCode = updates.code ? updates.code.trim().toUpperCase() : undefined;
         // Optimistically update local store
         set((state) => ({
           coupons: state.coupons.map((c) =>
-            String(c.id) === String(id) || (cleanCode && c.code === cleanCode) || c.code === String(id)
+            String(c.id) === String(id) ||
+            (updates.originalCode && c.code === updates.originalCode) ||
+            (cleanCode && c.code === cleanCode) ||
+            c.code === String(id)
               ? {
                   ...c,
                   ...updates,
