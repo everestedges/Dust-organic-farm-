@@ -624,12 +624,13 @@ export const Admin: React.FC = () => {
   };
 
   const openEditCategoryModal = (cat: Category) => {
+    if (!cat) return;
     setEditingCategory(cat);
     setCategoryForm({
-      name: cat.name,
-      slug: cat.slug,
+      name: cat.name || "",
+      slug: cat.slug || "",
       desc: cat.desc || cat.description || "",
-      displayOrder: cat.displayOrder || 1,
+      displayOrder: Number(cat.displayOrder) || 1,
       isActive: cat.isActive !== false,
     });
     setIsCategoryModalOpen(true);
@@ -699,12 +700,13 @@ export const Admin: React.FC = () => {
   };
 
   const openEditVariantModal = (v: PackageVariant) => {
+    if (!v) return;
     setEditingVariant(v);
     setVariantForm({
-      name: v.name,
+      name: v.name || "",
       subtitle: v.subtitle || "",
       price: v.price !== null && v.price !== undefined ? v.price : "",
-      displayOrder: v.displayOrder || 1,
+      displayOrder: Number(v.displayOrder) || 1,
     });
     setIsVariantModalOpen(true);
   };
@@ -1742,16 +1744,25 @@ export const Admin: React.FC = () => {
                           </span>
                           <button
                             type="button"
-                            onClick={() => openEditCategoryModal(cat)}
-                            className="p-1.5 rounded-lg text-stone-500 hover:text-[#0E382E] hover:bg-[#F6F5F0] transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              openEditCategoryModal(cat);
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg text-stone-700 hover:text-[#0E382E] hover:bg-[#E8F1E9] border border-stone-200 hover:border-[#74B487] text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                             title="Edit Category"
                           >
-                            <Edit3 className="w-3.5 h-3.5" />
+                            <Edit3 className="w-3.5 h-3.5 text-[#E67E22]" />
+                            <span>Edit</span>
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleDeleteCategory(cat)}
-                            className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDeleteCategory(cat);
+                            }}
+                            className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                             title="Delete Category"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1811,16 +1822,25 @@ export const Admin: React.FC = () => {
                           )}
                           <button
                             type="button"
-                            onClick={() => openEditVariantModal(v)}
-                            className="p-1.5 rounded-lg text-stone-500 hover:text-[#0E382E] hover:bg-[#F6F5F0] transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              openEditVariantModal(v);
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg text-stone-700 hover:text-[#0E382E] hover:bg-[#E8F1E9] border border-stone-200 hover:border-[#74B487] text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
                             title="Edit Variant"
                           >
-                            <Edit3 className="w-3.5 h-3.5" />
+                            <Edit3 className="w-3.5 h-3.5 text-[#E67E22]" />
+                            <span>Edit</span>
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleDeleteVariant(v)}
-                            className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDeleteVariant(v);
+                            }}
+                            className="p-1.5 rounded-lg text-stone-400 hover:text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
                             title="Delete Variant"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -4504,11 +4524,17 @@ export const Admin: React.FC = () => {
       )}
       {/* Category Creation / Edit Modal */}
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-[#74B487]/50 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs overflow-y-auto animate-fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsCategoryModalOpen(false);
+          }}
+        >
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-[#74B487]/50 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
             <button
+              type="button"
               onClick={() => setIsCategoryModalOpen(false)}
-              className="absolute top-6 right-6 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -4660,11 +4686,17 @@ export const Admin: React.FC = () => {
 
       {/* Package Variant Creation / Edit Modal */}
       {isVariantModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-[#74B487]/50 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs overflow-y-auto animate-fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsVariantModalOpen(false);
+          }}
+        >
+          <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full border border-[#74B487]/50 shadow-2xl relative my-8 max-h-[90vh] overflow-y-auto">
             <button
+              type="button"
               onClick={() => setIsVariantModalOpen(false)}
-              className="absolute top-6 right-6 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors"
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-stone-100 text-stone-400 hover:text-stone-700 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>

@@ -2339,7 +2339,7 @@ app.put("/api/categories/:id", async (req, res) => {
   const { id } = req.params;
   const { name, slug, description, displayOrder, isActive } = req.body;
   try {
-    const rows = await query("SELECT * FROM categories WHERE id = ?", [id]);
+    const rows = await query("SELECT * FROM categories WHERE id = ? OR slug = ?", [id, id]);
     if (!rows || rows.length === 0) {
       return res.status(404).json({ success: false, error: "Category not found" });
     }
@@ -2357,14 +2357,14 @@ app.put("/api/categories/:id", async (req, res) => {
       `UPDATE categories 
        SET name = ?, slug = ?, description = ?, display_order = ?, is_active = ?
        WHERE id = ?`,
-      [newName, newSlug, newDesc, newOrder, newActive, id]
+      [newName, newSlug, newDesc, newOrder, newActive, current.id]
     );
 
-    console.log(`✏️ [MySQL] Updated category id=${id} (${newName})`);
+    console.log(`✏️ [MySQL] Updated category id=${current.id} (${newName})`);
     return res.json({
       success: true,
       category: {
-        id: Number(id),
+        id: Number(current.id),
         name: newName,
         slug: newSlug,
         desc: newDesc,
@@ -2382,7 +2382,7 @@ app.put("/api/categories/:id", async (req, res) => {
 app.delete("/api/categories/:id", async (req, res) => {
   const { id } = req.params;
   try {
-    await query("DELETE FROM categories WHERE id = ?", [id]);
+    await query("DELETE FROM categories WHERE id = ? OR slug = ?", [id, id]);
     console.log(`🗑️ [MySQL] Deleted category id=${id}`);
     return res.json({ success: true, message: "Category deleted successfully" });
   } catch (err) {

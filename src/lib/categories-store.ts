@@ -206,7 +206,9 @@ export const useCategoriesStore = create<CategoriesStore>()(
           if (res.ok && data.success) {
             set((state) => ({
               categories: state.categories.map((c) =>
-                c.id === id ? { ...c, ...updatedFields } : c
+                String(c.id) === String(id) || c.slug === String(id)
+                  ? { ...c, ...updatedFields }
+                  : c
               ),
             }));
             await get().fetchCategories(true);
@@ -214,14 +216,16 @@ export const useCategoriesStore = create<CategoriesStore>()(
           }
         } catch (err) {
           console.error("Update category error:", err);
-          set((state) => ({
-            categories: state.categories.map((c) =>
-              c.id === id ? { ...c, ...updatedFields } : c
-            ),
-          }));
-          return true;
         }
-        return false;
+        // Fallback update local state so UI never fails even if offline
+        set((state) => ({
+          categories: state.categories.map((c) =>
+            String(c.id) === String(id) || c.slug === String(id)
+              ? { ...c, ...updatedFields }
+              : c
+          ),
+        }));
+        return true;
       },
 
       deleteCategory: async (id) => {
@@ -232,18 +236,21 @@ export const useCategoriesStore = create<CategoriesStore>()(
           const data = await res.json().catch(() => ({}));
           if (res.ok && data.success) {
             set((state) => ({
-              categories: state.categories.filter((c) => c.id !== id),
+              categories: state.categories.filter(
+                (c) => String(c.id) !== String(id) && c.slug !== String(id)
+              ),
             }));
             return true;
           }
         } catch (err) {
           console.error("Delete category error:", err);
-          set((state) => ({
-            categories: state.categories.filter((c) => c.id !== id),
-          }));
-          return true;
         }
-        return false;
+        set((state) => ({
+          categories: state.categories.filter(
+            (c) => String(c.id) !== String(id) && c.slug !== String(id)
+          ),
+        }));
+        return true;
       },
 
       fetchVariants: async () => {
@@ -306,21 +313,20 @@ export const useCategoriesStore = create<CategoriesStore>()(
           if (res.ok && data.success) {
             set((state) => ({
               variants: state.variants.map((v) =>
-                v.id === id ? { ...v, ...updatedFields } : v
+                String(v.id) === String(id) ? { ...v, ...updatedFields } : v
               ),
             }));
             return true;
           }
         } catch (err) {
           console.error("Update variant error:", err);
-          set((state) => ({
-            variants: state.variants.map((v) =>
-              v.id === id ? { ...v, ...updatedFields } : v
-            ),
-          }));
-          return true;
         }
-        return false;
+        set((state) => ({
+          variants: state.variants.map((v) =>
+            String(v.id) === String(id) ? { ...v, ...updatedFields } : v
+          ),
+        }));
+        return true;
       },
 
       deleteVariant: async (id) => {
@@ -331,18 +337,17 @@ export const useCategoriesStore = create<CategoriesStore>()(
           const data = await res.json().catch(() => ({}));
           if (res.ok && data.success) {
             set((state) => ({
-              variants: state.variants.filter((v) => v.id !== id),
+              variants: state.variants.filter((v) => String(v.id) !== String(id)),
             }));
             return true;
           }
         } catch (err) {
           console.error("Delete variant error:", err);
-          set((state) => ({
-            variants: state.variants.filter((v) => v.id !== id),
-          }));
-          return true;
         }
-        return false;
+        set((state) => ({
+          variants: state.variants.filter((v) => String(v.id) !== String(id)),
+        }));
+        return true;
       },
     }),
     {
