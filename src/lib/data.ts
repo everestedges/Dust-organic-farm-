@@ -93,7 +93,7 @@ export interface Product {
   shortName: string;
   subtitle: string;
   pitch: string;
-  category: "wholesome-millets" | "pure-fruit-powders" | "heritage-wellness" | "pure-nut-powders" | "herbal-haircare";
+  category: "wholesome-millets" | "pure-fruit-powders" | "heritage-wellness" | "pure-nut-powders" | "herbal-haircare" | string;
   categoryLabel: string;
   price: number;
   originalPrice?: number;
@@ -130,7 +130,7 @@ export interface Product {
 }
 
 export interface Collection {
-  slug: "wholesome-millets" | "pure-fruit-powders" | "heritage-wellness" | "pure-nut-powders" | "herbal-haircare";
+  slug: "wholesome-millets" | "pure-fruit-powders" | "heritage-wellness" | "pure-nut-powders" | "herbal-haircare" | string;
   name: string;
   titleLines: [string, string];
   tagline: string;

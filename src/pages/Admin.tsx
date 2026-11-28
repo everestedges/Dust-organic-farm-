@@ -45,6 +45,7 @@ import { useProductsStore } from "@/lib/products-store";
 import { useUpcomingBannersStore, UpcomingBanner } from "@/lib/upcoming-banners-store";
 import { useTickerStore, DEFAULT_TICKER_ITEMS } from "@/lib/ticker-store";
 import { useCouponsStore, Coupon } from "@/lib/coupons-store";
+import { useCategoriesStore, Category, PackageVariant } from "@/lib/categories-store";
 
 export const Admin: React.FC = () => {
   const navigate = useNavigate();
@@ -291,7 +292,7 @@ export const Admin: React.FC = () => {
 
   // Tab 1: Basic & Pricing
   const [newProductName, setNewProductName] = useState("");
-  const [newProductCategory, setNewProductCategory] = useState<"wholesome-millets" | "heritage-wellness" | "pure-fruit-powders" | "pure-nut-powders" | "herbal-haircare">("heritage-wellness");
+  const [newProductCategory, setNewProductCategory] = useState<string>("heritage-wellness");
   const [newProductPrice, setNewProductPrice] = useState(299);
   const [newProductOriginalPrice, setNewProductOriginalPrice] = useState(349);
   const [newProductWeight, setNewProductWeight] = useState("200g");
@@ -335,11 +336,41 @@ export const Admin: React.FC = () => {
   const [newProductHeritageTitle, setNewProductHeritageTitle] = useState("Indian Heritage Wisdom");
   const [newProductHeritageQuote, setNewProductHeritageQuote] = useState("Inspired by time-tested Indian wellness traditions.");
 
-  // State 2: Categories
-  const [categories, setCategories] = useState([
-    { id: 1, name: "Wholesome Laddoo Premix", slug: "wholesome-millets", count: 1, desc: "Traditional millet mixes and dry fruit laddoo premixes with zero added sugar." },
-    { id: 2, name: "Heritage Wellness", slug: "heritage-wellness", count: 1, desc: "Post-meal digestive mixes and royal paan shots inspired by Banaras traditions." },
-  ]);
+  // State 2: Categories & Package Variants Store
+  const {
+    categories,
+    variants,
+    fetchCategories,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    fetchVariants,
+    addVariant,
+    updateVariant,
+    deleteVariant,
+    isLoading: isCategoriesLoading,
+  } = useCategoriesStore();
+
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [categoryForm, setCategoryForm] = useState({
+    name: "",
+    slug: "",
+    desc: "",
+    displayOrder: 1,
+    isActive: true,
+  });
+  const [isSavingCategory, setIsSavingCategory] = useState(false);
+
+  const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
+  const [editingVariant, setEditingVariant] = useState<PackageVariant | null>(null);
+  const [variantForm, setVariantForm] = useState({
+    name: "",
+    subtitle: "",
+    price: "" as string | number,
+    displayOrder: 1,
+  });
+  const [isSavingVariant, setIsSavingVariant] = useState(false);
 
   // State 3: Coupons & Promotional Offers Store
   const {
@@ -504,6 +535,10 @@ export const Admin: React.FC = () => {
 
       // 7. Fetch discount coupons & promotional offers
       fetchCoupons(true);
+
+      // 8. Fetch product categories & package variants
+      fetchCategories(true);
+      fetchVariants();
     } catch (err) {
       console.warn("Could not load live database records:", err);
     } finally {
@@ -573,6 +608,148 @@ export const Admin: React.FC = () => {
       setTVideoPoster(uploadedUrl);
     }
     e.target.value = "";
+  };
+
+  // Category Modal Handlers
+  const openNewCategoryModal = () => {
+    setEditingCategory(null);
+    setCategoryForm({
+      name: "",
+      slug: "",
+      desc: "",
+      displayOrder: categories.length + 1,
+      isActive: true,
+    });
+    setIsCategoryModalOpen(true);
+  };
+
+  const openEditCategoryModal = (cat: Category) => {
+    setEditingCategory(cat);
+    setCategoryForm({
+      name: cat.name,
+      slug: cat.slug,
+      desc: cat.desc || cat.description || "",
+      displayOrder: cat.displayOrder || 1,
+      isActive: cat.isActive !== false,
+    });
+    setIsCategoryModalOpen(true);
+  };
+
+  const handleSaveCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanName = categoryForm.name.trim();
+    if (!cleanName) {
+      alert("Please enter a category name");
+      return;
+    }
+    const cleanSlug = (categoryForm.slug || cleanName)
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+
+    setIsSavingCategory(true);
+    try {
+      if (editingCategory) {
+        const ok = await updateCategory(editingCategory.id, {
+          name: cleanName,
+          slug: cleanSlug,
+          desc: categoryForm.desc.trim(),
+          description: categoryForm.desc.trim(),
+          displayOrder: Number(categoryForm.displayOrder) || 1,
+          isActive: categoryForm.isActive,
+        });
+        if (ok) {
+          setIsCategoryModalOpen(false);
+          setEditingCategory(null);
+        }
+      } else {
+        const ok = await addCategory({
+          name: cleanName,
+          slug: cleanSlug,
+          desc: categoryForm.desc.trim(),
+          description: categoryForm.desc.trim(),
+          displayOrder: Number(categoryForm.displayOrder) || categories.length + 1,
+          isActive: categoryForm.isActive,
+        });
+        if (ok) {
+          setIsCategoryModalOpen(false);
+        }
+      }
+    } finally {
+      setIsSavingCategory(false);
+    }
+  };
+
+  const handleDeleteCategory = async (cat: Category) => {
+    if (window.confirm(`Are you sure you want to delete category "${cat.name}"? Products under this category might need to be reassigned.`)) {
+      await deleteCategory(cat.id);
+    }
+  };
+
+  // Package Variant Modal Handlers
+  const openNewVariantModal = () => {
+    setEditingVariant(null);
+    setVariantForm({
+      name: "",
+      subtitle: "",
+      price: "",
+      displayOrder: variants.length + 1,
+    });
+    setIsVariantModalOpen(true);
+  };
+
+  const openEditVariantModal = (v: PackageVariant) => {
+    setEditingVariant(v);
+    setVariantForm({
+      name: v.name,
+      subtitle: v.subtitle || "",
+      price: v.price !== null && v.price !== undefined ? v.price : "",
+      displayOrder: v.displayOrder || 1,
+    });
+    setIsVariantModalOpen(true);
+  };
+
+  const handleSaveVariant = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanName = variantForm.name.trim();
+    if (!cleanName) {
+      alert("Please enter a package variant name (e.g. 200g Standard Pouch)");
+      return;
+    }
+    setIsSavingVariant(true);
+    try {
+      const priceNum = variantForm.price !== "" && !isNaN(Number(variantForm.price)) ? Number(variantForm.price) : null;
+      if (editingVariant) {
+        const ok = await updateVariant(editingVariant.id, {
+          name: cleanName,
+          subtitle: variantForm.subtitle.trim(),
+          price: priceNum,
+          displayOrder: Number(variantForm.displayOrder) || 1,
+        });
+        if (ok) {
+          setIsVariantModalOpen(false);
+          setEditingVariant(null);
+        }
+      } else {
+        const ok = await addVariant({
+          name: cleanName,
+          subtitle: variantForm.subtitle.trim(),
+          price: priceNum,
+          displayOrder: Number(variantForm.displayOrder) || variants.length + 1,
+        });
+        if (ok) {
+          setIsVariantModalOpen(false);
+        }
+      }
+    } finally {
+      setIsSavingVariant(false);
+    }
+  };
+
+  const handleDeleteVariant = async (v: PackageVariant) => {
+    if (window.confirm(`Are you sure you want to delete package variant "${v.name}"?`)) {
+      await deleteVariant(v.id);
+    }
   };
 
   // Upcoming Product Banners Modal & CRUD handlers
@@ -883,6 +1060,7 @@ export const Admin: React.FC = () => {
       .replace(/(^-|-$)/g, "");
 
     const categoryLabels: Record<string, string> = {
+      ...categories.reduce((acc, c) => ({ ...acc, [c.slug]: c.name }), {}),
       "wholesome-millets": "Wholesome Laddoo Premix",
       "heritage-wellness": "Heritage Wellness",
       "pure-fruit-powders": "Pure Fruit Powders",

@@ -4,14 +4,17 @@ import { ShoppingBag, Eye, Heart, Search, ArrowUpRight, Zap } from "lucide-react
 import { Product } from "@/lib/data";
 import { useCartStore } from "@/lib/cart-store";
 import { useProductsStore } from "@/lib/products-store";
+import { useCategoriesStore } from "@/lib/categories-store";
 
 export const Shop: React.FC = () => {
   const navigate = useNavigate();
   const { products, fetchProducts } = useProductsStore();
+  const { categories, fetchCategories } = useCategoriesStore();
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+    fetchCategories(false);
+  }, [fetchProducts, fetchCategories]);
 
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("featured");
@@ -74,46 +77,21 @@ export const Shop: React.FC = () => {
           >
             All Products ({products.length})
           </button>
-          <button
-            onClick={() => setSelectedCategory("wholesome-millets")}
-            className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-colors ${
-              selectedCategory === "wholesome-millets"
-                ? "bg-[#E67E22] text-white shadow-xs"
-                : "bg-white text-[#0E382E] hover:bg-[#74B487]/20 border border-[#74B487]/40"
-            }`}
-          >
-            Wholesome Laddoo Premix
-          </button>
-          <button
-            onClick={() => setSelectedCategory("heritage-wellness")}
-            className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-colors ${
-              selectedCategory === "heritage-wellness"
-                ? "bg-[#E67E22] text-white shadow-xs"
-                : "bg-white text-[#0E382E] hover:bg-[#74B487]/20 border border-[#74B487]/40"
-            }`}
-          >
-            Heritage Wellness
-          </button>
-          <button
-            onClick={() => setSelectedCategory("pure-nut-powders")}
-            className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-colors ${
-              selectedCategory === "pure-nut-powders"
-                ? "bg-[#E67E22] text-white shadow-xs"
-                : "bg-white text-[#0E382E] hover:bg-[#74B487]/20 border border-[#74B487]/40"
-            }`}
-          >
-            Pure Nut Powders
-          </button>
-          <button
-            onClick={() => setSelectedCategory("herbal-haircare")}
-            className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-colors ${
-              selectedCategory === "herbal-haircare"
-                ? "bg-[#E67E22] text-white shadow-xs"
-                : "bg-white text-[#0E382E] hover:bg-[#74B487]/20 border border-[#74B487]/40"
-            }`}
-          >
-            Herbal Hair Care
-          </button>
+          {categories
+            .filter((c) => c.isActive !== false)
+            .map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.slug)}
+                className={`px-4 py-2 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-colors ${
+                  selectedCategory === cat.slug
+                    ? "bg-[#E67E22] text-white shadow-xs"
+                    : "bg-white text-[#0E382E] hover:bg-[#74B487]/20 border border-[#74B487]/40"
+                }`}
+              >
+                {cat.name}
+              </button>
+            ))}
         </div>
 
         {/* Right Search & Sort */}

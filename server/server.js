@@ -132,6 +132,57 @@ async function initDatabaseTables() {
       )
     `).catch(() => {});
 
+    // Categories table
+    await query(`
+      CREATE TABLE IF NOT EXISTS categories (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL UNIQUE,
+        description TEXT NULL,
+        display_order INT DEFAULT 0,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `).catch(() => {});
+
+    // Seed default categories if table is empty
+    const existingCats = await query("SELECT COUNT(*) as count FROM categories").catch(() => [{ count: 0 }]);
+    if (!existingCats || existingCats[0]?.count === 0) {
+      await query(`
+        INSERT INTO categories (name, slug, description, display_order, is_active)
+        VALUES 
+          ('Wholesome Laddoo Premix', 'wholesome-millets', 'Traditional millet mixes and dry fruit laddoo premixes with zero added sugar.', 1, 1),
+          ('Heritage Wellness', 'heritage-wellness', 'Post-meal digestive mixes and royal paan shots inspired by Banaras traditions.', 2, 1),
+          ('Pure Fruit Powders', 'pure-fruit-powders', '100% pure freeze-dried fruit powders with zero preservatives.', 3, 1),
+          ('Pure Nut Powders', 'pure-nut-powders', 'Stone-ground almond & cashew powders rich in natural oils.', 4, 1),
+          ('Herbal Haircare', 'herbal-haircare', 'Ayurvedic herbal cleansing powders and scalp nourishment.', 5, 1)
+      `).catch(() => {});
+    }
+
+    // Package Variants table
+    await query(`
+      CREATE TABLE IF NOT EXISTS package_variants (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        subtitle VARCHAR(255) NULL,
+        price DECIMAL(10,2) NULL,
+        display_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `).catch(() => {});
+
+    const existingVars = await query("SELECT COUNT(*) as count FROM package_variants").catch(() => [{ count: 0 }]);
+    if (!existingVars || existingVars[0]?.count === 0) {
+      await query(`
+        INSERT INTO package_variants (name, subtitle, price, display_order)
+        VALUES 
+          ('20g Digestive Pouch', 'Makes 4 After-Meal Shots', 249.00, 1),
+          ('100g Cooler Pack', 'Makes 10 Refreshment Drinks', 199.00, 2),
+          ('200g Standard Pouch', 'Makes 20 Daily Servings', 299.00, 3),
+          ('500g Value Pack', 'Family Monthly Wellness Pack', 699.00, 4)
+      `).catch(() => {});
+    }
+
     // Seed default active coupons if empty
     const existingCoupons = await query("SELECT COUNT(*) as count FROM coupons").catch(() => [{ count: 0 }]);
     if (!existingCoupons || existingCoupons[0]?.count === 0) {
@@ -2199,6 +2250,247 @@ app.delete("/api/coupons/:id", async (req, res) => {
     return res.json({ success: true, message: "Coupon deleted successfully" });
   } catch (err) {
     console.error("❌ Delete coupon error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------
+// CATEGORIES ENDPOINTS
+// ---------------------------------------------------------------------
+app.get("/api/categories", async (req, res) => {
+  try {
+    const showAll = req.query.all === "true";
+    const sql = `
+      SELECT c.*, 
+        (SELECT COUNT(*) FROM products p WHERE p.category = c.slug OR p.category_id = c.id) AS count
+      FROM categories c
+      ${showAll ? "" : "WHERE c.is_active = 1 OR c.is_active IS NULL"}
+      ORDER BY c.display_order ASC, c.id ASC
+    `;
+    const rows = await query(sql);
+    const categories = rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      slug: r.slug,
+      desc: r.description || "",
+      description: r.description || "",
+      displayOrder: r.display_order || 0,
+      isActive: r.is_active === 1 || r.is_active === true,
+      count: Number(r.count) || 0,
+      createdAt: r.created_at,
+    }));
+    return res.json({ success: true, categories });
+  } catch (err) {
+    console.error("❌ Get categories error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post("/api/categories", async (req, res) => {
+  const { name, slug, description, displayOrder, isActive } = req.body;
+  if (!name || !name.trim()) {
+    return res.status(400).json({ success: false, error: "Category name is required" });
+  }
+  const cleanName = name.trim();
+  const cleanSlug = (slug || cleanName)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+  try {
+    const existing = await query("SELECT id FROM categories WHERE slug = ?", [cleanSlug]);
+    if (existing && existing.length > 0) {
+      return res.status(400).json({ success: false, error: `Category with slug '${cleanSlug}' already exists.` });
+    }
+
+    const result = await query(
+      `INSERT INTO categories (name, slug, description, display_order, is_active)
+       VALUES (?, ?, ?, ?, ?)`,
+      [
+        cleanName,
+        cleanSlug,
+        description ? description.trim() : "",
+        Number(displayOrder) || 0,
+        isActive !== undefined ? (isActive ? 1 : 0) : 1,
+      ]
+    );
+
+    console.log(`✨ [MySQL] Created new category: ${cleanName} (${cleanSlug}) id=${result.insertId}`);
+    return res.json({
+      success: true,
+      category: {
+        id: result.insertId,
+        name: cleanName,
+        slug: cleanSlug,
+        desc: description ? description.trim() : "",
+        description: description ? description.trim() : "",
+        displayOrder: Number(displayOrder) || 0,
+        isActive: isActive !== undefined ? !!isActive : true,
+        count: 0,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Create category error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put("/api/categories/:id", async (req, res) => {
+  const { id } = req.params;
+  const { name, slug, description, displayOrder, isActive } = req.body;
+  try {
+    const rows = await query("SELECT * FROM categories WHERE id = ?", [id]);
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ success: false, error: "Category not found" });
+    }
+
+    const current = rows[0];
+    const newName = name !== undefined ? name.trim() : current.name;
+    const newSlug = slug !== undefined
+      ? slug.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")
+      : current.slug;
+    const newDesc = description !== undefined ? description.trim() : current.description;
+    const newOrder = displayOrder !== undefined ? Number(displayOrder) : current.display_order;
+    const newActive = isActive !== undefined ? (isActive ? 1 : 0) : current.is_active;
+
+    await query(
+      `UPDATE categories 
+       SET name = ?, slug = ?, description = ?, display_order = ?, is_active = ?
+       WHERE id = ?`,
+      [newName, newSlug, newDesc, newOrder, newActive, id]
+    );
+
+    console.log(`✏️ [MySQL] Updated category id=${id} (${newName})`);
+    return res.json({
+      success: true,
+      category: {
+        id: Number(id),
+        name: newName,
+        slug: newSlug,
+        desc: newDesc,
+        description: newDesc,
+        displayOrder: newOrder,
+        isActive: newActive === 1,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Update category error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete("/api/categories/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await query("DELETE FROM categories WHERE id = ?", [id]);
+    console.log(`🗑️ [MySQL] Deleted category id=${id}`);
+    return res.json({ success: true, message: "Category deleted successfully" });
+  } catch (err) {
+    console.error("❌ Delete category error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// ---------------------------------------------------------------------
+// PACKAGE VARIANTS ENDPOINTS
+// ---------------------------------------------------------------------
+app.get("/api/variants", async (req, res) => {
+  try {
+    const rows = await query("SELECT * FROM package_variants ORDER BY display_order ASC, id ASC");
+    const variants = rows.map((r) => ({
+      id: r.id,
+      name: r.name,
+      subtitle: r.subtitle || "",
+      price: r.price !== null ? Number(r.price) : null,
+      displayOrder: r.display_order || 0,
+      createdAt: r.created_at,
+    }));
+    return res.json({ success: true, variants });
+  } catch (err) {
+    console.error("❌ Get variants error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post("/api/variants", async (req, res) => {
+  const { name, subtitle, price, displayOrder } = req.body;
+  if (!name || !name.trim()) {
+    return res.status(400).json({ success: false, error: "Variant name is required" });
+  }
+  try {
+    const result = await query(
+      `INSERT INTO package_variants (name, subtitle, price, display_order)
+       VALUES (?, ?, ?, ?)`,
+      [
+        name.trim(),
+        subtitle ? subtitle.trim() : "",
+        price !== undefined && price !== "" ? Number(price) : null,
+        Number(displayOrder) || 0,
+      ]
+    );
+
+    console.log(`✨ [MySQL] Created package variant: ${name} id=${result.insertId}`);
+    return res.json({
+      success: true,
+      variant: {
+        id: result.insertId,
+        name: name.trim(),
+        subtitle: subtitle ? subtitle.trim() : "",
+        price: price !== undefined && price !== "" ? Number(price) : null,
+        displayOrder: Number(displayOrder) || 0,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Create variant error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.put("/api/variants/:id", async (req, res) => {
+  const { id } = req.params;
+  const { name, subtitle, price, displayOrder } = req.body;
+  try {
+    const rows = await query("SELECT * FROM package_variants WHERE id = ?", [id]);
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ success: false, error: "Package variant not found" });
+    }
+    const current = rows[0];
+    const newName = name !== undefined ? name.trim() : current.name;
+    const newSub = subtitle !== undefined ? subtitle.trim() : current.subtitle;
+    const newPrice = price !== undefined && price !== "" ? Number(price) : current.price;
+    const newOrder = displayOrder !== undefined ? Number(displayOrder) : current.display_order;
+
+    await query(
+      `UPDATE package_variants 
+       SET name = ?, subtitle = ?, price = ?, display_order = ?
+       WHERE id = ?`,
+      [newName, newSub, newPrice, newOrder, id]
+    );
+
+    return res.json({
+      success: true,
+      variant: {
+        id: Number(id),
+        name: newName,
+        subtitle: newSub,
+        price: newPrice !== null ? Number(newPrice) : null,
+        displayOrder: newOrder,
+      },
+    });
+  } catch (err) {
+    console.error("❌ Update variant error:", err);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.delete("/api/variants/:id", async (req, res) => {
+  const { id } = req.params;
+  try {
+    await query("DELETE FROM package_variants WHERE id = ?", [id]);
+    console.log(`🗑️ [MySQL] Deleted variant id=${id}`);
+    return res.json({ success: true, message: "Package variant deleted successfully" });
+  } catch (err) {
+    console.error("❌ Delete variant error:", err);
     return res.status(500).json({ success: false, error: err.message });
   }
 });
